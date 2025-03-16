@@ -54,7 +54,8 @@ class TaskScreen extends StatelessWidget {
                   {'label': 'Finance', 'color': Colors.orange},
                   {'label': 'Shopping', 'color': Colors.pink},
                 ],
-                onCategorySelected: (String category) {},
+                isMultiSelect: true,
+                onCategorySelected: (category) {},
               ),
             ),
             Container(
@@ -118,8 +119,7 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   DateTime? _selectedDate;
-  TimeOfDay? _selectedStartTime;
-  TimeOfDay? _selectedEndTime;
+  TimeOfDay? _selectedTime;
 
   // Hàm chọn ngày
   Future<void> _selectDate(BuildContext context) async {
@@ -137,7 +137,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+  Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: 0, minute: 0),
@@ -145,11 +145,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
     if (pickedTime != null) {
       setState(() {
-        if (isStartTime) {
-          _selectedStartTime = pickedTime;
-        } else {
-          _selectedEndTime = pickedTime;
-        }
+        _selectedTime = pickedTime;
       });
     }
   }
@@ -255,13 +251,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           ),
                         ),
                         filled: true,
-                        fillColor: Colors.black, // Nền xám tối
+                        fillColor: Colors.black,
                       ),
                       style: TextStyle(color: Colors.white),
                     ),
                     SizedBox(height: 18),
                     Text(
-                      'Due Date',
+                      'Task date',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -303,95 +299,49 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       ),
                     ),
                     SizedBox(height: 18),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => _selectTime(context),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey, width: 2),
+                          padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Text(
-                              'Start time',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                            Icon(
+                              Icons.access_time,
+                              color: Colors.deepPurpleAccent,
+                              size: 20,
                             ),
-                            SizedBox(height: 8),
-                            OutlinedButton.icon(
-                              onPressed: () => _selectTime(context, true),
-                              icon: Icon(
-                                Icons.access_time,
-                                color: Colors.deepPurpleAccent,
-                                size: 20,
-                              ),
-                              label: Text(
-                                _selectedStartTime == null
-                                    ? 'Select start time'
-                                    : '${_selectedStartTime!.hour}:${_selectedStartTime!.minute}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: Colors.grey, width: 2),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 20,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                            SizedBox(width: 8),
+                            Text(
+                              _selectedTime == null
+                                  ? 'Select time for notification'
+                                  : '${_selectedTime!.hour}:${_selectedTime!.minute}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
                               ),
                             ),
                           ],
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'End time',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            OutlinedButton.icon(
-                              onPressed: () => _selectTime(context, false),
-                              icon: Icon(
-                                Icons.access_time,
-                                color: Colors.deepPurpleAccent,
-                                size: 20,
-                              ),
-                              label: Text(
-                                _selectedEndTime == null
-                                    ? 'Select end time'
-                                    : '${_selectedEndTime!.hour}:${_selectedEndTime!.minute}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: Colors.grey, width: 2),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 20,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
                     SizedBox(height: 18),
+                    Text(
+                      'Select repeat days',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
                     WeekdaySelector(onSelectionChanged: (selectedDays) {}),
                     SizedBox(height: 18),
                     PrioritySelector(onPrioritySelected: (priority) {}),
@@ -406,7 +356,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           {'label': 'Finance', 'color': Colors.orange},
                           {'label': 'Shopping', 'color': Colors.pink},
                         ],
-                        onCategorySelected: (String category) {},
+                        isMultiSelect: false,
+                        onCategorySelected: (category) {},
                       ),
                     ),
                     SizedBox(height: 18),
@@ -550,7 +501,7 @@ class DetailTaskScreen extends StatelessWidget {
                         ),
                       ),
                       filled: true,
-                      fillColor: Colors.black, // Nền xám tối
+                      fillColor: Colors.black,
                     ),
                     style: TextStyle(color: Colors.white),
                   ),

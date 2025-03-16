@@ -19,55 +19,31 @@ class Actionbutton extends StatelessWidget {
   }
 }
 
-class CategoryChip extends StatefulWidget {
+class CategoryChip extends StatelessWidget {
   final String label;
   final Color color;
   final bool isSelected;
-  final VoidCallback? onPressed; // Callback khi nhấn vào chip
+  final VoidCallback? onPressed;
 
   const CategoryChip({
     super.key,
     required this.label,
     required this.color,
-    this.isSelected = false,
+    required this.isSelected,
     this.onPressed,
   });
 
   @override
-  // ignore: library_private_types_in_public_api
-  _CategoryChipState createState() => _CategoryChipState();
-}
-
-class _CategoryChipState extends State<CategoryChip> {
-  late bool _isSelected;
-
-  @override
-  void initState() {
-    super.initState();
-    _isSelected = widget.isSelected;
-  }
-
-  void _toggleSelect() {
-    setState(() {
-      _isSelected = !_isSelected;
-    });
-
-    if (widget.onPressed != null) {
-      widget.onPressed!(); // Chỉ gọi khi onPressed được truyền vào
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _toggleSelect,
+      onTap: onPressed,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           // ignore: deprecated_member_use
-          color: _isSelected ? widget.color.withOpacity(0.3) : Colors.black,
+          color: isSelected ? color.withOpacity(0.3) : Colors.black,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: widget.color, width: 2),
+          border: Border.all(color: color, width: 2),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -75,14 +51,11 @@ class _CategoryChipState extends State<CategoryChip> {
             Container(
               width: 14,
               height: 14,
-              decoration: BoxDecoration(
-                color: widget.color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 8),
             Text(
-              widget.label,
+              label,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -96,15 +69,41 @@ class _CategoryChipState extends State<CategoryChip> {
   }
 }
 
-class CategoryList extends StatelessWidget {
+class CategoryList extends StatefulWidget {
   final List<Map<String, dynamic>> categories;
-  final Function(String) onCategorySelected;
+  final Function(List<String>) onCategorySelected;
+  final bool isMultiSelect;
 
   const CategoryList({
     super.key,
     required this.categories,
     required this.onCategorySelected,
+    this.isMultiSelect = true, // Mặc định là chọn nhiều
   });
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _CategoryListState createState() => _CategoryListState();
+}
+
+class _CategoryListState extends State<CategoryList> {
+  List<String> selectedCategories = [];
+
+  void _toggleCategory(String label) {
+    setState(() {
+      if (widget.isMultiSelect) {
+        if (selectedCategories.contains(label)) {
+          selectedCategories.remove(label);
+        } else {
+          selectedCategories.add(label);
+        }
+      } else {
+        selectedCategories = [label];
+      }
+    });
+
+    widget.onCategorySelected(selectedCategories);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,13 +113,14 @@ class CategoryList extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Row(
           children:
-              categories.map((category) {
+              widget.categories.map((category) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: CategoryChip(
                     label: category['label'],
                     color: category['color'],
-                    onPressed: () => onCategorySelected(category['label']),
+                    isSelected: selectedCategories.contains(category['label']),
+                    onPressed: () => _toggleCategory(category['label']),
                   ),
                 );
               }).toList(),

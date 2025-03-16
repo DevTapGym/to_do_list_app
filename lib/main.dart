@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:to_do_list_app/screens/celendar_screen.dart';
+import 'package:to_do_list_app/screens/group_screen.dart';
 import 'package:to_do_list_app/screens/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats_screen.dart';
 import 'package:to_do_list_app/screens/task_screen.dart';
@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const List<Widget> _pages = <Widget>[
     Center(child: TaskScreen()),
-    Center(child: CelendarScreen()),
+    Center(child: GroupScreen()),
     Center(child: StatsScreen()),
     Center(child: SettingScreen()),
   ];
@@ -52,10 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.check_box),
               label: 'Tasks',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Celendar',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Group'),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
               label: 'Stats',
