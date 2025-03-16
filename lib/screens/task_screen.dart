@@ -137,7 +137,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  // Hàm dùng chung để chọn thời gian (startTime hoặc endTime)
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
