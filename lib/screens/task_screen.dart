@@ -82,7 +82,7 @@ class TaskScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AddTaskScreen(),
+                          builder: (context) => const DetailTaskScreen(),
                         ),
                       );
                     },
@@ -179,58 +179,355 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
             ),
           ),
-          body: Container(
-            decoration: BoxDecoration(color: Colors.black),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
+          body: SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              decoration: BoxDecoration(color: Colors.black),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Task Title',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Enter task title',
+                        hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Colors.black,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey, width: 2),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey, width: 2),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Colors.deepPurpleAccent,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 18),
+                    Text(
+                      'Task Description',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextFormField(
+                      maxLines: 4,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        hintText: 'Enter task description',
+                        hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
+                        hintFadeDuration: Duration(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey, width: 2),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey, width: 2),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(
+                            color: Colors.deepPurpleAccent,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.black, // Nền xám tối
+                      ),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    SizedBox(height: 18),
+                    Text(
+                      'Due Date',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => _selectDate(context),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey, width: 2),
+                          padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              color: Colors.deepPurpleAccent,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              _selectedDate == null
+                                  ? 'Select date'
+                                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 18),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Start time',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: () => _selectTime(context, true),
+                              icon: Icon(
+                                Icons.access_time,
+                                color: Colors.deepPurpleAccent,
+                                size: 20,
+                              ),
+                              label: Text(
+                                _selectedStartTime == null
+                                    ? 'Select start time'
+                                    : '${_selectedStartTime!.hour}:${_selectedStartTime!.minute}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: Colors.grey, width: 2),
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 20,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'End time',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            OutlinedButton.icon(
+                              onPressed: () => _selectTime(context, false),
+                              icon: Icon(
+                                Icons.access_time,
+                                color: Colors.deepPurpleAccent,
+                                size: 20,
+                              ),
+                              label: Text(
+                                _selectedEndTime == null
+                                    ? 'Select end time'
+                                    : '${_selectedEndTime!.hour}:${_selectedEndTime!.minute}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: Colors.grey, width: 2),
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 20,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 18),
+                    WeekdaySelector(onSelectionChanged: (selectedDays) {}),
+                    SizedBox(height: 18),
+                    PrioritySelector(onPrioritySelected: (priority) {}),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 8),
+                      child: CategoryList(
+                        categories: [
+                          {'label': 'Personal', 'color': Colors.red},
+                          {'label': 'Work', 'color': Colors.purple},
+                          {'label': 'Health', 'color': Colors.green},
+                          {'label': 'Study', 'color': Colors.blue},
+                          {'label': 'Finance', 'color': Colors.orange},
+                          {'label': 'Shopping', 'color': Colors.pink},
+                        ],
+                        onCategorySelected: (String category) {},
+                      ),
+                    ),
+                    SizedBox(height: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurpleAccent,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 34,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            "Create Task",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class DetailTaskScreen extends StatelessWidget {
+  const DetailTaskScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            leading: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
+              },
+              icon: Icon(Icons.arrow_back, color: Colors.white, size: 34),
+            ),
+            title: Padding(
+              padding: const EdgeInsets.only(left: 80),
+              child: Text(
+                'Detail task',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+          ),
+          body: SingleChildScrollView(
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              decoration: BoxDecoration(color: Colors.black),
+              padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Task Title',
+                    'Title task',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  TextField(
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Enter task title',
-                      hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
-                      labelStyle: TextStyle(color: Colors.white),
-                      filled: true,
-                      fillColor: Colors.black,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey, width: 2),
+                  SizedBox(height: 12),
+                  Column(
+                    children: [
+                      _buildInfoRow(
+                        Icons.calendar_today,
+                        "Due: ",
+                        Colors.green,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey, width: 2),
+                      SizedBox(height: 8),
+                      _buildInfoRow(
+                        Icons.access_time,
+                        "Created:",
+                        Colors.orange,
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Colors.deepPurpleAccent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
+                      SizedBox(height: 8),
+                      _buildInfoRow(Icons.flag, '', Colors.purple),
+                      SizedBox(height: 8),
+                      _buildInfoRow(Icons.label, '', Colors.blue),
+                    ],
                   ),
-                  SizedBox(height: 18),
+                  SizedBox(height: 24),
                   Text(
-                    'Task Description',
+                    'Description',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 12),
                   TextFormField(
+                    readOnly: true,
                     maxLines: 4,
                     keyboardType: TextInputType.multiline,
                     decoration: InputDecoration(
@@ -257,176 +554,59 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     ),
                     style: TextStyle(color: Colors.white),
                   ),
-                  SizedBox(height: 18),
-                  Text(
-                    'Due Date',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => _selectDate(context),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey, width: 2),
-                        padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.calendar_today,
-                            color: Colors.deepPurpleAccent,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            _selectedDate == null
-                                ? 'Select date'
-                                : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 18),
+                  SizedBox(height: 24),
+                  Divider(color: Colors.grey, thickness: 2),
+                  SizedBox(height: 12),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Start time',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () => _selectTime(context, true),
-                            icon: Icon(
-                              Icons.access_time,
-                              color: Colors.deepPurpleAccent,
-                              size: 20,
-                            ),
-                            label: Text(
-                              _selectedStartTime == null
-                                  ? 'Select start time'
-                                  : '${_selectedStartTime!.hour}:${_selectedStartTime!.minute}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.grey, width: 2),
-                              padding: EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 20,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'End time',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () => _selectTime(context, false),
-                            icon: Icon(
-                              Icons.access_time,
-                              color: Colors.deepPurpleAccent,
-                              size: 20,
-                            ),
-                            label: Text(
-                              _selectedEndTime == null
-                                  ? 'Select end time'
-                                  : '${_selectedEndTime!.hour}:${_selectedEndTime!.minute}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.grey, width: 2),
-                              padding: EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 20,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 18),
-                  WeekdaySelector(onSelectionChanged: (selectedDays) {}),
-                  SizedBox(height: 18),
-                  PrioritySelector(onPrioritySelected: (priority) {}),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 8),
-                    child: CategoryList(
-                      categories: [
-                        {'label': 'Personal', 'color': Colors.red},
-                        {'label': 'Work', 'color': Colors.purple},
-                        {'label': 'Health', 'color': Colors.green},
-                        {'label': 'Study', 'color': Colors.blue},
-                        {'label': 'Finance', 'color': Colors.orange},
-                        {'label': 'Shopping', 'color': Colors.pink},
-                      ],
-                      onCategorySelected: (String category) {},
-                    ),
-                  ),
-                  SizedBox(height: 18),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
+                      OutlinedButton.icon(
                         onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurpleAccent,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 34,
+                        icon: Icon(
+                          Icons.update,
+                          color: Colors.deepPurpleAccent,
+                        ),
+                        label: Text(
+                          'Update',
+                          style: TextStyle(
+                            color: Colors.deepPurpleAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Colors.deepPurpleAccent,
+                            width: 2,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
                           ),
                         ),
-                        child: Text(
-                          "Create Task",
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        label: Text(
+                          'Delete',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.red,
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 16,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.red, width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
                           ),
                         ),
                       ),
@@ -438,7 +618,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           ),
         ),
       ),
+
       debugShowCheckedModeBanner: false,
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 24),
+        SizedBox(width: 8),
+        Text(text, style: TextStyle(color: Colors.white, fontSize: 16)),
+      ],
     );
   }
 }
