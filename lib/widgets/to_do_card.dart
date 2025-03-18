@@ -21,6 +21,25 @@ class TodoCard extends StatelessWidget {
     }
   }
 
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case "Personal":
+        return Colors.red;
+      case "Finance":
+        return Colors.orange;
+      case "Study":
+        return Colors.blue;
+      case "Work":
+        return Colors.purple;
+      case "Health":
+        return Colors.green;
+      case "Shopping":
+        return Colors.pink;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -73,7 +92,10 @@ class TodoCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.deepPurpleAccent,
+                            color:
+                                task.completed
+                                    ? Colors.green
+                                    : _getCategoryColor(task.category),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -135,7 +157,9 @@ class TodoCard extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailTaskScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => DetailTaskScreen(task: task),
+                  ),
                 );
               },
               child: const Icon(Icons.arrow_forward_ios, color: Colors.white),

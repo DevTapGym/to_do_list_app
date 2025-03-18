@@ -29,20 +29,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  List<Task> taskList = [];
+  List<Task> tasks = [];
 
   void _addTask(Task task) {
     setState(() {
-      taskList.add(task);
+      tasks.add(task);
     });
   }
-
-  static const List<Widget> _pages = <Widget>[
-    Center(child: TaskScreen()),
-    Center(child: GroupScreen()),
-    Center(child: StatsScreen()),
-    Center(child: SettingScreen()),
-  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -52,9 +45,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = <Widget>[
+      Center(child: TaskScreen(taskList: tasks, onTaskAdded: _addTask)),
+      Center(child: GroupScreen()),
+      Center(child: StatsScreen()),
+      Center(child: SettingScreen()),
+    ];
+
     return SafeArea(
       child: Scaffold(
-        body: _pages[_selectedIndex],
+        body: pages[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -82,14 +82,18 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton:
             _selectedIndex == 0
                 ? FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final newTask = await Navigator.push<Task>(
                       context,
                       MaterialPageRoute(
                         builder:
                             (context) => AddTaskScreen(onTaskAdded: _addTask),
                       ),
                     );
+
+                    if (newTask != null) {
+                      _addTask(newTask);
+                    }
                   },
                   backgroundColor: Colors.deepPurpleAccent,
                   shape: RoundedRectangleBorder(

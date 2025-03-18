@@ -5,18 +5,23 @@ import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
 
 class TaskScreen extends StatefulWidget {
-  const TaskScreen({super.key});
+  final List<Task> taskList;
+  final Function(Task) onTaskAdded;
+
+  const TaskScreen({
+    super.key,
+    required this.taskList,
+    required this.onTaskAdded,
+  });
 
   @override
   State<TaskScreen> createState() => _TaskScreenState();
 }
 
 class _TaskScreenState extends State<TaskScreen> {
-  List<Task> taskList = [];
-
   void _addTask(Task task) {
     setState(() {
-      taskList.add(task);
+      widget.taskList.add(task);
     });
   }
 
@@ -86,20 +91,20 @@ class _TaskScreenState extends State<TaskScreen> {
                 onCategorySelected: (category) {},
               ),
             ),
-            taskList.isEmpty
+            widget.taskList.isEmpty
                 ? EmptyState(onAddTask: _navigateToAddTaskScreen)
                 : Expanded(
                   child: ListView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: taskList.length,
+                    itemCount: widget.taskList.length,
                     itemBuilder: (context, index) {
                       return TodoCard(
-                        task: taskList[index],
+                        task: widget.taskList[index],
                         onTap: () {
                           setState(() {
-                            taskList[index].completed =
-                                !taskList[index].completed;
+                            widget.taskList[index].completed =
+                                !widget.taskList[index].completed;
                           });
                         },
                       );

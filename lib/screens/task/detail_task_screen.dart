@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/models/task.dart';
 
-class DetailTaskScreen extends StatelessWidget {
-  const DetailTaskScreen({super.key});
+class DetailTaskScreen extends StatefulWidget {
+  final Task task;
+  const DetailTaskScreen({super.key, required this.task});
 
+  @override
+  State<DetailTaskScreen> createState() => _DetailTaskScreenState();
+}
+
+class _DetailTaskScreenState extends State<DetailTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -46,13 +53,29 @@ class DetailTaskScreen extends StatelessWidget {
                 SizedBox(height: 12),
                 Column(
                   children: [
-                    _buildInfoRow(Icons.calendar_today, "Due: ", Colors.green),
+                    _buildInfoRow(
+                      Icons.calendar_today,
+                      "Task Date: ${widget.task.taskDate}",
+                      Colors.green,
+                    ),
                     SizedBox(height: 8),
-                    _buildInfoRow(Icons.access_time, "Created:", Colors.orange),
+                    _buildInfoRow(
+                      Icons.access_time,
+                      "Notification: ${widget.task.notificationTime}",
+                      Colors.orange,
+                    ),
                     SizedBox(height: 8),
-                    _buildInfoRow(Icons.flag, '', Colors.purple),
+                    _buildInfoRow(
+                      Icons.flag,
+                      '${widget.task.priority} Priority',
+                      Colors.purple,
+                    ),
                     SizedBox(height: 8),
-                    _buildInfoRow(Icons.label, '', Colors.blue),
+                    _buildInfoRow(
+                      Icons.label,
+                      'Category: ${widget.task.category}',
+                      Colors.blue,
+                    ),
                   ],
                 ),
                 SizedBox(height: 24),
@@ -68,6 +91,7 @@ class DetailTaskScreen extends StatelessWidget {
                 TextFormField(
                   readOnly: true,
                   maxLines: 4,
+                  initialValue: '${widget.task.description}',
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                     hintText: 'Enter task description',
