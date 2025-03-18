@@ -91,6 +91,7 @@ class _CategoryListState extends State<CategoryList> {
 
   void _toggleCategory(String label) {
     setState(() {
+      // true chọn nhiều false chọn 1
       if (widget.isMultiSelect) {
         if (selectedCategories.contains(label)) {
           selectedCategories.remove(label);
@@ -217,7 +218,7 @@ class _PrioritySelectorState extends State<PrioritySelector> {
       children: [
         _buildPriorityButton("High", Colors.red),
         _buildPriorityButton("Medium", Colors.orange),
-        _buildPriorityButton("Low", Colors.green),
+        _buildPriorityButton("Low", Colors.blue),
       ],
     );
   }

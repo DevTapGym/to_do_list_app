@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/screens/group_screen.dart';
 import 'package:to_do_list_app/screens/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats_screen.dart';
-import 'package:to_do_list_app/screens/task_screen.dart';
+import 'package:to_do_list_app/screens/task/add_task_screen.dart';
+import 'package:to_do_list_app/screens/task/task_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,6 +29,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  List<Task> taskList = [];
+
+  void _addTask(Task task) {
+    setState(() {
+      taskList.add(task);
+    });
+  }
 
   static const List<Widget> _pages = <Widget>[
     Center(child: TaskScreen()),
@@ -77,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AddTaskScreen(),
+                        builder:
+                            (context) => AddTaskScreen(onTaskAdded: _addTask),
                       ),
                     );
                   },
