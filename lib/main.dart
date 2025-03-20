@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/screens/auth/auth_screen.dart';
 import 'package:to_do_list_app/screens/celendar_screen.dart';
 import 'package:to_do_list_app/screens/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats_screen.dart';
 import 'package:to_do_list_app/screens/task_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const AuthScreen());
 }
 
 class MyApp extends StatelessWidget {
