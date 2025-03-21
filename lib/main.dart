@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
-import 'package:to_do_list_app/screens/group_screen.dart';
-import 'package:to_do_list_app/screens/setting_screen.dart';
-import 'package:to_do_list_app/screens/stats_screen.dart';
+import 'package:to_do_list_app/screens/group/group_screen.dart';
+import 'package:to_do_list_app/screens/setting/setting_screen.dart';
+import 'package:to_do_list_app/screens/stats/stats_screen.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
+import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,6 +31,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<Task> tasks = [];
+  final List<CategoryChip> categories = [
+    CategoryChip(label: 'Personal', color: Colors.red, isSelected: false),
+    CategoryChip(label: 'Work', color: Colors.purple, isSelected: false),
+    CategoryChip(label: 'Health', color: Colors.green, isSelected: false),
+    CategoryChip(label: 'Study', color: Colors.blue, isSelected: false),
+    CategoryChip(label: 'Finance', color: Colors.orange, isSelected: false),
+    CategoryChip(label: 'Shopping', color: Colors.pink, isSelected: false),
+  ];
 
   void _addTask(Task task) {
     setState(() {
@@ -46,7 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = <Widget>[
-      Center(child: TaskScreen(taskList: tasks, onTaskAdded: _addTask)),
+      Center(
+        child: TaskScreen(
+          taskList: tasks,
+          categories: categories,
+          onTaskAdded: _addTask,
+        ),
+      ),
       Center(child: GroupScreen()),
       Center(child: StatsScreen()),
       Center(child: SettingScreen()),
@@ -87,7 +102,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => AddTaskScreen(onTaskAdded: _addTask),
+                            (context) => AddTaskScreen(
+                              onTaskAdded: _addTask,
+                              categories: categories,
+                            ),
                       ),
                     );
 

@@ -1,24 +1,5 @@
 import 'package:flutter/material.dart';
 
-class Actionbutton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final IconData icon;
-  const Actionbutton({super.key, this.onPressed, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(color: Colors.white10, shape: BoxShape.circle),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 28),
-        onPressed: onPressed ?? () {},
-      ),
-    );
-  }
-}
-
 class CategoryChip extends StatelessWidget {
   final String label;
   final Color color;
@@ -40,8 +21,7 @@ class CategoryChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          // ignore: deprecated_member_use
-          color: isSelected ? color.withOpacity(0.3) : Colors.black,
+          color: isSelected ? Colors.white10 : Colors.black,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: color, width: 2),
         ),
@@ -70,15 +50,19 @@ class CategoryChip extends StatelessWidget {
 }
 
 class CategoryList extends StatefulWidget {
-  final List<Map<String, dynamic>> categories;
+  final List<CategoryChip> categories;
+  final Function(List<CategoryChip>) onCategoryUpdated;
   final Function(List<String>) onCategorySelected;
   final bool isMultiSelect;
+  final bool showAddButton;
 
   const CategoryList({
     super.key,
     required this.categories,
+    required this.onCategoryUpdated,
     required this.onCategorySelected,
-    this.isMultiSelect = true, // Mặc định là chọn nhiều
+    this.isMultiSelect = true,
+    this.showAddButton = true, // Mặc định hiển thị nút thêm
   });
 
   @override
@@ -91,7 +75,6 @@ class _CategoryListState extends State<CategoryList> {
 
   void _toggleCategory(String label) {
     setState(() {
-      // true chọn nhiều false chọn 1
       if (widget.isMultiSelect) {
         if (selectedCategories.contains(label)) {
           selectedCategories.remove(label);
@@ -106,26 +89,61 @@ class _CategoryListState extends State<CategoryList> {
     widget.onCategorySelected(selectedCategories);
   }
 
+  void _addCategory() {
+    setState(() {
+      final newCategory = CategoryChip(
+        label: 'New Category ${widget.categories.length + 1}',
+        color: Colors.grey,
+        isSelected: false,
+        onPressed: () {},
+      );
+
+      widget.categories.add(newCategory);
+      widget.onCategoryUpdated(widget.categories);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 60,
-      child: SingleChildScrollView(
+      height: 40,
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        child: Row(
-          children:
-              widget.categories.map((category) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: CategoryChip(
-                    label: category['label'],
-                    color: category['color'],
-                    isSelected: selectedCategories.contains(category['label']),
-                    onPressed: () => _toggleCategory(category['label']),
+        itemCount: widget.categories.length + 1,
+        itemBuilder: (context, index) {
+          if (index < widget.categories.length) {
+            final category = widget.categories[index];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: CategoryChip(
+                label: category.label,
+                color: category.color,
+                isSelected: selectedCategories.contains(category.label),
+                onPressed: () => _toggleCategory(category.label),
+              ),
+            );
+          } else if (widget.showAddButton) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: _addCategory,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                );
-              }).toList(),
-        ),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }

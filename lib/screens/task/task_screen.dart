@@ -7,10 +7,12 @@ import 'package:to_do_list_app/widgets/to_do_card.dart';
 class TaskScreen extends StatefulWidget {
   final List<Task> taskList;
   final Function(Task) onTaskAdded;
+  final List<CategoryChip> categories;
 
   const TaskScreen({
     super.key,
     required this.taskList,
+    required this.categories,
     required this.onTaskAdded,
   });
 
@@ -19,9 +21,175 @@ class TaskScreen extends StatefulWidget {
 }
 
 class _TaskScreenState extends State<TaskScreen> {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  List<Task> _filteredTasks = [];
+  final List<String> _selectedCategories = [];
+  bool? _completedFilter;
+  String _sortOrder = 'newest';
+
+  // void _applyFilters() {
+  //   setState(() {
+  //     _filteredTasks = widget.taskList.where((task) {
+  //       if (_selectedCategories.isNotEmpty &&
+  //           !_selectedCategories.contains(task.category)) {
+  //         return false;
+  //       }
+  //       if (_completedFilter != null && task.completed != _completedFilter) {
+  //         return false;
+  //       }
+  //       return true;
+  //     }).toList();
+
+  //     if (_sortOrder == 'newest') {
+  //       _filteredTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  //     } else {
+  //       _filteredTasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  //     }
+  //   });
+  // }
+
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+
+                children: [
+                  Text(
+                    'Filter jobs',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+
+                  // Chọn danh mục
+                  Wrap(
+                    spacing: 8,
+                    children:
+                        ['Personal', 'Work', 'Health', 'Study']
+                            .map(
+                              (category) => ChoiceChip(
+                                label: Text(category),
+                                selected: _selectedCategories.contains(
+                                  category,
+                                ),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedCategories.add(category);
+                                    } else {
+                                      _selectedCategories.remove(category);
+                                    }
+                                  });
+                                },
+                              ),
+                            )
+                            .toList(),
+                  ),
+
+                  SizedBox(height: 10),
+
+                  // Chọn trạng thái
+                  CheckboxListTile(
+                    title: Text('Completed Task'),
+                    value: _completedFilter == true,
+                    onChanged: (value) {
+                      setState(() {
+                        _completedFilter = value == true ? true : null;
+                      });
+                    },
+                  ),
+                  CheckboxListTile(
+                    title: Text('Incomplete Task'),
+                    value: _completedFilter == false,
+                    onChanged: (value) {
+                      setState(() {
+                        _completedFilter = value == true ? false : null;
+                      });
+                    },
+                  ),
+
+                  SizedBox(height: 10),
+
+                  // Chọn cách sắp xếp
+                  RadioListTile(
+                    title: Text('Sort by priority'),
+                    value: 'priority',
+                    groupValue: _sortOrder,
+                    onChanged: (value) {
+                      setState(() {
+                        _sortOrder = value.toString();
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: Text('Sort by notification time'),
+                    value: 'notification',
+                    groupValue: _sortOrder,
+                    onChanged: (value) {
+                      setState(() {
+                        _sortOrder = value.toString();
+                      });
+                    },
+                  ),
+
+                  SizedBox(height: 10),
+
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurpleAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        //_applyFilters();
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Apply',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _searchTask(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredTasks = List.from(widget.taskList);
+      } else {
+        _filteredTasks =
+            widget.taskList
+                .where(
+                  (task) =>
+                      task.title.toLowerCase().contains(query.toLowerCase()) ||
+                      task.description!.toLowerCase().contains(
+                        query.toLowerCase(),
+                      ),
+                )
+                .toList();
+      }
+    });
+  }
+
   void _addTask(Task task) {
     setState(() {
       widget.taskList.add(task);
+      _filteredTasks = List.from(widget.taskList);
     });
   }
 
@@ -29,7 +197,11 @@ class _TaskScreenState extends State<TaskScreen> {
     final newTask = await Navigator.push<Task>(
       context,
       MaterialPageRoute(
-        builder: (context) => AddTaskScreen(onTaskAdded: _addTask),
+        builder:
+            (context) => AddTaskScreen(
+              onTaskAdded: _addTask,
+              categories: widget.categories,
+            ),
       ),
     );
 
@@ -40,6 +212,9 @@ class _TaskScreenState extends State<TaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isSearching) {
+      _filteredTasks = List.from(widget.taskList);
+    }
     return Container(
       decoration: BoxDecoration(color: Colors.black),
       child: Padding(
@@ -49,29 +224,93 @@ class _TaskScreenState extends State<TaskScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hi there,',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      'Your Task',
-                      style: TextStyle(
-                        fontSize: 26,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                _isSearching
+                    ? Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        onChanged: (query) {
+                          _searchTask(query);
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search task...',
+                          hintStyle: TextStyle(color: Colors.white54),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Colors.white54,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Colors.deepPurpleAccent,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        style: TextStyle(color: Colors.white),
                       ),
+                    )
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hi there,',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Your Task',
+                          style: TextStyle(
+                            fontSize: 26,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
                 Row(
                   children: [
-                    Actionbutton(icon: Icons.search),
+                    Container(
+                      margin: EdgeInsets.only(left: 12),
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.search, color: Colors.white, size: 28),
+                        onPressed: () {
+                          setState(() {
+                            if (_isSearching) {
+                              _searchController.clear();
+                              _filteredTasks = List.from(widget.taskList);
+                            }
+                            _isSearching = !_isSearching;
+                          });
+                        },
+                      ),
+                    ),
                     SizedBox(width: 12),
-                    Actionbutton(icon: Icons.filter_list),
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.filter_list,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        onPressed: _showFilterBottomSheet,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -79,15 +318,9 @@ class _TaskScreenState extends State<TaskScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 12),
               child: CategoryList(
-                categories: [
-                  {'label': 'Personal', 'color': Colors.red},
-                  {'label': 'Work', 'color': Colors.purple},
-                  {'label': 'Health', 'color': Colors.green},
-                  {'label': 'Study', 'color': Colors.blue},
-                  {'label': 'Finance', 'color': Colors.orange},
-                  {'label': 'Shopping', 'color': Colors.pink},
-                ],
+                categories: widget.categories,
                 isMultiSelect: true,
+                onCategoryUpdated: (category) {},
                 onCategorySelected: (category) {},
               ),
             ),
@@ -95,16 +328,14 @@ class _TaskScreenState extends State<TaskScreen> {
                 ? EmptyState(onAddTask: _navigateToAddTaskScreen)
                 : Expanded(
                   child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: widget.taskList.length,
+                    itemCount: _filteredTasks.length,
                     itemBuilder: (context, index) {
                       return TodoCard(
-                        task: widget.taskList[index],
+                        task: _filteredTasks[index],
                         onTap: () {
                           setState(() {
-                            widget.taskList[index].completed =
-                                !widget.taskList[index].completed;
+                            _filteredTasks[index].completed =
+                                !_filteredTasks[index].completed;
                           });
                         },
                       );
