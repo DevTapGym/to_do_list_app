@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/screens/group/group_screen.dart';
 import 'package:to_do_list_app/screens/setting/setting_screen.dart';
@@ -7,8 +8,9 @@ import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
+
 void main() {
-  runApp(const MyApp());
+  runApp(const AuthScreen());
 }
 
 class MyApp extends StatelessWidget {
