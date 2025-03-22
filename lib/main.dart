@@ -5,8 +5,18 @@ import 'package:to_do_list_app/screens/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats_screen.dart';
 import 'package:to_do_list_app/screens/task_screen.dart';
 
-void main() {
-  runApp(const AuthScreen());
+import 'package:provider/provider.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+
+void main() async {
+  // runApp(const AuthScreen());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,7 +24,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomeScreen(), debugShowCheckedModeBanner: false);
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Flutter Demo',
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode:
+              themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const HomeScreen(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
+    );
   }
 }
 
