@@ -72,6 +72,8 @@ class CategoryList extends StatefulWidget {
 
 class _CategoryListState extends State<CategoryList> {
   List<String> selectedCategories = [];
+  bool isAddingCategory = false;
+  final TextEditingController _controller = TextEditingController();
 
   void _toggleCategory(String label) {
     setState(() {
@@ -89,10 +91,17 @@ class _CategoryListState extends State<CategoryList> {
     widget.onCategorySelected(selectedCategories);
   }
 
-  void _addCategory() {
+  void _addCategory(String categoryName) {
+    if (categoryName.trim().isEmpty) {
+      setState(() {
+        isAddingCategory = false; // Ẩn TextField nếu không nhập gì
+      });
+      return;
+    } // Tránh thêm tên rỗng
+
     setState(() {
       final newCategory = CategoryChip(
-        label: 'New Category ${widget.categories.length + 1}',
+        label: categoryName,
         color: Colors.grey,
         isSelected: false,
         onPressed: () {},
@@ -100,7 +109,10 @@ class _CategoryListState extends State<CategoryList> {
 
       widget.categories.add(newCategory);
       widget.onCategoryUpdated(widget.categories);
+      isAddingCategory = false;
     });
+
+    _controller.clear();
   }
 
   @override
@@ -125,21 +137,60 @@ class _CategoryListState extends State<CategoryList> {
           } else if (widget.showAddButton) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: _addCategory,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white),
-                ),
-              ),
+              child:
+                  isAddingCategory
+                      ? SizedBox(
+                        width: 140,
+                        child: Focus(
+                          onFocusChange: (hasFocus) {
+                            if (!hasFocus && _controller.text.isEmpty) {
+                              setState(() {
+                                isAddingCategory =
+                                    false; // Ẩn khi mất focus mà không nhập
+                              });
+                            }
+                          },
+                          child: TextField(
+                            controller: _controller,
+                            autofocus: true,
+                            style: TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: 'Enter category ...',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            onSubmitted: _addCategory,
+                          ),
+                        ),
+                      )
+                      : GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isAddingCategory = true;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(Icons.add, color: Colors.white),
+                        ),
+                      ),
             );
           }
           return const SizedBox.shrink();
