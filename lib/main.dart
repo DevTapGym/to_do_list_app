@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/models/group.dart';
 
 import 'package:to_do_list_app/models/task.dart';
+//import 'package:to_do_list_app/screens/auth/auth_screen.dart';
 import 'package:to_do_list_app/screens/group/group_screen.dart';
 import 'package:to_do_list_app/screens/setting/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
@@ -8,9 +10,8 @@ import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
-
 void main() {
-  runApp(const AuthScreen());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -33,6 +34,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<Task> tasks = [];
+  List<Group> groups = [];
   final List<CategoryChip> categories = [
     CategoryChip(label: 'Personal', color: Colors.red, isSelected: false),
     CategoryChip(label: 'Work', color: Colors.purple, isSelected: false),
@@ -64,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTaskAdded: _addTask,
         ),
       ),
-      Center(child: GroupScreen()),
+      Center(child: GroupsScreen(groups: groups)),
       Center(child: StatsScreen()),
       Center(child: SettingScreen()),
     ];
