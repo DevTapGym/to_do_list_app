@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/TaskSettingItem.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/widgets/task_setting_item.dart';
 
 class SettingScreen extends StatelessWidget {
   const SettingScreen({super.key});
