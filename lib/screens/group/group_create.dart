@@ -127,6 +127,7 @@ class GroupCreate extends StatelessWidget {
       padding: const EdgeInsets.only(right: 8),
       child: CircleAvatar(
         radius: 28,
+        // ignore: deprecated_member_use
         backgroundColor: color.withOpacity(0.2),
         child: Icon(icon, size: 32, color: color),
       ),
