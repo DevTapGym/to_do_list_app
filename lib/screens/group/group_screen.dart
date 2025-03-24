@@ -3,11 +3,16 @@ import 'package:to_do_list_app/models/group.dart';
 import 'package:to_do_list_app/models/task.dart';
 
 // Màn hình hiển thị danh sách nhóm
-class GroupsScreen extends StatelessWidget {
+class GroupsScreen extends StatefulWidget {
   final List<Group> groups;
 
   const GroupsScreen({super.key, required this.groups});
 
+  @override
+  State<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends State<GroupsScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -71,9 +76,9 @@ class GroupsScreen extends StatelessWidget {
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: groups.length,
+                itemCount: widget.groups.length,
                 itemBuilder: (context, index) {
-                  return GroupWidget(group: groups[index]);
+                  return GroupWidget(group: widget.groups[index]);
                 },
               ),
             ),
