@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: 'Flutter Demo',
+          title: 'To do list app',
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           themeMode:
@@ -56,7 +56,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<Task> tasks = [];
-  List<Group> groups = [];
+  // fake data
+  final List<Group> groups = List.generate(3, (groupIndex) {
+    return Group(
+      name: 'Group ${groupIndex + 1}',
+      id: 'G${groupIndex + 1}',
+      items: List.generate(3, (taskIndex) {
+        return Task(
+          title: 'Task ${taskIndex + 1} of Group ${groupIndex + 1}',
+          description: 'Description for Task ${taskIndex + 1}',
+          taskDate: DateTime.now().add(Duration(days: taskIndex)),
+          category: 'Work',
+          priority: 'High',
+          completed: false,
+          notificationTime: TimeOfDay(hour: 8, minute: 30),
+          repeatDays: [1, 3, 5],
+        );
+      }),
+    );
+  });
+
   final List<CategoryChip> categories = [
     CategoryChip(label: 'Personal', color: Colors.red, isSelected: false),
     CategoryChip(label: 'Work', color: Colors.purple, isSelected: false),
@@ -144,6 +163,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(50),
                   ),
                   child: const Icon(Icons.add, color: Colors.white, size: 32),
+                )
+                : _selectedIndex == 1
+                ? FloatingActionButton(
+                  onPressed: () {},
+                  backgroundColor: Colors.deepPurpleAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: const Icon(
+                    Icons.group_add,
+                    color: Colors.white,
+                    size: 32,
+                  ),
                 )
                 : null,
       ),
