@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/screens/task/detail_task_screen.dart';
+import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class TodoCard extends StatelessWidget {
   final Task task;
   final VoidCallback onTap;
+  final List<CategoryChip> categories;
 
-  const TodoCard({super.key, required this.task, required this.onTap});
+  const TodoCard({
+    super.key,
+    required this.task,
+    required this.onTap,
+    required this.categories,
+  });
 
   Color _getPriorityColor(String priority) {
     switch (priority) {
@@ -158,7 +165,11 @@ class TodoCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DetailTaskScreen(task: task),
+                    builder:
+                        (context) => DetailTaskScreen(
+                          task: task,
+                          categories: categories,
+                        ),
                   ),
                 );
               },

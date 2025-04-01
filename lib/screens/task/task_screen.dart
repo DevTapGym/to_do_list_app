@@ -24,149 +24,41 @@ class _TaskScreenState extends State<TaskScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   List<Task> _filteredTasks = [];
-  final List<String> _selectedCategories = [];
-  bool? _completedFilter;
-  String _sortOrder = 'newest';
+  DateTime? _selectedDate;
 
-  // void _applyFilters() {
-  //   setState(() {
-  //     _filteredTasks = widget.taskList.where((task) {
-  //       if (_selectedCategories.isNotEmpty &&
-  //           !_selectedCategories.contains(task.category)) {
-  //         return false;
-  //       }
-  //       if (_completedFilter != null && task.completed != _completedFilter) {
-  //         return false;
-  //       }
-  //       return true;
-  //     }).toList();
-
-  //     if (_sortOrder == 'newest') {
-  //       _filteredTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  //     } else {
-  //       _filteredTasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-  //     }
-  //   });
-  // }
-
-  void _showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-
-                children: [
-                  Text(
-                    'Filter jobs',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-
-                  // Chọn danh mục
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        ['Personal', 'Work', 'Health', 'Study']
-                            .map(
-                              (category) => ChoiceChip(
-                                label: Text(category),
-                                selected: _selectedCategories.contains(
-                                  category,
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedCategories.add(category);
-                                    } else {
-                                      _selectedCategories.remove(category);
-                                    }
-                                  });
-                                },
-                              ),
-                            )
-                            .toList(),
-                  ),
-
-                  SizedBox(height: 10),
-
-                  // Chọn trạng thái
-                  CheckboxListTile(
-                    title: Text('Completed Task'),
-                    value: _completedFilter == true,
-                    onChanged: (value) {
-                      setState(() {
-                        _completedFilter = value == true ? true : null;
-                      });
-                    },
-                  ),
-                  CheckboxListTile(
-                    title: Text('Incomplete Task'),
-                    value: _completedFilter == false,
-                    onChanged: (value) {
-                      setState(() {
-                        _completedFilter = value == true ? false : null;
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-
-                  // Chọn cách sắp xếp
-                  RadioListTile(
-                    title: Text('Sort by priority'),
-                    value: 'priority',
-                    groupValue: _sortOrder,
-                    onChanged: (value) {
-                      setState(() {
-                        _sortOrder = value.toString();
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: Text('Sort by notification time'),
-                    value: 'notification',
-                    groupValue: _sortOrder,
-                    onChanged: (value) {
-                      setState(() {
-                        _sortOrder = value.toString();
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        //_applyFilters();
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Apply',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  // Lọc theo ngày
+  void _filterByDate() {
+    setState(() {
+      if (_selectedDate == null) {
+        _filteredTasks = List.from(widget.taskList);
+      } else {
+        _filteredTasks =
+            widget.taskList.where((task) {
+              return task.taskDate.year == _selectedDate!.year &&
+                  task.taskDate.month == _selectedDate!.month &&
+                  task.taskDate.day == _selectedDate!.day;
+            }).toList();
+      }
+    });
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2018),
+      lastDate: DateTime(2040),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+      _filterByDate();
+    }
+  }
+
+  //Tìm theo từ khóa
   void _searchTask(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -210,10 +102,27 @@ class _TaskScreenState extends State<TaskScreen> {
     }
   }
 
+  Future<void> selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2018),
+      lastDate: DateTime(2040),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_isSearching) {
+    if (!_isSearching && _selectedDate == null) {
       _filteredTasks = List.from(widget.taskList);
+    } else if (_selectedDate != null) {
+      _filterByDate();
     }
     return Container(
       decoration: BoxDecoration(color: Colors.black),
@@ -304,11 +213,11 @@ class _TaskScreenState extends State<TaskScreen> {
                       ),
                       child: IconButton(
                         icon: Icon(
-                          Icons.filter_list,
+                          Icons.calendar_today,
                           color: Colors.white,
                           size: 28,
                         ),
-                        onPressed: _showFilterBottomSheet,
+                        onPressed: () => _selectDate(context),
                       ),
                     ),
                   ],
@@ -332,6 +241,7 @@ class _TaskScreenState extends State<TaskScreen> {
                     itemBuilder: (context, index) {
                       return TodoCard(
                         task: _filteredTasks[index],
+                        categories: widget.categories,
                         onTap: () {
                           setState(() {
                             _filteredTasks[index].completed =

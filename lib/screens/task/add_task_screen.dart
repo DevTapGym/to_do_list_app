@@ -278,15 +278,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 WeekdaySelector(onSelectionChanged: handleSelectionChanged),
                 SizedBox(height: 18),
                 PrioritySelector(onPrioritySelected: handlePrioritySelected),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 8),
-                  child: CategoryList(
-                    categories: widget.categories,
-                    isMultiSelect: false,
-                    showAddButton: false,
-                    onCategorySelected: handleselectedCategories,
-                    onCategoryUpdated: (covariant) {},
-                  ),
+                SizedBox(height: 18),
+                CategoryList(
+                  categories: widget.categories,
+                  isMultiSelect: false,
+                  showAddButton: false,
+                  onCategorySelected: handleselectedCategories,
+                  onCategoryUpdated: (covariant) {},
                 ),
                 SizedBox(height: 18),
                 Row(
