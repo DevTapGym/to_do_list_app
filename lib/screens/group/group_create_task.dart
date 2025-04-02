@@ -376,6 +376,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
       children: [
         CircleAvatar(
           radius: 28,
+          // ignore: deprecated_member_use
           backgroundColor: color.withOpacity(0.2),
           child: Icon(icon, size: 32, color: color),
         ),
