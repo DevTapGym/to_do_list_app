@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/screens/setting/account_settings_screen.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/task_setting_item.dart';
 
@@ -90,7 +91,14 @@ class _StateMySetting extends State<MySetting> {
                         subtitle: "Information about your account",
                         iconBgColor: isDark ? Colors.red.shade900 : Colors.red,
                         backgroundColor: colors.itemBgColor,
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AccountSettingsScreen(),
+                            ),
+                          );
+                        },
                       ),
 
                       const SizedBox(height: spacing),

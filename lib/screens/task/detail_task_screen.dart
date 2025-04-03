@@ -49,18 +49,17 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(Icons.arrow_back, color: colors.textColor, size: 34),
+            icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
           ),
-          title: Center(
-            child: Text(
-              'Detail Task',
-              style: TextStyle(
-                color: colors.textColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
+          title: Text(
+            'Detail Task',
+            style: TextStyle(
+              color: colors.textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
             ),
           ),
+          centerTitle: true,
         ),
         backgroundColor: colors.bgColor,
         body: Padding(

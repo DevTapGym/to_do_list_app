@@ -106,16 +106,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(Icons.arrow_back, color: colors.textColor, size: 34),
+            icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
           ),
           title: Text(
             'Add task',
             style: TextStyle(
               color: colors.textColor,
               fontWeight: FontWeight.bold,
-              fontSize: 24,
+              fontSize: 22,
             ),
           ),
+          centerTitle: true,
         ),
         backgroundColor: colors.bgColor,
         body: SingleChildScrollView(
