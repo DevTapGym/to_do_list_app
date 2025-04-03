@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
@@ -119,13 +122,15 @@ class _TaskScreenState extends State<TaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     if (!_isSearching && _selectedDate == null) {
       _filteredTasks = List.from(widget.taskList);
     } else if (_selectedDate != null) {
       _filterByDate();
     }
     return Container(
-      decoration: BoxDecoration(color: Colors.black),
+      decoration: BoxDecoration(color: colors.bgColor),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -143,11 +148,11 @@ class _TaskScreenState extends State<TaskScreen> {
                         },
                         decoration: InputDecoration(
                           hintText: 'Search task...',
-                          hintStyle: TextStyle(color: Colors.white54),
+                          hintStyle: TextStyle(color: colors.subtitleColor),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
-                              color: Colors.white54,
+                              color: colors.subtitleColor,
                               width: 2,
                             ),
                           ),
@@ -159,7 +164,7 @@ class _TaskScreenState extends State<TaskScreen> {
                             ),
                           ),
                         ),
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: colors.textColor),
                       ),
                     )
                     : Column(
@@ -167,14 +172,17 @@ class _TaskScreenState extends State<TaskScreen> {
                       children: [
                         Text(
                           'Hi there,',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colors.textColor,
+                          ),
                         ),
                         SizedBox(height: 6),
                         Text(
                           'Your Task',
                           style: TextStyle(
                             fontSize: 26,
-                            color: Colors.white,
+                            color: colors.textColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -187,11 +195,15 @@ class _TaskScreenState extends State<TaskScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: colors.itemBgColor,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: Icon(Icons.search, color: Colors.white, size: 28),
+                        icon: Icon(
+                          Icons.search,
+                          color: colors.textColor,
+                          size: 28,
+                        ),
                         onPressed: () {
                           setState(() {
                             if (_isSearching) {
@@ -208,13 +220,13 @@ class _TaskScreenState extends State<TaskScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: colors.itemBgColor,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
                         icon: Icon(
                           Icons.calendar_today,
-                          color: Colors.white,
+                          color: colors.textColor,
                           size: 28,
                         ),
                         onPressed: () => _selectDate(context),
@@ -235,23 +247,27 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
             widget.taskList.isEmpty
                 ? EmptyState(onAddTask: _navigateToAddTaskScreen)
-                : Expanded(
-                  child: ListView.builder(
-                    itemCount: _filteredTasks.length,
-                    itemBuilder: (context, index) {
-                      return TodoCard(
-                        task: _filteredTasks[index],
-                        categories: widget.categories,
-                        onTap: () {
-                          setState(() {
-                            _filteredTasks[index].completed =
-                                !_filteredTasks[index].completed;
-                          });
-                        },
-                      );
-                    },
-                  ),
+                : Text(
+                  'You have ${widget.taskList.length} tasks to do',
+                  style: TextStyle(fontSize: 16, color: colors.textColor),
                 ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filteredTasks.length,
+                itemBuilder: (context, index) {
+                  return TodoCard(
+                    task: _filteredTasks[index],
+                    categories: widget.categories,
+                    onTap: () {
+                      setState(() {
+                        _filteredTasks[index].completed =
+                            !_filteredTasks[index].completed;
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -265,30 +281,37 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+    final colors = AppThemeConfig.getColors(context);
+
     return Container(
       margin: EdgeInsets.only(top: 24),
       child: Column(
         children: [
-          Icon(Icons.task, color: Colors.grey, size: 100),
+          Icon(Icons.task, color: colors.subtitleColor, size: 100),
           SizedBox(height: 8),
           Text(
             'No tasks yet',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: colors.textColor,
             ),
           ),
           SizedBox(height: 8),
           Text(
             'Add your first task to get started',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: colors.subtitleColor),
           ),
           SizedBox(height: 24),
           ElevatedButton(
             onPressed: onAddTask,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurpleAccent,
+              backgroundColor:
+                  isDark
+                      ? Colors.deepPurpleAccent
+                      : Colors.deepPurpleAccent.shade700,
               foregroundColor: Colors.white,
               padding: EdgeInsets.fromLTRB(40, 6, 40, 6),
             ),

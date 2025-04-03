@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/group.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 
 // Màn hình hiển thị danh sách nhóm
 class GroupsScreen extends StatefulWidget {
@@ -13,10 +14,34 @@ class GroupsScreen extends StatefulWidget {
 }
 
 class _GroupsScreenState extends State<GroupsScreen> {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  DateTime? selectedDate;
+
+  void _filterByDate() {}
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2018),
+      lastDate: DateTime(2040),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        selectedDate = pickedDate;
+      });
+      _filterByDate();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return Container(
-      decoration: BoxDecoration(color: Colors.black),
+      decoration: BoxDecoration(color: colors.bgColor),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -24,19 +49,54 @@ class _GroupsScreenState extends State<GroupsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Groups',
-                      style: TextStyle(
-                        fontSize: 26,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                _isSearching
+                    ? Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        onChanged: (query) {},
+                        decoration: InputDecoration(
+                          hintText: 'Search task...',
+                          hintStyle: TextStyle(color: colors.subtitleColor),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: colors.subtitleColor,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: Colors.deepPurpleAccent,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        style: TextStyle(color: colors.textColor),
                       ),
+                    )
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hi there,',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colors.textColor,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Your group',
+                          style: TextStyle(
+                            fontSize: 26,
+                            color: colors.textColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
                 Row(
                   children: [
                     Container(
@@ -44,30 +104,38 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white10,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.search, color: Colors.white, size: 28),
-                        onPressed: () {},
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Container(
-                      margin: EdgeInsets.only(left: 12),
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: colors.itemBgColor,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
                         icon: Icon(
-                          Icons.filter_list,
-                          color: Colors.white,
+                          Icons.search,
+                          color: colors.textColor,
                           size: 28,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          setState(() {
+                            if (_isSearching) {}
+                            _isSearching = !_isSearching;
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: colors.itemBgColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.calendar_today,
+                          color: colors.textColor,
+                          size: 28,
+                        ),
+                        onPressed: () => _selectDate(context),
                       ),
                     ),
                   ],

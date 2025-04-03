@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/screens/task/detail_task_screen.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class TodoCard extends StatelessWidget {
@@ -49,19 +50,21 @@ class TodoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 30, 30, 30),
+          color: colors.itemBgColor,
           borderRadius: BorderRadius.circular(14),
           border: Border(
             left: BorderSide(
               color:
                   task.completed
-                      ? Colors.green
+                      ? Colors.green.shade600
                       : _getPriorityColor(task.priority),
               width: 6,
             ),
@@ -76,7 +79,7 @@ class TodoCard extends StatelessWidget {
                   task.completed
                       ? Icons.check_circle
                       : Icons.radio_button_unchecked,
-                  color: task.completed ? Colors.green : Colors.white,
+                  color: task.completed ? Colors.green : colors.textColor,
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -85,7 +88,7 @@ class TodoCard extends StatelessWidget {
                     Text(
                       task.title,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -108,7 +111,7 @@ class TodoCard extends StatelessWidget {
                           child: Text(
                             task.category,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: colors.textColor,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
@@ -119,14 +122,14 @@ class TodoCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.access_time,
-                              color: Colors.white,
+                              color: colors.textColor,
                               size: 20,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${task.taskDate.day}/${task.taskDate.month}/${task.taskDate.year}',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: colors.textColor,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -139,14 +142,14 @@ class TodoCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.notifications,
-                                color: Colors.white,
+                                color: colors.textColor,
                                 size: 20,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${task.notificationTime!.hour}:${task.notificationTime!.minute}',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: colors.textColor,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -173,7 +176,7 @@ class TodoCard extends StatelessWidget {
                   ),
                 );
               },
-              child: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+              child: Icon(Icons.arrow_forward_ios, color: colors.textColor),
             ),
           ],
         ),

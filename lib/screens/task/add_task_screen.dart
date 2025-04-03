@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class AddTaskScreen extends StatefulWidget {
@@ -95,26 +96,28 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.black,
+          backgroundColor: colors.itemBgColor,
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(Icons.arrow_back, color: Colors.white, size: 34),
+            icon: Icon(Icons.arrow_back, color: colors.textColor, size: 34),
           ),
           title: Text(
             'Add task',
             style: TextStyle(
-              color: Colors.white,
+              color: colors.textColor,
               fontWeight: FontWeight.bold,
               fontSize: 24,
             ),
           ),
         ),
-        backgroundColor: Colors.black,
+        backgroundColor: colors.bgColor,
         body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -126,19 +129,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.textColor,
                   ),
                 ),
                 SizedBox(height: 8),
                 TextField(
                   controller: _titleController,
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: colors.textColor),
                   decoration: InputDecoration(
                     hintText: 'Enter task title',
                     hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
                     labelStyle: TextStyle(color: Colors.white),
                     filled: true,
-                    fillColor: Colors.black,
+                    fillColor: colors.itemBgColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: Colors.grey, width: 2),
@@ -162,7 +165,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.textColor,
                   ),
                 ),
                 SizedBox(height: 8),
@@ -190,9 +193,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       ),
                     ),
                     filled: true,
-                    fillColor: Colors.black,
+                    fillColor: colors.itemBgColor,
                   ),
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: colors.textColor),
                 ),
                 SizedBox(height: 18),
                 Text(
@@ -200,12 +203,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.textColor,
                   ),
                 ),
                 SizedBox(height: 8),
-                SizedBox(
+                Container(
                   width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: colors.itemBgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: OutlinedButton(
                     onPressed: () => _selectDate(context),
                     style: OutlinedButton.styleFrom(
@@ -220,7 +227,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       children: [
                         Icon(
                           Icons.calendar_today,
-                          color: Colors.deepPurpleAccent,
+                          color: colors.primaryColor,
                           size: 20,
                         ),
                         SizedBox(width: 8),
@@ -228,15 +235,22 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           _selectedDate == null
                               ? 'Select date'
                               : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colors.textColor,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
                 SizedBox(height: 18),
-                SizedBox(
+                Container(
                   width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: colors.itemBgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: OutlinedButton(
                     onPressed: () => _selectTime(context),
                     style: OutlinedButton.styleFrom(
@@ -251,7 +265,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       children: [
                         Icon(
                           Icons.access_time,
-                          color: Colors.deepPurpleAccent,
+                          color: colors.primaryColor,
                           size: 20,
                         ),
                         SizedBox(width: 8),
@@ -259,7 +273,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           _selectedTime == null
                               ? 'Select time for notification'
                               : '${_selectedTime!.hour}:${_selectedTime!.minute}',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colors.textColor,
+                          ),
                         ),
                       ],
                     ),
@@ -271,7 +288,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.textColor,
                   ),
                 ),
                 SizedBox(height: 8),
@@ -286,15 +303,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   onCategorySelected: handleselectedCategories,
                   onCategoryUpdated: (covariant) {},
                 ),
-                SizedBox(height: 18),
+                SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
                       onPressed: _createTask,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        foregroundColor: Colors.white,
+                        backgroundColor: colors.primaryColor,
+                        foregroundColor: colors.textColor,
                         padding: EdgeInsets.symmetric(
                           vertical: 12,
                           horizontal: 34,

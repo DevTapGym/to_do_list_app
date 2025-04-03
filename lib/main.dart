@@ -8,6 +8,7 @@ import 'package:to_do_list_app/screens/setting/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 import 'package:provider/provider.dart';
@@ -112,6 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
       Center(child: SettingScreen()),
     ];
 
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+    final colors = AppThemeConfig.getColors(context);
+
     return SafeArea(
       child: Scaffold(
         body: pages[_selectedIndex],
@@ -131,10 +136,13 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Setting',
             ),
           ],
-          backgroundColor: const Color.fromARGB(255, 30, 30, 30),
+          backgroundColor: colors.itemBgColor,
           currentIndex: _selectedIndex,
-          selectedItemColor: Colors.deepPurpleAccent,
-          unselectedItemColor: Colors.white,
+          selectedItemColor:
+              isDark
+                  ? Colors.deepPurpleAccent
+                  : Colors.deepPurpleAccent.shade700,
+          unselectedItemColor: colors.textColor,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
           onTap: _onItemTapped,
@@ -158,7 +166,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       _addTask(newTask);
                     }
                   },
-                  backgroundColor: Colors.deepPurpleAccent,
+                  backgroundColor:
+                      isDark
+                          ? Colors.deepPurpleAccent
+                          : Colors.deepPurpleAccent.shade700,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),
@@ -167,7 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 : _selectedIndex == 1
                 ? FloatingActionButton(
                   onPressed: () {},
-                  backgroundColor: Colors.deepPurpleAccent,
+                  backgroundColor:
+                      isDark
+                          ? Colors.deepPurpleAccent
+                          : Colors.deepPurpleAccent.shade700,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),

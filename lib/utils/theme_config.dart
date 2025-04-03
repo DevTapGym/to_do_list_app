@@ -15,20 +15,24 @@ abstract class AppColors {
   Color get textColor;
   Color get itemBgColor;
   Color get subtitleColor;
+  Color get primaryColor;
 }
 
 class LightColors implements AppColors {
   @override
-  Color get bgColor => Colors.white;
+  Color get bgColor => Colors.grey.shade300;
 
   @override
   Color get textColor => Colors.black;
 
   @override
-  Color get itemBgColor => Colors.grey.shade300;
+  Color get itemBgColor => Colors.white;
 
   @override
   Color get subtitleColor => Colors.grey[700]!;
+
+  @override
+  Color get primaryColor => Colors.deepPurpleAccent.shade700;
 }
 
 class DarkColors implements AppColors {
@@ -43,4 +47,7 @@ class DarkColors implements AppColors {
 
   @override
   Color get subtitleColor => Colors.grey[400]!;
+
+  @override
+  Color get primaryColor => Colors.deepPurpleAccent;
 }

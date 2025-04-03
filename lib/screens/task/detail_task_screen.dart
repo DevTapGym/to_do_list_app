@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class DetailTaskScreen extends StatefulWidget {
@@ -38,28 +39,30 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.black,
+          backgroundColor: colors.itemBgColor,
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(Icons.arrow_back, color: Colors.white, size: 34),
+            icon: Icon(Icons.arrow_back, color: colors.textColor, size: 34),
           ),
           title: Center(
             child: Text(
               'Detail Task',
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
               ),
             ),
           ),
         ),
-        backgroundColor: Colors.black,
+        backgroundColor: colors.bgColor,
         body: Padding(
           padding: EdgeInsets.all(12),
           child: SingleChildScrollView(
@@ -107,7 +110,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                 Text(
                   'Description',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -118,7 +121,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                   maxLines: 4,
                   keyboardType: TextInputType.multiline,
                   decoration: _inputDecoration('Enter task description'),
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: colors.textColor),
                 ),
                 SizedBox(height: 24),
 
@@ -128,7 +131,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                     _buildOutlinedButton(
                       icon: Icons.update,
                       label: 'Update',
-                      color: Colors.deepPurpleAccent,
+                      color: colors.primaryColor,
                       onPressed: () {},
                     ),
                     _buildOutlinedButton(
@@ -152,13 +155,15 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     TextEditingController controller, {
     bool isEdit = false,
   }) {
+    final colors = AppThemeConfig.getColors(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: colors.textColor,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -168,13 +173,15 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
           readOnly: isEdit,
           controller: controller,
           decoration: _inputDecoration('Enter $label'),
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: colors.textColor),
         ),
       ],
     );
   }
 
   Widget _buildDatePicker(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return TextFormField(
       controller: TextEditingController(
         text:
@@ -183,8 +190,23 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
       readOnly: true,
       decoration: InputDecoration(
         labelText: 'Task Date',
-        border: OutlineInputBorder(),
-        suffixIcon: Icon(Icons.calendar_today),
+        hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
+        labelStyle: TextStyle(color: colors.textColor, fontSize: 18),
+        filled: true,
+        fillColor: colors.itemBgColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey, width: 2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey, width: 2),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
+        ),
+        suffixIcon: Icon(Icons.calendar_today, color: colors.primaryColor),
       ),
       onTap: () async {
         DateTime? pickedDate = await showDatePicker(
@@ -204,6 +226,8 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   }
 
   Widget _buildTimePicker(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return TextFormField(
       controller: TextEditingController(
         text:
@@ -214,8 +238,23 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
       readOnly: true,
       decoration: InputDecoration(
         labelText: 'Notification Time',
-        border: OutlineInputBorder(),
-        suffixIcon: Icon(Icons.access_time),
+        hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
+        labelStyle: TextStyle(color: colors.textColor, fontSize: 18),
+        filled: true,
+        fillColor: colors.itemBgColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey, width: 2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey, width: 2),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
+        ),
+        suffixIcon: Icon(Icons.access_time, color: colors.primaryColor),
       ),
       onTap: () async {
         TimeOfDay? pickedTime = await showTimePicker(
@@ -238,13 +277,14 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     String? selectedValue,
     ValueChanged<String?> onChanged,
   ) {
+    final colors = AppThemeConfig.getColors(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: colors.textColor,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -253,12 +293,12 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         DropdownButtonFormField<String>(
           value: selectedValue,
           decoration: _inputDecoration('Select $label'),
-          dropdownColor: Colors.black,
+          dropdownColor: colors.bgColor,
           items:
               items.map((item) {
                 return DropdownMenuItem(
                   value: item,
-                  child: Text(item, style: TextStyle(color: Colors.white)),
+                  child: Text(item, style: TextStyle(color: colors.textColor)),
                 );
               }).toList(),
           onChanged: onChanged,
@@ -268,15 +308,25 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   }
 
   InputDecoration _inputDecoration(String hint) {
+    final colors = AppThemeConfig.getColors(context);
+
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
+      filled: true,
+      fillColor: colors.itemBgColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide(color: Colors.grey, width: 2),
       ),
-      filled: true,
-      fillColor: Colors.black,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.deepPurpleAccent, width: 2),
+      ),
     );
   }
 
