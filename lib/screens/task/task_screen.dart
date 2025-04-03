@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
@@ -24,149 +27,41 @@ class _TaskScreenState extends State<TaskScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   List<Task> _filteredTasks = [];
-  final List<String> _selectedCategories = [];
-  bool? _completedFilter;
-  String _sortOrder = 'newest';
+  DateTime? _selectedDate;
 
-  // void _applyFilters() {
-  //   setState(() {
-  //     _filteredTasks = widget.taskList.where((task) {
-  //       if (_selectedCategories.isNotEmpty &&
-  //           !_selectedCategories.contains(task.category)) {
-  //         return false;
-  //       }
-  //       if (_completedFilter != null && task.completed != _completedFilter) {
-  //         return false;
-  //       }
-  //       return true;
-  //     }).toList();
-
-  //     if (_sortOrder == 'newest') {
-  //       _filteredTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  //     } else {
-  //       _filteredTasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-  //     }
-  //   });
-  // }
-
-  void _showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-
-                children: [
-                  Text(
-                    'Filter jobs',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-
-                  // Chọn danh mục
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        ['Personal', 'Work', 'Health', 'Study']
-                            .map(
-                              (category) => ChoiceChip(
-                                label: Text(category),
-                                selected: _selectedCategories.contains(
-                                  category,
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedCategories.add(category);
-                                    } else {
-                                      _selectedCategories.remove(category);
-                                    }
-                                  });
-                                },
-                              ),
-                            )
-                            .toList(),
-                  ),
-
-                  SizedBox(height: 10),
-
-                  // Chọn trạng thái
-                  CheckboxListTile(
-                    title: Text('Completed Task'),
-                    value: _completedFilter == true,
-                    onChanged: (value) {
-                      setState(() {
-                        _completedFilter = value == true ? true : null;
-                      });
-                    },
-                  ),
-                  CheckboxListTile(
-                    title: Text('Incomplete Task'),
-                    value: _completedFilter == false,
-                    onChanged: (value) {
-                      setState(() {
-                        _completedFilter = value == true ? false : null;
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-
-                  // Chọn cách sắp xếp
-                  RadioListTile(
-                    title: Text('Sort by priority'),
-                    value: 'priority',
-                    groupValue: _sortOrder,
-                    onChanged: (value) {
-                      setState(() {
-                        _sortOrder = value.toString();
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: Text('Sort by notification time'),
-                    value: 'notification',
-                    groupValue: _sortOrder,
-                    onChanged: (value) {
-                      setState(() {
-                        _sortOrder = value.toString();
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        //_applyFilters();
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Apply',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  // Lọc theo ngày
+  void _filterByDate() {
+    setState(() {
+      if (_selectedDate == null) {
+        _filteredTasks = List.from(widget.taskList);
+      } else {
+        _filteredTasks =
+            widget.taskList.where((task) {
+              return task.taskDate.year == _selectedDate!.year &&
+                  task.taskDate.month == _selectedDate!.month &&
+                  task.taskDate.day == _selectedDate!.day;
+            }).toList();
+      }
+    });
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2018),
+      lastDate: DateTime(2040),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+      _filterByDate();
+    }
+  }
+
+  //Tìm theo từ khóa
   void _searchTask(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -210,13 +105,32 @@ class _TaskScreenState extends State<TaskScreen> {
     }
   }
 
+  Future<void> selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2018),
+      lastDate: DateTime(2040),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_isSearching) {
+    final colors = AppThemeConfig.getColors(context);
+
+    if (!_isSearching && _selectedDate == null) {
       _filteredTasks = List.from(widget.taskList);
+    } else if (_selectedDate != null) {
+      _filterByDate();
     }
     return Container(
-      decoration: BoxDecoration(color: Colors.black),
+      decoration: BoxDecoration(color: colors.bgColor),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -234,11 +148,11 @@ class _TaskScreenState extends State<TaskScreen> {
                         },
                         decoration: InputDecoration(
                           hintText: 'Search task...',
-                          hintStyle: TextStyle(color: Colors.white54),
+                          hintStyle: TextStyle(color: colors.subtitleColor),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
-                              color: Colors.white54,
+                              color: colors.subtitleColor,
                               width: 2,
                             ),
                           ),
@@ -250,7 +164,7 @@ class _TaskScreenState extends State<TaskScreen> {
                             ),
                           ),
                         ),
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: colors.textColor),
                       ),
                     )
                     : Column(
@@ -258,14 +172,17 @@ class _TaskScreenState extends State<TaskScreen> {
                       children: [
                         Text(
                           'Hi there,',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colors.textColor,
+                          ),
                         ),
                         SizedBox(height: 6),
                         Text(
                           'Your Task',
                           style: TextStyle(
                             fontSize: 26,
-                            color: Colors.white,
+                            color: colors.textColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -278,11 +195,15 @@ class _TaskScreenState extends State<TaskScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: colors.itemBgColor,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: Icon(Icons.search, color: Colors.white, size: 28),
+                        icon: Icon(
+                          Icons.search,
+                          color: colors.textColor,
+                          size: 28,
+                        ),
                         onPressed: () {
                           setState(() {
                             if (_isSearching) {
@@ -299,16 +220,16 @@ class _TaskScreenState extends State<TaskScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: colors.itemBgColor,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
                         icon: Icon(
-                          Icons.filter_list,
-                          color: Colors.white,
+                          Icons.calendar_today,
+                          color: colors.textColor,
                           size: 28,
                         ),
-                        onPressed: _showFilterBottomSheet,
+                        onPressed: () => _selectDate(context),
                       ),
                     ),
                   ],
@@ -326,22 +247,27 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
             widget.taskList.isEmpty
                 ? EmptyState(onAddTask: _navigateToAddTaskScreen)
-                : Expanded(
-                  child: ListView.builder(
-                    itemCount: _filteredTasks.length,
-                    itemBuilder: (context, index) {
-                      return TodoCard(
-                        task: _filteredTasks[index],
-                        onTap: () {
-                          setState(() {
-                            _filteredTasks[index].completed =
-                                !_filteredTasks[index].completed;
-                          });
-                        },
-                      );
-                    },
-                  ),
+                : Text(
+                  'You have ${widget.taskList.length} tasks to do',
+                  style: TextStyle(fontSize: 16, color: colors.textColor),
                 ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _filteredTasks.length,
+                itemBuilder: (context, index) {
+                  return TodoCard(
+                    task: _filteredTasks[index],
+                    categories: widget.categories,
+                    onTap: () {
+                      setState(() {
+                        _filteredTasks[index].completed =
+                            !_filteredTasks[index].completed;
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -355,30 +281,37 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+    final colors = AppThemeConfig.getColors(context);
+
     return Container(
       margin: EdgeInsets.only(top: 24),
       child: Column(
         children: [
-          Icon(Icons.task, color: Colors.grey, size: 100),
+          Icon(Icons.task, color: colors.subtitleColor, size: 100),
           SizedBox(height: 8),
           Text(
             'No tasks yet',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: colors.textColor,
             ),
           ),
           SizedBox(height: 8),
           Text(
             'Add your first task to get started',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: colors.subtitleColor),
           ),
           SizedBox(height: 24),
           ElevatedButton(
             onPressed: onAddTask,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurpleAccent,
+              backgroundColor:
+                  isDark
+                      ? Colors.deepPurpleAccent
+                      : Colors.deepPurpleAccent.shade700,
               foregroundColor: Colors.white,
               padding: EdgeInsets.fromLTRB(40, 6, 40, 6),
             ),

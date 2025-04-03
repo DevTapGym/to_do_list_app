@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -159,8 +159,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
 
-  const OtpVerificationScreen({Key? key, required this.email})
-    : super(key: key);
+  const OtpVerificationScreen({super.key, required this.email});
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -364,7 +363,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
 
-  const ResetPasswordScreen({Key? key, required this.email}) : super(key: key);
+  const ResetPasswordScreen({super.key, required this.email});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
