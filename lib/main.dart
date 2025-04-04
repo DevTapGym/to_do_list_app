@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:to_do_list_app/models/group.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_list_app/bloc/auth_bloc.dart';
+import 'package:to_do_list_app/screens/auth/auth_screen.dart';
+import 'package:to_do_list_app/screens/celendar_screen.dart';
+import 'package:to_do_list_app/screens/setting_screen.dart';
+import 'package:to_do_list_app/screens/stats_screen.dart';
+import 'package:to_do_list_app/screens/task_screen.dart';
+import 'package:to_do_list_app/services/api_service.dart';
 
-import 'package:to_do_list_app/models/task.dart';
-//import 'package:to_do_list_app/screens/auth/auth_screen.dart';
-import 'package:to_do_list_app/screens/group/group_screen.dart';
-import 'package:to_do_list_app/screens/setting/setting_screen.dart';
-import 'package:to_do_list_app/screens/stats/stats_screen.dart';
-import 'package:to_do_list_app/screens/task/add_task_screen.dart';
-import 'package:to_do_list_app/screens/task/task_screen.dart';
-import 'package:to_do_list_app/utils/theme_config.dart';
-import 'package:to_do_list_app/widgets/icon_button_wg.dart';
-
-import 'package:provider/provider.dart';
-import 'package:to_do_list_app/providers/theme_provider.dart';
-
-void main() async {
-  // runApp(const AuthScreen());
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  final ApiService apiService = ApiService();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
-      child: const MyApp(),
+    BlocProvider(
+      create: (context) => AuthBloc(apiService: apiService),
+      child: AuthScreen(),
     ),
   );
 }
