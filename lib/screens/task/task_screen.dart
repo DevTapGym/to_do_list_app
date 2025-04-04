@@ -6,6 +6,7 @@ import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
+import 'package:intl/intl.dart';
 
 class TaskScreen extends StatefulWidget {
   final List<Task> taskList;
@@ -27,21 +28,17 @@ class _TaskScreenState extends State<TaskScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   List<Task> _filteredTasks = [];
-  DateTime? _selectedDate;
+  DateTime _selectedDate = DateTime.now();
 
   // Lọc theo ngày
   void _filterByDate() {
     setState(() {
-      if (_selectedDate == null) {
-        _filteredTasks = List.from(widget.taskList);
-      } else {
-        _filteredTasks =
-            widget.taskList.where((task) {
-              return task.taskDate.year == _selectedDate!.year &&
-                  task.taskDate.month == _selectedDate!.month &&
-                  task.taskDate.day == _selectedDate!.day;
-            }).toList();
-      }
+      _filteredTasks =
+          widget.taskList.where((task) {
+            return task.taskDate.year == _selectedDate.year &&
+                task.taskDate.month == _selectedDate.month &&
+                task.taskDate.day == _selectedDate.day;
+          }).toList();
     });
   }
 
@@ -124,10 +121,8 @@ class _TaskScreenState extends State<TaskScreen> {
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
 
-    if (!_isSearching && _selectedDate == null) {
+    if (!_isSearching) {
       _filteredTasks = List.from(widget.taskList);
-    } else if (_selectedDate != null) {
-      _filterByDate();
     }
     return Container(
       decoration: BoxDecoration(color: colors.bgColor),
@@ -245,29 +240,47 @@ class _TaskScreenState extends State<TaskScreen> {
                 onCategorySelected: (category) {},
               ),
             ),
-            widget.taskList.isEmpty
-                ? EmptyState(onAddTask: _navigateToAddTaskScreen)
-                : Text(
-                  'You have ${widget.taskList.length} tasks to do',
-                  style: TextStyle(fontSize: 16, color: colors.textColor),
+            DatePickerWidget(
+              onDateSelected: (date) {
+                setState(() {
+                  _selectedDate = date;
+                });
+                _filterByDate();
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${widget.taskList.length} Tasks For ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: colors.textColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _filteredTasks.length,
-                itemBuilder: (context, index) {
-                  return TodoCard(
-                    task: _filteredTasks[index],
-                    categories: widget.categories,
-                    onTap: () {
-                      setState(() {
-                        _filteredTasks[index].completed =
-                            !_filteredTasks[index].completed;
-                      });
-                    },
-                  );
-                },
               ),
             ),
+            widget.taskList.isEmpty
+                ? EmptyState(onAddTask: _navigateToAddTaskScreen)
+                : Expanded(
+                  child: ListView.builder(
+                    itemCount: _filteredTasks.length,
+                    itemBuilder: (context, index) {
+                      return TodoCard(
+                        task: _filteredTasks[index],
+                        categories: widget.categories,
+                        onTap: () {
+                          setState(() {
+                            _filteredTasks[index].completed =
+                                !_filteredTasks[index].completed;
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
           ],
         ),
       ),
@@ -322,6 +335,87 @@ class EmptyState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class DatePickerWidget extends StatefulWidget {
+  final Function(DateTime) onDateSelected;
+
+  const DatePickerWidget({super.key, required this.onDateSelected});
+
+  @override
+  _DatePickerWidgetState createState() => _DatePickerWidgetState();
+}
+
+class _DatePickerWidgetState extends State<DatePickerWidget> {
+  DateTime selectedDate = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
+    List<DateTime> dates = List.generate(
+      4,
+      (index) => DateTime.now().add(Duration(days: index)),
+    );
+
+    final colors = AppThemeConfig.getColors(context);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children:
+          dates.map((date) {
+            bool isSelected =
+                selectedDate.day == date.day &&
+                selectedDate.month == date.month &&
+                selectedDate.year == date.year;
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedDate = date;
+                });
+                widget.onDateSelected(date);
+              },
+              child: Container(
+                width: 80,
+                height: 100,
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                margin: EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: isSelected ? colors.primaryColor : colors.itemBgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      DateFormat('EEE').format(date),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      date.day.toString(),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('MMM').format(date),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
     );
   }
 }
