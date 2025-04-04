@@ -31,9 +31,3 @@ class AuthScreen extends StatelessWidget {
     );
   }
 }
-
-// Trang Login
-
-
-// Trang Register
-

@@ -23,7 +23,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomeScreen(), debugShowCheckedModeBanner: false);
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'To do list app',
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode:
+              themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const HomeScreen(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
+    );
   }
 }
 
@@ -37,13 +49,41 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  List<Task> tasks = [];
+  // fake data
+  final List<Group> groups = List.generate(3, (groupIndex) {
+    return Group(
+      name: 'Group ${groupIndex + 1}',
+      id: 'G${groupIndex + 1}',
+      items: List.generate(3, (taskIndex) {
+        return Task(
+          title: 'Task ${taskIndex + 1} of Group ${groupIndex + 1}',
+          description: 'Description for Task ${taskIndex + 1}',
+          taskDate: DateTime.now().add(Duration(days: taskIndex)),
+          category: 'Work',
+          priority: 'High',
+          completed: false,
+          notificationTime: TimeOfDay(hour: 8, minute: 30),
+          repeatDays: [1, 3, 5],
+        );
+      }),
+    );
+  });
 
-  static const List<Widget> _pages = <Widget>[
-    Center(child: TaskScreen()),
-    Center(child: CelendarScreen()),
-    Center(child: StatsScreen()),
-    Center(child: SettingScreen()),
+  final List<CategoryChip> categories = [
+    CategoryChip(label: 'Personal', color: Colors.red, isSelected: false),
+    CategoryChip(label: 'Work', color: Colors.purple, isSelected: false),
+    CategoryChip(label: 'Health', color: Colors.green, isSelected: false),
+    CategoryChip(label: 'Study', color: Colors.blue, isSelected: false),
+    CategoryChip(label: 'Finance', color: Colors.orange, isSelected: false),
+    CategoryChip(label: 'Shopping', color: Colors.pink, isSelected: false),
   ];
+
+  void _addTask(Task task) {
+    setState(() {
+      tasks.add(task);
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -53,19 +93,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = <Widget>[
+      Center(
+        child: TaskScreen(
+          taskList: tasks,
+          categories: categories,
+          onTaskAdded: _addTask,
+        ),
+      ),
+      Center(child: GroupsScreen(groups: groups)),
+      Center(child: StatsScreen()),
+      Center(child: SettingScreen()),
+    ];
+
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+    final colors = AppThemeConfig.getColors(context);
+
     return SafeArea(
       child: Scaffold(
-        body: _pages[_selectedIndex],
+        body: pages[_selectedIndex],
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.check_box),
               label: 'Tasks',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Celendar',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Group'),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
               label: 'Stats',
@@ -75,10 +129,13 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Setting',
             ),
           ],
-          backgroundColor: const Color.fromARGB(255, 30, 30, 30),
+          backgroundColor: colors.itemBgColor,
           currentIndex: _selectedIndex,
-          selectedItemColor: Colors.deepPurpleAccent,
-          unselectedItemColor: Colors.white,
+          selectedItemColor:
+              isDark
+                  ? Colors.deepPurpleAccent
+                  : Colors.deepPurpleAccent.shade700,
+          unselectedItemColor: colors.textColor,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
           onTap: _onItemTapped,
@@ -86,19 +143,46 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton:
             _selectedIndex == 0
                 ? FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final newTask = await Navigator.push<Task>(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AddTaskScreen(),
+                        builder:
+                            (context) => AddTaskScreen(
+                              onTaskAdded: _addTask,
+                              categories: categories,
+                            ),
                       ),
                     );
+
+                    if (newTask != null) {
+                      _addTask(newTask);
+                    }
                   },
-                  backgroundColor: Colors.deepPurpleAccent,
+                  backgroundColor:
+                      isDark
+                          ? Colors.deepPurpleAccent
+                          : Colors.deepPurpleAccent.shade700,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),
                   child: const Icon(Icons.add, color: Colors.white, size: 32),
+                )
+                : _selectedIndex == 1
+                ? FloatingActionButton(
+                  onPressed: () {},
+                  backgroundColor:
+                      isDark
+                          ? Colors.deepPurpleAccent
+                          : Colors.deepPurpleAccent.shade700,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: const Icon(
+                    Icons.group_add,
+                    color: Colors.white,
+                    size: 32,
+                  ),
                 )
                 : null,
       ),
