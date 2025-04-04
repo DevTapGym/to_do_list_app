@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_list_app/bloc/auth_bloc.dart';
 import 'package:to_do_list_app/screens/auth/auth_screen.dart';
 import 'package:to_do_list_app/screens/celendar_screen.dart';
 import 'package:to_do_list_app/screens/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats_screen.dart';
 import 'package:to_do_list_app/screens/task_screen.dart';
+import 'package:to_do_list_app/services/api_service.dart';
 
 void main() {
-  runApp(const AuthScreen());
+  final ApiService apiService = ApiService();
+  runApp(
+    BlocProvider(
+      create: (context) => AuthBloc(apiService: apiService),
+      child: AuthScreen(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
