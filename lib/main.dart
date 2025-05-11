@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:to_do_list_app/bloc/auth_bloc.dart';
 import 'package:to_do_list_app/models/group.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/screens/auth/login_page.dart';
+import 'package:to_do_list_app/screens/auth/register_page.dart';
 import 'package:to_do_list_app/screens/group/group_screen.dart';
 import 'package:to_do_list_app/screens/setting/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
+import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
+import 'package:to_do_list_app/screens/auth/otp_verification_screen.dart';
+import 'package:to_do_list_app/screens/auth/forgot_passowrd_screen.dart';
 
 void main() {
-  //final ApiService apiService = ApiService();
+  final AuthService authService = AuthService();
+
   runApp(
-    // BlocProvider(
-    //   create: (context) => AuthBloc(apiService: apiService),
-    //   child: AuthScreen(),
-    // ),
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        BlocProvider(create: (_) => AuthBloc(authService: authService)),
+      ],
       child: MyApp(),
     ),
   );
@@ -40,6 +47,27 @@ class MyApp extends StatelessWidget {
               themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
           home: const HomeScreen(),
           debugShowCheckedModeBanner: false,
+          initialRoute: '/login',
+
+          routes: {
+            '/login': (context) => const LoginPage(),
+            '/register': (context) => const RegisterPage(),
+            '/forgot-password': (context) => ForgotPasswordScreen(),
+            //'/reset-password': (context) => ResetPasswordScreen(),
+            '/home': (context) => const HomeScreen(),
+          },
+
+          onGenerateRoute: (settings) {
+            if (settings.name == '/otp-verification') {
+              final args = settings.arguments as Map<String, String>;
+              return MaterialPageRoute(
+                builder:
+                    (context) =>
+                        OtpVerificationScreen(email: args["email"] ?? ""),
+              );
+            }
+            return null;
+          },
         );
       },
     );

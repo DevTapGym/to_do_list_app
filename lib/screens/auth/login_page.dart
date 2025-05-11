@@ -22,11 +22,23 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.pushReplacementNamed(context, "/otp-verification");
+            String email = _emailController.text.trim();
+            if (state.isActive) {
+              Navigator.pushReplacementNamed(context, '/home');
+            } else {
+              Navigator.pushNamed(
+                context,
+                '/otp-verification',
+                arguments: {"email": email},
+              );
+            }
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
+
         builder: (context, state) {
           return Center(
             child: SingleChildScrollView(
@@ -57,8 +69,10 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(Icons.email, color: Colors
-                            .white70),
+                        prefixIcon: const Icon(
+                          Icons.email,
+                          color: Colors.white70,
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -85,8 +99,10 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(Icons.lock, color: Colors
-                            .white70),
+                        prefixIcon: const Icon(
+                          Icons.lock,
+                          color: Colors.white70,
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -102,10 +118,12 @@ class _LoginPageState extends State<LoginPage> {
                     ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          context.read<AuthBloc>().add(LoginEvent(
-                            email: _emailController.text,
-                            password: _passwordController.text,
-                          ));
+                          context.read<AuthBloc>().add(
+                            LoginEvent(
+                              email: _emailController.text,
+                              password: _passwordController.text,
+                            ),
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -118,8 +136,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: const Text(
                         'Login',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight
-                            .bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),

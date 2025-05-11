@@ -35,8 +35,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           context,
           MaterialPageRoute(
             builder:
-                (context) =>
-                    OtpVerificationScreen(email: _emailController.text),
+                (context) => OtpVerificationPage(email: _emailController.text),
           ),
         );
       });
@@ -128,22 +127,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 style: TextStyle(fontSize: 16),
                               ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Liên kết quay lại đăng nhập
-                    TextButton(
-                      onPressed: () {
-                        // Quay lại màn hình đăng nhập
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Quay lại đăng nhập',
-                        style: TextStyle(
-                          color: Colors.purpleAccent,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -156,16 +139,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 }
 
 // Màn hình 2: Nhập OTP
-class OtpVerificationScreen extends StatefulWidget {
+class OtpVerificationPage extends StatefulWidget {
   final String email;
 
-  const OtpVerificationScreen({super.key, required this.email});
+  const OtpVerificationPage({super.key, required this.email});
 
   @override
-  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+  State<OtpVerificationPage> createState() => _OtpVerificationPageState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+class _OtpVerificationPageState extends State<OtpVerificationPage> {
   final _formKey = GlobalKey<FormState>();
   final _otpController = TextEditingController();
   bool _isLoading = false;
@@ -458,7 +441,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Mật khẩu mới',
-                        hintText: '••••••••',
                         prefixIcon: Icon(Icons.lock, color: Colors.grey),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -493,7 +475,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
                         labelText: 'Xác nhận mật khẩu',
-                        hintText: '••••••••',
                         prefixIcon: Icon(
                           Icons.lock_outline,
                           color: Colors.grey,
