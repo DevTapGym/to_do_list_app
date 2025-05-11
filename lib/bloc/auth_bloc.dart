@@ -20,7 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
       );
-    } else if (response.isActive) {
+    } else if (!response.isActive) {
       // Tài khoản đúng nhưng chưa active
       emit(AuthAuthenticated(authResponse: null, isActive: false));
     } else {

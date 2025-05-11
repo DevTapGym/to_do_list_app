@@ -5,8 +5,8 @@ import 'package:to_do_list_app/bloc/auth_bloc.dart';
 import 'package:to_do_list_app/models/group.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
-import 'package:to_do_list_app/screens/auth/login_page.dart';
-import 'package:to_do_list_app/screens/auth/register_page.dart';
+import 'package:to_do_list_app/screens/auth/login_screen.dart';
+import 'package:to_do_list_app/screens/auth/register_screen.dart';
 import 'package:to_do_list_app/screens/group/group_screen.dart';
 import 'package:to_do_list_app/screens/setting/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
 
           routes: {
             '/login': (context) => const LoginPage(),
-            '/register': (context) => const RegisterPage(),
+            '/register': (context) => const RegisterScreen(),
             '/forgot-password': (context) => ForgotPasswordScreen(),
             //'/reset-password': (context) => ResetPasswordScreen(),
             '/home': (context) => const HomeScreen(),

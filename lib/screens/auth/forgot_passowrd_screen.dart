@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -10,6 +13,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
   @override
@@ -18,27 +22,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _requestOtp() {
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _requestOtp() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // Mô phỏng gửi yêu cầu OTP
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
+      final email = _emailController.text.trim();
+      final success = await _authService.sendCode(email);
 
-        // Chuyển sang màn hình nhập OTP
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (success) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) => OtpVerificationPage(email: _emailController.text),
+            builder: (context) => OtpVerificationPage(email: email),
           ),
         );
-      });
+      } else {
+        _showMessage("Gửi mã thất bại. Vui lòng kiểm tra lại email.");
+      }
     }
   }
 
@@ -48,7 +60,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('Quên mật khẩu'),
+        title: const Text('Quên mật khẩu'),
       ),
       body: SafeArea(
         child: Center(
@@ -61,14 +73,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Icon và tiêu đề
-                    Icon(
+                    const Icon(
                       Icons.lock_reset,
                       size: 80,
                       color: Colors.purpleAccent,
                     ),
                     const SizedBox(height: 30),
-                    Text(
+                    const Text(
                       'Đặt lại mật khẩu',
                       style: TextStyle(
                         fontSize: 28,
@@ -85,16 +96,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Trường nhập email
+                    // Email field
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Email',
-                        hintText: 'example@mail.com',
+
                         prefixIcon: Icon(Icons.email, color: Colors.grey),
                       ),
-                      style: TextStyle(fontSize: 16),
+                      style: const TextStyle(fontSize: 16),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Vui lòng nhập email của bạn';
@@ -109,12 +120,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Nút gửi OTP
+                    // Send OTP button
                     ElevatedButton(
                       onPressed: _isLoading ? null : _requestOtp,
                       child:
                           _isLoading
-                              ? SizedBox(
+                              ? const SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
@@ -122,7 +133,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   strokeWidth: 3,
                                 ),
                               )
-                              : Text(
+                              : const Text(
                                 'Gửi mã OTP',
                                 style: TextStyle(fontSize: 16),
                               ),
@@ -151,77 +162,86 @@ class OtpVerificationPage extends StatefulWidget {
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
   final _formKey = GlobalKey<FormState>();
   final _otpController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  Timer? _timer;
+  int _secondsRemaining = 90;
+  bool _isResendAvailable = false;
   bool _isLoading = false;
-  int _remainingTime = 60; // Thời gian đếm ngược (60 giây)
-  bool _canResend = false;
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
+    _startCountdown();
   }
 
-  void _startTimer() {
-    Future.delayed(const Duration(seconds: 1), () {
-      if (_remainingTime > 0) {
+  void _startCountdown() {
+    setState(() {
+      _secondsRemaining = 90;
+      _isResendAvailable = false;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining == 0) {
+        timer.cancel();
         setState(() {
-          _remainingTime--;
+          _isResendAvailable = true;
         });
-        _startTimer();
       } else {
         setState(() {
-          _canResend = true;
+          _secondsRemaining--;
         });
       }
     });
   }
 
-  void _resendOtp() {
-    if (_canResend) {
-      setState(() {
-        _remainingTime = 60;
-        _canResend = false;
-      });
-
-      // Mô phỏng gửi lại mã OTP
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã gửi lại mã OTP đến ${widget.email}'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      _startTimer();
-    }
-  }
-
-  void _verifyOtp() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // Mô phỏng xác minh OTP
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Chuyển sang màn hình đặt lại mật khẩu
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResetPasswordScreen(email: widget.email),
-          ),
-        );
-      });
-    }
-  }
-
   @override
   void dispose() {
+    _timer?.cancel();
     _otpController.dispose();
     super.dispose();
+  }
+
+  Future<void> _verifyCode() async {
+    final code = _otpController.text.trim();
+    if (code.length != 6 || int.tryParse(code) == null) {
+      _showMessage("Vui lòng nhập mã OTP hợp lệ.");
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await _authService.checkCode(widget.email, code);
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResetPasswordScreen(email: widget.email),
+        ),
+      );
+    } else {
+      _showMessage("Mã xác thực không đúng.");
+    }
+  }
+
+  Future<void> _sendCode() async {
+    final success = await _authService.sendCode(widget.email);
+    if (!success) {
+      _showMessage("Gửi mã thất bại. Vui lòng thử lại sau.");
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -274,8 +294,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
                         labelText: 'Mã OTP',
-                        hintText: '123456',
-                        counterText: '',
                         prefixIcon: Icon(Icons.pin, color: Colors.grey),
                       ),
                       style: TextStyle(fontSize: 18, letterSpacing: 8),
@@ -290,43 +308,30 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       },
                     ),
                     const SizedBox(height: 10),
-
-                    // Hiển thị thời gian còn lại hoặc nút gửi lại
-                    _canResend
-                        ? TextButton(
-                          onPressed: _resendOtp,
-                          child: Text(
-                            'Gửi lại mã OTP',
-                            style: TextStyle(
-                              color: Colors.purpleAccent,
-                              fontSize: 16,
-                            ),
-                          ),
-                        )
-                        : Text(
-                          'Gửi lại mã sau $_remainingTime giây',
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                    Text(
+                      _isResendAvailable
+                          ? 'Bạn có thể gửi lại mã.'
+                          : 'Gửi lại mã sau $_secondsRemaining giây',
+                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (_isResendAvailable)
+                      TextButton(
+                        onPressed: () {
+                          _sendCode();
+                          _startCountdown();
+                        },
+                        child: const Text("Gửi lại mã"),
+                      ),
                     const SizedBox(height: 30),
-
-                    // Nút xác minh
                     ElevatedButton(
-                      onPressed: _isLoading ? null : _verifyOtp,
+                      onPressed: _isLoading ? null : _verifyCode,
                       child:
                           _isLoading
-                              ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
                               )
-                              : Text(
+                              : const Text(
                                 'Xác minh',
                                 style: TextStyle(fontSize: 16),
                               ),

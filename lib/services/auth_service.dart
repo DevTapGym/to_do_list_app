@@ -34,7 +34,7 @@ class AuthService {
       }
 
       if (status == 400 && error == "User is not active") {
-        return LoginResult(isActive: true);
+        return LoginResult(isActive: false);
       }
 
       if (status == 500 && error == "Bad credentials") {
@@ -44,6 +44,40 @@ class AuthService {
       return LoginResult(error: message ?? "Đã xảy ra lỗi không xác định.");
     } catch (e) {
       return LoginResult(error: "Lỗi khi gọi API: $e");
+    }
+  }
+
+  Future<String> register(
+    String name,
+    String email,
+    String password,
+    String phone,
+  ) async {
+    try {
+      final response = await dio.post(
+        "/api/v1/auth/register",
+        data: {
+          "name": name,
+          "email": email,
+          "password": password,
+          "phone": phone,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data["status"] == 200) {
+        return "success";
+      } else if (response.data["status"] == 400 &&
+          response.data["error"] == "Email already exists") {
+        return "Email đã tồn tại";
+      } else if (response.data["status"] == 400 &&
+          response.data["error"] == "Passwords not strong") {
+        return "Mật khẩu không đủ mạnh";
+      } else {
+        return response.data["message"] ?? "Đã xảy ra lỗi không xác định.";
+      }
+    } catch (e) {
+      print("Lỗi khi đăng ký: $e");
+      return "Lỗi máy chủ hoặc mất kết nối";
     }
   }
 
