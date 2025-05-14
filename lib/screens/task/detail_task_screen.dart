@@ -31,7 +31,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     descriptionController = TextEditingController(
       text: widget.task.description,
     );
-    categoryController = TextEditingController(text: widget.task.category);
+    categoryController = TextEditingController(text: widget.task.categoryName);
     taskDate = widget.task.taskDate;
     notificationTime = widget.task.notificationTime;
     selectedPriority = widget.task.priority;

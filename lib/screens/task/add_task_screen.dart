@@ -79,11 +79,13 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       return;
     }
 
+    // Tạm thời sử dụng categoryId là 1
     Task newTask = Task(
       title: _titleController.text,
       description: _descriptionController.text,
       taskDate: _selectedDate!,
-      category:
+      categoryId: 1,
+      categoryName:
           selectedCategories.isNotEmpty ? selectedCategories[0] : 'Personal',
       priority: selectedPriority,
       repeatDays: selectedDays,

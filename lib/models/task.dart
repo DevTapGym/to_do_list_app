@@ -4,9 +4,11 @@ class Task {
   String title;
   String? description;
   DateTime taskDate;
-  String category;
+  int categoryId;
+  String? categoryName;
   String priority;
   bool completed;
+  DateTime? createdAt;
   TimeOfDay? notificationTime;
   List<int>? repeatDays = []; // 0 = thứ 2, 1 = thứ 3, ..., 6 = chủ nhật
 
@@ -15,39 +17,39 @@ class Task {
     required this.title,
     required this.description,
     required this.taskDate,
-    required this.category,
     required this.priority,
+    required this.categoryId,
+    this.categoryName,
+    this.createdAt,
     this.completed = false,
     this.notificationTime,
     this.repeatDays,
   });
 
   // Convert Task to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'description': description,
-      'dueDate': taskDate.toIso8601String(),
-      'category': category,
-      'priority': priority,
-      'completed': completed,
-    };
-  }
-
-  // Create Task from JSON
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
       title: json['title'],
       description: json['description'],
       taskDate: DateTime.parse(json['dueDate']),
-      category: json['category'],
+      categoryId: json['categoryId'],
       priority: json['priority'],
       completed: json['completed'],
+      createdAt:
+          json['created'] != null
+              ? DateTime.tryParse(json['created']['createdAt'])
+              : null,
     );
   }
 
-  @override
-  String toString() {
-    return 'Task(title: $title, description: $description, dueDate: $taskDate, category: $category, priority: $priority, completed: $completed)';
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'dueDate': taskDate.toIso8601String(),
+      'categoryId': categoryId,
+      'priority': priority,
+      'completed': completed,
+    };
   }
 }

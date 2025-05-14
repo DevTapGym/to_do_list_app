@@ -105,11 +105,11 @@ class TodoCard extends StatelessWidget {
                             color:
                                 task.completed
                                     ? Colors.green
-                                    : _getCategoryColor(task.category),
+                                    : _getCategoryColor(task.categoryName!),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            task.category,
+                            task.categoryName!,
                             style: TextStyle(
                               color: colors.textColor,
                               fontSize: 14,

@@ -1,26 +1,30 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:to_do_list_app/models/auth_response.dart';
-import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final ApiService apiService;
+  final AuthService authService;
 
-  AuthBloc({required this.apiService}) : super(AuthInitial()) {
+  AuthBloc({required this.authService}) : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
   }
 
   void _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-    AuthResponse? authResponse = await apiService.login(event.email, event.password);
+    LoginResult response = await authService.login(event.email, event.password);
 
-    if (authResponse != null) {
-      emit(AuthAuthenticated(authResponse: authResponse));
+    if (response.authResponse != null) {
+      emit(
+        AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
+      );
+    } else if (!response.isActive) {
+      // Tài khoản đúng nhưng chưa active
+      emit(AuthAuthenticated(authResponse: null, isActive: false));
     } else {
-      emit(AuthError(message: "Đăng nhập thất bại"));
+      emit(AuthError(message: response.error ?? "Đăng nhập thất bại"));
     }
   }
 

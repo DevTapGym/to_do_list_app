@@ -5,25 +5,14 @@ import 'package:to_do_list_app/screens/setting/account_settings_screen.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/task_setting_item.dart';
 
-class SettingScreen extends StatelessWidget {
+class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MySetting();
-  }
+  State<SettingScreen> createState() => _SettingScreenState();
 }
 
-class MySetting extends StatefulWidget {
-  const MySetting({super.key});
-
-  @override
-  State<StatefulWidget> createState() {
-    return _StateMySetting();
-  }
-}
-
-class _StateMySetting extends State<MySetting> {
+class _SettingScreenState extends State<SettingScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
@@ -165,6 +154,22 @@ class _StateMySetting extends State<MySetting> {
                         backgroundColor: colors.itemBgColor,
                         onTap: () {},
                       ),
+                      // const SizedBox(height: 10),
+                      // ElevatedButton.icon(
+                      //   onPressed: () {
+                      //     Navigator.pushNamed(context, '/login');
+                      //   },
+                      //   icon: const Icon(Icons.logout, color: Colors.black),
+                      //   label: const Text('Logout'),
+                      //   style: ElevatedButton.styleFrom(
+                      //     backgroundColor: Colors.white,
+                      //     foregroundColor: Colors.black,
+                      //     minimumSize: const Size(double.infinity, 50),
+                      //     shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(12),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),

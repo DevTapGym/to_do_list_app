@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
@@ -7,18 +9,14 @@ import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
 import 'package:intl/intl.dart';
+import 'package:to_do_list_app/services/category_service.dart';
+import 'package:to_do_list_app/services/task_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TaskScreen extends StatefulWidget {
-  final List<Task> taskList;
   final Function(Task) onTaskAdded;
-  final List<CategoryChip> categories;
 
-  const TaskScreen({
-    super.key,
-    required this.taskList,
-    required this.categories,
-    required this.onTaskAdded,
-  });
+  const TaskScreen({super.key, required this.onTaskAdded});
 
   @override
   State<TaskScreen> createState() => _TaskScreenState();
@@ -29,12 +27,75 @@ class _TaskScreenState extends State<TaskScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Task> _filteredTasks = [];
   DateTime _selectedDate = DateTime.now();
+  List<Task> taskList = [];
+  List<CategoryChip> categories = [];
+
+  // Khởi tạo services
+  final TaskService taskService = TaskService();
+  final CategoryService categoryService = CategoryService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && authState.authResponse != null) {
+      try {
+        // Load categories
+        final fetchedCategories = await categoryService.getCategories(
+          authState.authResponse!.user.id,
+        );
+        setState(() {
+          categories.clear();
+          categories.addAll(
+            fetchedCategories.map(
+              (c) => CategoryChip(
+                label: c.name,
+                color: Colors.deepPurpleAccent.shade700,
+                isSelected: false,
+              ),
+            ),
+          );
+        });
+
+        // Load tasks
+        final tasks = await taskService.getTasks(
+          authState.authResponse!.user.id, // Giữ String cho getTasks
+          _selectedDate,
+        );
+        setState(() {
+          taskList = tasks;
+          _filteredTasks = List.from(taskList);
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load data: $e')));
+        setState(() {
+          categories.clear();
+          taskList = [];
+          _filteredTasks = [];
+        });
+      }
+    } else {
+      // Xử lý trường hợp không có auth
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+    }
+  }
 
   // Lọc theo ngày
   void _filterByDate() {
     setState(() {
       _filteredTasks =
-          widget.taskList.where((task) {
+          taskList.where((task) {
             return task.taskDate.year == _selectedDate.year &&
                 task.taskDate.month == _selectedDate.month &&
                 task.taskDate.day == _selectedDate.day;
@@ -54,18 +115,18 @@ class _TaskScreenState extends State<TaskScreen> {
       setState(() {
         _selectedDate = pickedDate;
       });
-      _filterByDate();
+      await _loadData(); // Tải lại dữ liệu từ API khi chọn ngày mới
     }
   }
 
-  //Tìm theo từ khóa
+  // Tìm theo từ khóa
   void _searchTask(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredTasks = List.from(widget.taskList);
+        _filteredTasks = List.from(taskList);
       } else {
         _filteredTasks =
-            widget.taskList
+            taskList
                 .where(
                   (task) =>
                       task.title.toLowerCase().contains(query.toLowerCase()) ||
@@ -80,9 +141,10 @@ class _TaskScreenState extends State<TaskScreen> {
 
   void _addTask(Task task) {
     setState(() {
-      widget.taskList.add(task);
-      _filteredTasks = List.from(widget.taskList);
+      taskList.add(task);
+      _filteredTasks = List.from(taskList);
     });
+    widget.onTaskAdded(task);
   }
 
   void _navigateToAddTaskScreen() async {
@@ -90,10 +152,8 @@ class _TaskScreenState extends State<TaskScreen> {
       context,
       MaterialPageRoute(
         builder:
-            (context) => AddTaskScreen(
-              onTaskAdded: _addTask,
-              categories: widget.categories,
-            ),
+            (context) =>
+                AddTaskScreen(onTaskAdded: _addTask, categories: categories),
       ),
     );
 
@@ -102,27 +162,12 @@ class _TaskScreenState extends State<TaskScreen> {
     }
   }
 
-  Future<void> selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2018),
-      lastDate: DateTime(2040),
-    );
-
-    if (pickedDate != null) {
-      setState(() {
-        _selectedDate = pickedDate;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
 
     if (!_isSearching) {
-      _filteredTasks = List.from(widget.taskList);
+      _filteredTasks = List.from(taskList);
     }
     return Container(
       decoration: BoxDecoration(color: colors.bgColor),
@@ -203,7 +248,7 @@ class _TaskScreenState extends State<TaskScreen> {
                           setState(() {
                             if (_isSearching) {
                               _searchController.clear();
-                              _filteredTasks = List.from(widget.taskList);
+                              _filteredTasks = List.from(taskList);
                             }
                             _isSearching = !_isSearching;
                           });
@@ -234,18 +279,18 @@ class _TaskScreenState extends State<TaskScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 12),
               child: CategoryList(
-                categories: widget.categories,
+                categories: categories,
                 isMultiSelect: true,
                 onCategoryUpdated: (category) {},
                 onCategorySelected: (category) {},
               ),
             ),
             DatePickerWidget(
-              onDateSelected: (date) {
+              onDateSelected: (date) async {
                 setState(() {
                   _selectedDate = date;
                 });
-                _filterByDate();
+                await _loadData(); // Tải lại dữ liệu từ API khi chọn ngày
               },
             ),
             Padding(
@@ -253,7 +298,7 @@ class _TaskScreenState extends State<TaskScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '${widget.taskList.length} Tasks For ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
+                  '${taskList.length} Tasks For ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
                   style: TextStyle(
                     fontSize: 16,
                     color: colors.textColor,
@@ -262,7 +307,7 @@ class _TaskScreenState extends State<TaskScreen> {
                 ),
               ),
             ),
-            widget.taskList.isEmpty
+            taskList.isEmpty
                 ? EmptyState(onAddTask: _navigateToAddTaskScreen)
                 : Expanded(
                   child: ListView.builder(
@@ -270,7 +315,7 @@ class _TaskScreenState extends State<TaskScreen> {
                     itemBuilder: (context, index) {
                       return TodoCard(
                         task: _filteredTasks[index],
-                        categories: widget.categories,
+                        categories: categories,
                         onTap: () {
                           setState(() {
                             _filteredTasks[index].completed =
@@ -288,6 +333,7 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 }
 
+// Giữ nguyên EmptyState và DatePickerWidget như code gốc
 class EmptyState extends StatelessWidget {
   final VoidCallback onAddTask;
   const EmptyState({super.key, required this.onAddTask});
