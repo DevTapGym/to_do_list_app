@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:to_do_list_app/bloc/auth_bloc.dart';
-import 'package:to_do_list_app/bloc/auth_event.dart';
-import 'package:to_do_list_app/bloc/auth_state.dart';
+import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_event.dart';
+import 'package:to_do_list_app/bloc/auth/auth_state.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,10 +16,14 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return Scaffold(
+      backgroundColor: colors.bgColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -38,7 +43,6 @@ class _LoginPageState extends State<LoginPage> {
             ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
-
         builder: (context, state) {
           return Center(
             child: SingleChildScrollView(
@@ -48,10 +52,10 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Login',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textColor,
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
                       ),
@@ -59,19 +63,19 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 48),
                     TextFormField(
                       controller: _emailController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: colors.textColor),
                       decoration: InputDecoration(
                         hintText: 'Email',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        hintStyle: TextStyle(color: colors.subtitleColor),
                         filled: true,
-                        fillColor: Colors.grey[900],
+                        fillColor: colors.itemBgColor,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.email,
-                          color: Colors.white70,
+                          color: colors.subtitleColor,
                         ),
                       ),
                       validator: (value) {
@@ -86,22 +90,36 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     const SizedBox(height: 20),
+
                     TextFormField(
                       controller: _passwordController,
-                      style: const TextStyle(color: Colors.white),
-                      obscureText: true,
+                      style: TextStyle(color: colors.textColor),
+                      obscureText: _obscureText,
                       decoration: InputDecoration(
                         hintText: 'Password',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        hintStyle: TextStyle(color: colors.subtitleColor),
                         filled: true,
-                        fillColor: Colors.grey[900],
+                        fillColor: colors.itemBgColor,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.lock,
-                          color: Colors.white70,
+                          color: colors.subtitleColor,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureText
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: colors.subtitleColor,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
                         ),
                       ),
                       validator: (value) {
@@ -114,6 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                         return null;
                       },
                     ),
+
                     const SizedBox(height: 30),
                     ElevatedButton(
                       onPressed: () {
@@ -127,8 +146,8 @@ class _LoginPageState extends State<LoginPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
+                        backgroundColor: colors.primaryColor,
+                        foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -146,23 +165,31 @@ class _LoginPageState extends State<LoginPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: Divider(color: Colors.grey[600], thickness: 1),
+                          child: Divider(
+                            color: colors.subtitleColor,
+                            thickness: 1,
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
                             'OR',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: colors.subtitleColor),
                           ),
                         ),
                         Expanded(
-                          child: Divider(color: Colors.grey[600], thickness: 1),
+                          child: Divider(
+                            color: colors.subtitleColor,
+                            thickness: 1,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        //Navigator.pushNamed(context, '/home');
+                      },
                       icon: const Icon(
                         Icons.g_mobiledata_outlined,
                         color: Colors.black,
@@ -199,18 +226,18 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: () {
                             Navigator.pushNamed(context, '/forgot-password');
                           },
-                          child: const Text(
+                          child: Text(
                             'Forgot Password?',
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(color: colors.subtitleColor),
                           ),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/register');
                           },
-                          child: const Text(
+                          child: Text(
                             'Sign Up',
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(color: colors.subtitleColor),
                           ),
                         ),
                       ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -64,7 +65,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return Scaffold(
+      backgroundColor: colors.bgColor,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -73,10 +77,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Register',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textColor,
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                   ),
@@ -153,13 +157,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 Row(
-                  children: const [
+                  children: [
                     Icon(Icons.info_outline, size: 16, color: Colors.grey),
                     SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Mật khẩu phải trên 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colors.subtitleColor,
+                        ),
                       ),
                     ),
                   ],
@@ -190,8 +197,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: colors.primaryColor,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -210,15 +217,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     Text(
                       'Already have an account? ',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: colors.subtitleColor),
                     ),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text(
+                      child: Text(
                         'Login',
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: colors.subtitleColor),
                       ),
                     ),
                   ],
@@ -232,16 +239,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   InputDecoration _buildInputDecoration(String hint, IconData icon) {
+    final colors = AppThemeConfig.getColors(context);
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.grey[600]),
+      hintStyle: TextStyle(color: colors.subtitleColor),
       filled: true,
-      fillColor: Colors.grey[900],
+      fillColor: colors.itemBgColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-      prefixIcon: Icon(icon, color: Colors.white70),
+      prefixIcon: Icon(icon, color: colors.subtitleColor),
     );
   }
 }

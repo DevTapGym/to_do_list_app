@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
@@ -94,8 +95,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final email = widget.email;
+    final colors = AppThemeConfig.getColors(context);
 
     return Scaffold(
+      backgroundColor: colors.bgColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -105,7 +108,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Xác minh OTP'),
+        title: Text(
+          'Xác minh OTP',
+          style: TextStyle(
+            color: colors.textColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: Center(
@@ -115,25 +126,21 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.verified_user,
-                  size: 80,
-                  color: Colors.purpleAccent,
-                ),
+                Icon(Icons.verified_user, size: 80, color: colors.primaryColor),
                 const SizedBox(height: 30),
-                const Text(
+                Text(
                   'Nhập mã OTP',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.textColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Chúng tôi đã gửi mã xác minh đến\n$email',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+                  style: TextStyle(fontSize: 16, color: colors.subtitleColor),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
@@ -142,19 +149,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Mã OTP',
                     counterText: '',
-                    prefixIcon: Icon(Icons.pin, color: Colors.grey),
+                    prefixIcon: Icon(Icons.pin, color: colors.subtitleColor),
                   ),
-                  style: const TextStyle(fontSize: 18, letterSpacing: 8),
+                  style: const TextStyle(fontSize: 18, letterSpacing: 10),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   _isResendAvailable
-                      ? 'Bạn có thể gửi lại mã.'
+                      ? 'Bạn có thể gửi lại mã'
                       : 'Gửi lại mã sau $_secondsRemaining giây',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  style: TextStyle(color: colors.subtitleColor, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
                 if (_isResendAvailable)
@@ -163,11 +170,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       _sendCode();
                       _startCountdown();
                     },
-                    child: const Text("Gửi lại mã"),
+                    child: Text(
+                      "Gửi lại mã",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: colors.primaryColor,
+                      ),
+                    ),
                   ),
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _verifyCode,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.primaryColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   child:
                       _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)

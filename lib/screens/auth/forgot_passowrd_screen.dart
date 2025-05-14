@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -56,11 +57,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return Scaffold(
+      backgroundColor: colors.bgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Quên mật khẩu'),
+        title: Text(
+          'Quên mật khẩu',
+          style: TextStyle(
+            color: colors.textColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: SafeArea(
         child: Center(
@@ -73,25 +91,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lock_reset,
                       size: 80,
-                      color: Colors.purpleAccent,
+                      color: colors.primaryColor,
                     ),
                     const SizedBox(height: 30),
-                    const Text(
+                    Text(
                       'Đặt lại mật khẩu',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colors.textColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Nhập email của bạn để nhận mã OTP',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: colors.subtitleColor,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 40),
@@ -100,10 +121,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Email',
-
-                        prefixIcon: Icon(Icons.email, color: Colors.grey),
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: colors.subtitleColor,
+                        ),
                       ),
                       style: const TextStyle(fontSize: 16),
                       validator: (value) {
@@ -123,13 +146,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     // Send OTP button
                     ElevatedButton(
                       onPressed: _isLoading ? null : _requestOtp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.primaryColor,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       child:
                           _isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: Colors.white,
+                                  color: colors.primaryColor,
                                   strokeWidth: 3,
                                 ),
                               )
@@ -246,11 +277,27 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
     return Scaffold(
+      backgroundColor: colors.bgColor,
       appBar: AppBar(
+        title: Text(
+          'Xác minh OTP',
+          style: TextStyle(
+            color: colors.textColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('Xác minh OTP'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: SafeArea(
         child: Center(
@@ -266,7 +313,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     Icon(
                       Icons.verified_user,
                       size: 80,
-                      color: Colors.purpleAccent,
+                      color: colors.primaryColor,
                     ),
                     const SizedBox(height: 30),
                     Text(
@@ -274,14 +321,17 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colors.textColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Chúng tôi đã gửi mã xác minh đến\n${widget.email}',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[400]),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: colors.subtitleColor,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 40),
@@ -294,9 +344,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                       textAlign: TextAlign.center,
                       decoration: InputDecoration(
                         labelText: 'Mã OTP',
-                        prefixIcon: Icon(Icons.pin, color: Colors.grey),
+                        prefixIcon: Icon(
+                          Icons.pin,
+                          color: colors.subtitleColor,
+                        ),
                       ),
-                      style: TextStyle(fontSize: 18, letterSpacing: 8),
+                      style: TextStyle(fontSize: 18, letterSpacing: 10),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Vui lòng nhập mã OTP';
@@ -310,9 +363,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                     const SizedBox(height: 10),
                     Text(
                       _isResendAvailable
-                          ? 'Bạn có thể gửi lại mã.'
+                          ? 'Bạn có thể gửi lại mã'
                           : 'Gửi lại mã sau $_secondsRemaining giây',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      style: TextStyle(
+                        color: colors.subtitleColor,
+                        fontSize: 16,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     if (_isResendAvailable)
@@ -321,19 +377,33 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                           _sendCode();
                           _startCountdown();
                         },
-                        child: const Text("Gửi lại mã"),
+                        child: Text(
+                          "Gửi lại mã",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colors.primaryColor,
+                          ),
+                        ),
                       ),
                     const SizedBox(height: 30),
                     ElevatedButton(
                       onPressed: _isLoading ? null : _verifyCode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.primaryColor,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       child:
                           _isLoading
-                              ? const CircularProgressIndicator(
-                                color: Colors.white,
+                              ? CircularProgressIndicator(
+                                color: colors.primaryColor,
                               )
                               : const Text(
                                 'Xác minh',
-                                style: TextStyle(fontSize: 16),
+                                style: TextStyle(fontSize: 18),
                               ),
                     ),
                   ],

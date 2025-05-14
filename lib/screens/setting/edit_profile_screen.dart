@@ -56,6 +56,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
     return Scaffold(
+      backgroundColor: colors.bgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -76,20 +77,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         centerTitle: true,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromRGBO(225, 245, 254, 0.9),
-              Color.fromRGBO(255, 255, 255, 0.95),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        decoration: BoxDecoration(color: colors.bgColor),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Avatar section with camera icon
               Padding(
                 padding: const EdgeInsets.only(top: 80, bottom: 20),
                 child: GestureDetector(
@@ -99,10 +90,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     height: 130,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.9),
+                      color: colors.itemBgColor,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.shade200.withOpacity(0.3),
+                          color: colors.itemBgColor.withOpacity(0.2),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -133,7 +124,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                       style: TextStyle(
                                         fontSize: 50,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.blue.shade700,
+                                        color: colors.primaryColor,
                                       ),
                                     ),
                                   ),
@@ -145,7 +136,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.blue,
+                              color: colors.primaryColor,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: const Icon(
@@ -166,11 +157,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.95),
+                  color: colors.itemBgColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: colors.itemBgColor.withOpacity(0.2),
                       spreadRadius: 2,
                       blurRadius: 10,
                       offset: const Offset(0, 5),
@@ -215,18 +206,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.blue.shade400.withOpacity(0.9),
-                        Colors.blue.shade600.withOpacity(0.9),
-                      ],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ),
+                    color: colors.primaryColor,
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.shade300.withOpacity(0.3),
+                        color: colors.subtitleColor.withOpacity(0.3),
                         blurRadius: 10,
                         spreadRadius: 2,
                         offset: const Offset(0, 3),
@@ -250,12 +234,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Save',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colors.textColor,
                       ),
                     ),
                   ),
