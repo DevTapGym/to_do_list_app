@@ -13,12 +13,14 @@ class TodoCardTeam extends StatelessWidget {
   final bool isLeader;
   final VoidCallback? onChanged;
   final TeamService teamService = getIt.get<TeamService>();
+  final User? assignedMember;
   TodoCardTeam({
     super.key,
     required this.task,
     required this.canEdit,
     required this.isLeader,
     this.onChanged,
+    this.assignedMember,
   });
 
   @override
@@ -69,6 +71,27 @@ class TodoCardTeam extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
+                    if (assignedMember != null) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person,
+                            color: colors.subtitleColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            assignedMember!.name,
+                            style: TextStyle(
+                              color: colors.subtitleColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                    ],
                     Row(
                       children: [
                         const SizedBox(width: 6),

@@ -44,28 +44,29 @@ class TeamMember {
   int userId;
   int teamId;
   User? user;
-  Team? team;
-  List<TeamTask>? tasks;
   TeamMember({
     required this.id,
     required this.role,
     required this.userId,
     required this.teamId,
     this.user,
-    this.team,
-    this.tasks,
   });
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
     Role memberRole = Role.values.firstWhere(
       (e) => e.toString().split('.').last == json['role'],
+      orElse: () => Role.MEMBER, 
     );
-
+    User? user;
+    if (json['user'] != null && json['user'] is Map<String, dynamic>) {
+      user = User.fromJson(json['user'] as Map<String, dynamic>);
+    }
     return TeamMember(
       id: json['id'] as int,
       role: memberRole,
       userId: json['userId'] as int? ?? json['user']?['id'] as int? ?? 0,
       teamId: json['teamId'] as int? ?? json['team']?['id'] as int? ?? 0,
+      user: user,
     );
   }
 
@@ -75,6 +76,7 @@ class TeamMember {
       'role': role.toString().split('.').last,
       'userId': userId,
       'teamId': teamId,
+      'user': user?.toJson(),
     };
   }
 }

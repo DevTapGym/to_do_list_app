@@ -1,9 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:to_do_list_app/Repositories/Team/teamTaskRepository.dart';
 import 'package:to_do_list_app/bloc/Team/teamTask_bloc.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/screens/stats/stats_screen.dart';
+import 'package:to_do_list_app/screens/team/TeamSummaryPage.dart';
 import 'package:to_do_list_app/screens/team/group_QR_Share.dart';
 import 'package:to_do_list_app/screens/team/group_create_task.dart';
 import 'package:to_do_list_app/screens/team/group_listMember.dart';
@@ -52,6 +56,8 @@ class _GroupDetailState extends State<GroupDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
     final colors = AppThemeConfig.getColors(context);
     return Scaffold(
       appBar: AppBar(
@@ -166,81 +172,252 @@ class _GroupDetailState extends State<GroupDetail> {
         color: colors.bgColor,
         child: Padding(
           padding: const EdgeInsets.all(12),
+          child: BlocBuilder<TeamTaskBloc, TeamTaskState>(
+            bloc: teamTaskBloc,
+            builder: (context, state) {
+              int teamCompletedTasksCount = 0;
+              int teamPendingTasksCount = 0;
+              List<TeamTask> allTeamTasks = [];
 
-          child: Column(
-            children: [
-              Expanded(
-                child: BlocBuilder<TeamTaskBloc, TeamTaskState>(
-                  bloc: teamTaskBloc,
-                  builder: (context, state) {
-                    if (state is TeamTaskLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is TeamTaskLoaded) {
-                      final tasks = state.tasks;
+              int myCompletedTasksCount = 0;
+              int myPendingTasksCount = 0;
 
-                      final myTasks =
-                          tasks
-                              .where((t) => t.teamMemberId == teamMember?.id)
-                              .toList();
-                      final otherTasks =
-                          tasks
-                              .where((t) => t.teamMemberId != teamMember?.id)
-                              .toList();
+              if (state is TeamTaskLoaded) {
+                allTeamTasks = state.tasks;
+                teamCompletedTasksCount =
+                    allTeamTasks.where((task) => task.isCompleted).length;
+                teamPendingTasksCount =
+                    allTeamTasks.where((task) => !task.isCompleted).length;
 
-                      sortTasks(myTasks);
-                      sortTasks(otherTasks);
-                      return ListView(
-                        children: [
-                          if (myTasks.isNotEmpty) ...[
-                            Text(
-                              'Your tasks',
-                              style: TextStyle(
-                                color: colors.textColor,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                // Tính toán thống kê cá nhân nếu teamMember tồn tại
+                if (teamMember != null) {
+                  final myTasks =
+                      allTeamTasks
+                          .where((task) => task.teamMemberId == teamMember!.id)
+                          .toList();
+                  myCompletedTasksCount =
+                      myTasks.where((task) => task.isCompleted).length;
+                  myPendingTasksCount =
+                      myTasks.where((task) => !task.isCompleted).length;
+                }
+              }
+
+              return Column(
+                children: [
+                  // Thống kê cả nhóm
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Team Summary',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textColor,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          if (state is TeamTaskLoaded) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TeamSummaryPage(
+                                  team: widget.team,
+                                  allTeamTasks: allTeamTasks,
+                                  isDark: isDark,
+                                ),
                               ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          'See more',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colors.subtitleColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SummaryCard(
+                        title: "Completed",
+                        value: teamCompletedTasksCount.toString(),
+                        icon: Icons.check_circle,
+                        borderColor:
+                            isDark ? Colors.green.shade600 : Colors.green,
+                        iconColor: isDark ? Colors.green : Colors.greenAccent,
+                      ),
+                      SummaryCard(
+                        title: "Pending",
+                        value: teamPendingTasksCount.toString(),
+                        icon: Icons.access_time,
+                        borderColor:
+                            isDark ? Colors.orange.shade900 : Colors.orange,
+                        iconColor: isDark ? Colors.orange : Colors.orangeAccent,
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  // Thống kê theo thành viên
+                  if (teamMember != null) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Your Summary',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SummaryCard(
+                          title: "My Completed",
+                          value: myCompletedTasksCount.toString(),
+                          icon: Icons.check_circle,
+                          borderColor:
+                              isDark ? Colors.green.shade600 : Colors.green,
+                          iconColor: isDark ? Colors.green : Colors.greenAccent,
+                        ),
+                        SummaryCard(
+                          title: "My Pending",
+                          value: myPendingTasksCount.toString(),
+                          icon: Icons.access_time,
+                          borderColor:
+                              isDark ? Colors.orange.shade900 : Colors.orange,
+                          iconColor:
+                              isDark ? Colors.orange : Colors.orangeAccent,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                  ],
+
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        if (state is TeamTaskLoading) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (state is TeamTaskLoaded) {
+                          final tasks = state.tasks;
+
+                          final myDisplayedTasks =
+                              teamMember != null
+                                  ? tasks
+                                      .where(
+                                        (t) => t.teamMemberId == teamMember!.id,
+                                      )
+                                      .toList()
+                                  : <TeamTask>[];
+
+                          final otherDisplayedTasks =
+                              teamMember != null
+                                  ? tasks
+                                      .where(
+                                        (t) => t.teamMemberId != teamMember!.id,
+                                      )
+                                      .toList()
+                                  : tasks.toList();
+
+                          sortTasks(myDisplayedTasks);
+                          sortTasks(otherDisplayedTasks);
+                          return ListView(
+                            children: [
+                              if (myDisplayedTasks.isNotEmpty) ...[
+                                Text(
+                                  'Your tasks',
+                                  style: TextStyle(
+                                    color: colors.textColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                ...myDisplayedTasks.map(
+                                  (g) => TodoCardTeam(
+                                    task: g,
+                                    onChanged: onChanged,
+                                    canEdit:
+                                        widget.isLeader ||
+                                        (teamMember != null &&
+                                            g.teamMemberId == teamMember!.id),
+                                    isLeader: widget.isLeader,
+                                    assignedMember: getAssignedMemberById(
+                                      g.teamMemberId,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              if (otherDisplayedTasks.isNotEmpty) ...[
+                                Text(
+                                  'Other members\' tasks',
+                                  style: TextStyle(
+                                    color: colors.textColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                ...otherDisplayedTasks.map(
+                                  (g) => TodoCardTeam(
+                                    task: g,
+                                    onChanged: onChanged,
+                                    canEdit: // Chỉ leader mới sửa được task của người khác
+                                        widget.isLeader ||
+                                        (teamMember != null &&
+                                            g.teamMemberId == teamMember!.id),
+                                    isLeader: widget.isLeader,
+                                    assignedMember: getAssignedMemberById(
+                                      g.teamMemberId,
+                                    ),
+                                  ),
+                                ),
+                              ],
+
+                              if (state.tasks.isEmpty)
+                                Center(
+                                  child: Text(
+                                    'No tasks available for this team.',
+                                    style: TextStyle(color: colors.textColor),
+                                  ),
+                                ),
+                            ],
+                          );
+                        } else if (state is TeamTaskError) {
+                          return Center(
+                            child: Text(
+                              'Error: ${state.message}',
+                              style: TextStyle(color: colors.textColor),
                             ),
-                            ...myTasks.map(
-                              (g) => TodoCardTeam(
-                                task: g,
-                                onChanged: onChanged,
-                                canEdit:
-                                    widget.isLeader ||
-                                    g.teamMemberId == teamMember?.id,
-                                isLeader: widget.isLeader,
-                              ),
+                          );
+                        } else {
+                          return Center(
+                            child: Text(
+                              'No data available or unknown state.',
+                              style: TextStyle(color: colors.textColor),
                             ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (otherTasks.isNotEmpty) ...[
-                            Text(
-                              'Other tasks',
-                              style: TextStyle(
-                                color: colors.textColor,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            ...otherTasks.map(
-                              (g) => TodoCardTeam(
-                                task: g,
-                                onChanged: onChanged,
-                                canEdit:
-                                    widget.isLeader ||
-                                    g.teamMemberId == teamMember?.id,
-                                isLeader: widget.isLeader,
-                              ),
-                            ),
-                          ],
-                        ],
-                      );
-                    } else {
-                      return const Center(child: Text('No data available'));
-                    }
-                  },
-                ),
-              ),
-            ],
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -265,10 +442,12 @@ class _GroupDetailState extends State<GroupDetail> {
     );
   }
 
+  User getAssignedMemberById(int id) {
+    return widget.team.teamMembers.firstWhere((m) => m.id == id).user!;
+  }
+
   void onChanged() {
-    setState(() {
-      teamTaskBloc.add(LoadTeamTasksByTeamId(widget.team.id));
-    });
+    teamTaskBloc.add(LoadTeamTasksByTeamId(widget.team.id));
   }
 
   void sortTasks(List list) {
@@ -282,8 +461,6 @@ class _GroupDetailState extends State<GroupDetail> {
       return a.deadline.compareTo(b.deadline);
     });
   }
-
-  
 
   void onDisband(int teamId) async {
     await teamService.DisbandTeam(teamId);
@@ -299,7 +476,7 @@ class _GroupDetailState extends State<GroupDetail> {
           content: 'Are you sure you want to disband team "${team.name}"?',
           confirmText: 'Confirm',
           cancelText: 'Cancel',
-          onConfirm: ()=>onDisband(team.id),
+          onConfirm: () => onDisband(team.id),
         );
       },
     );
@@ -327,7 +504,7 @@ class _GroupDetailState extends State<GroupDetail> {
           content: 'Are you sure you want to leave team "${team.name}"?',
           confirmText: 'Confirm',
           cancelText: 'Cancel',
-          onConfirm: ()=>onLeave(team.id, user.id),
+          onConfirm: () => onLeave(team.id, user.id),
         );
       },
     );
