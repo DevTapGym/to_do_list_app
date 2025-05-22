@@ -95,6 +95,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
   List<Task> taskList = [];
   List<Category> categoriesList = [];
@@ -169,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTaskAdded: _addTask,
           tasks: taskList,
           categories: categoriesList,
+          scaffoldKey: _scaffoldKey,
         ),
       ),
       Center(child: GroupsScreen(groups: groups)),
@@ -182,8 +184,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return SafeArea(
       child: Scaffold(
+        key: _scaffoldKey,
         body: pages[_selectedIndex],
-
+        drawer: CategoryDrawer(
+          onCategoryUpdated: (updatedCategories) {
+            setState(() {
+              categoriesList = updatedCategories;
+            });
+          },
+        ),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -252,6 +261,471 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
                 : null,
+      ),
+    );
+  }
+}
+
+class CategoryDrawer extends StatefulWidget {
+  final Function(List<Category>) onCategoryUpdated;
+
+  const CategoryDrawer({super.key, required this.onCategoryUpdated});
+
+  @override
+  State<CategoryDrawer> createState() => _CategoryDrawerState();
+}
+
+class _CategoryDrawerState extends State<CategoryDrawer> {
+  final CategoryService categoryService = CategoryService();
+  List<Category> categories = [];
+
+  // Danh sách tên danh mục mặc định
+  static const List<String> defaultCategoryNames = [
+    'Personal',
+    'Work',
+    'Health',
+    'Study',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      try {
+        final fetched = await categoryService.getCategories(
+          authState.authResponse!.user.id,
+        );
+        setState(() {
+          categories = fetched;
+        });
+      } catch (e) {
+        setState(() {
+          categories = [];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load categories: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      setState(() {
+        categories = [];
+      });
+    }
+  }
+
+  void _addCategory(String name) async {
+    // Để trống theo yêu cầu
+  }
+
+  void _updateCategory(int id, String newName) async {
+    // Để trống theo yêu cầu
+  }
+
+  void _deleteCategory(int id) async {
+    // Để trống theo yêu cầu
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    final isDark = themeProvider.isDarkMode;
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors:
+                      isDark
+                          ? [
+                            Colors.deepPurpleAccent,
+                            Colors.deepPurple.shade700,
+                          ]
+                          : [
+                            Colors.deepPurpleAccent.shade700,
+                            Colors.deepPurple,
+                          ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.category, color: Colors.white, size: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Manage Categories',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Danh sách danh mục
+            Expanded(
+              child:
+                  categories.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.category_outlined,
+                              size: 60,
+                              color: colors.subtitleColor,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No categories yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: colors.subtitleColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          final isDefault = defaultCategoryNames.contains(
+                            category.name,
+                          );
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              color: isDark ? colors.itemBgColor : Colors.white,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                                leading: Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isDefault
+                                            ? Colors
+                                                .blueAccent // Màu khác cho danh mục mặc định
+                                            : Colors.deepPurpleAccent.shade700,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                title: Text(
+                                  category.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors.textColor,
+                                  ),
+                                ),
+                                trailing:
+                                    isDefault
+                                        ? null // Ẩn nút cho danh mục mặc định
+                                        : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.edit_outlined,
+                                                color: colors.subtitleColor,
+                                              ),
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    String updatedName =
+                                                        category.name;
+                                                    return AlertDialog(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              16,
+                                                            ),
+                                                      ),
+                                                      backgroundColor:
+                                                          colors.itemBgColor,
+                                                      title: Text(
+                                                        'Edit Category',
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color:
+                                                              colors.textColor,
+                                                        ),
+                                                      ),
+                                                      content: TextField(
+                                                        controller:
+                                                            TextEditingController(
+                                                              text:
+                                                                  category.name,
+                                                            ),
+                                                        onChanged:
+                                                            (value) =>
+                                                                updatedName =
+                                                                    value,
+                                                        decoration: InputDecoration(
+                                                          labelText:
+                                                              'Category Name',
+                                                          labelStyle: TextStyle(
+                                                            color:
+                                                                colors
+                                                                    .subtitleColor,
+                                                          ),
+                                                          filled: true,
+                                                          fillColor:
+                                                              isDark
+                                                                  ? Colors
+                                                                      .grey
+                                                                      .shade800
+                                                                  : Colors
+                                                                      .grey
+                                                                      .shade100,
+                                                          border: OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide.none,
+                                                          ),
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12,
+                                                                    ),
+                                                                borderSide:
+                                                                    BorderSide(
+                                                                      color:
+                                                                          Colors
+                                                                              .deepPurpleAccent,
+                                                                      width: 2,
+                                                                    ),
+                                                              ),
+                                                        ),
+                                                        style: TextStyle(
+                                                          color:
+                                                              colors.textColor,
+                                                        ),
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed:
+                                                              () =>
+                                                                  Navigator.pop(
+                                                                    context,
+                                                                  ),
+                                                          child: Text(
+                                                            'Cancel',
+                                                            style: TextStyle(
+                                                              color:
+                                                                  colors
+                                                                      .subtitleColor,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            _updateCategory(
+                                                              category.id,
+                                                              updatedName,
+                                                            );
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .deepPurpleAccent,
+                                                            foregroundColor:
+                                                                Colors.white,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: const Text(
+                                                            'Save',
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: colors.subtitleColor,
+                                              ),
+                                              onPressed:
+                                                  () => _deleteCategory(
+                                                    category.id,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+            ),
+            // Nút thêm danh mục
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add, size: 24),
+                label: const Text(
+                  'Add Category',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isDark
+                          ? Colors.deepPurpleAccent
+                          : Colors.deepPurpleAccent.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 4,
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      String newCategory = '';
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        backgroundColor: colors.itemBgColor,
+                        title: Text(
+                          'Add New Category',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textColor,
+                          ),
+                        ),
+                        content: TextField(
+                          onChanged: (value) => newCategory = value,
+                          decoration: InputDecoration(
+                            labelText: 'Category Name',
+                            labelStyle: TextStyle(color: colors.subtitleColor),
+                            filled: true,
+                            fillColor:
+                                isDark
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurpleAccent,
+                                width: 2,
+                              ),
+                            ),
+                            errorText:
+                                defaultCategoryNames.contains(newCategory)
+                                    ? 'This category name is reserved'
+                                    : null,
+                          ),
+                          style: TextStyle(color: colors.textColor),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: colors.subtitleColor,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (!defaultCategoryNames.contains(newCategory)) {
+                                _addCategory(newCategory);
+                                Navigator.pop(context);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurpleAccent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Add',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

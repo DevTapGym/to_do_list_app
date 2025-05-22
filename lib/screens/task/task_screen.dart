@@ -16,12 +16,14 @@ class TaskScreen extends StatefulWidget {
   final Function(Task) onTaskAdded;
   final List<Task> tasks;
   final List<Category> categories;
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   const TaskScreen({
     super.key,
     required this.onTaskAdded,
     required this.tasks,
     required this.categories,
+    required this.scaffoldKey,
   });
 
   @override
@@ -260,6 +262,7 @@ class _TaskScreenState extends State<TaskScreen> {
                             ),
                           )
                           .toList(),
+                  scaffoldKey: widget.scaffoldKey,
                   isMultiSelect: true,
                   onCategoryUpdated: (updatedCategories) {
                     setState(() {

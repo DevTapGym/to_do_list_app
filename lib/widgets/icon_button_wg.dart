@@ -63,6 +63,7 @@ class CategoryList extends StatefulWidget {
   final bool isMultiSelect;
   final bool showAddButton;
   final VoidCallback? onAddButtonPressed;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const CategoryList({
     super.key,
@@ -72,6 +73,7 @@ class CategoryList extends StatefulWidget {
     this.isMultiSelect = true,
     this.showAddButton = true,
     this.onAddButtonPressed,
+    this.scaffoldKey,
   });
 
   @override
@@ -112,7 +114,9 @@ class _CategoryListState extends State<CategoryList> {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: GestureDetector(
-                onTap: widget.onAddButtonPressed,
+                onTap: () {
+                  widget.scaffoldKey!.currentState?.openDrawer();
+                },
                 child: Container(
                   width: 40,
                   height: 40,
