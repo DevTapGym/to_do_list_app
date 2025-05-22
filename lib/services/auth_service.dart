@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/auth_response.dart';
 
 class AuthService {
@@ -9,8 +9,66 @@ class AuthService {
       validateStatus: (status) {
         return true;
       },
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
     ),
   );
+
+  Future<LoginResult> verifyToken() async {
+    try {
+      final storage = FlutterSecureStorage();
+      String? accessToken = await storage.read(key: 'access_token');
+      print('Access Token: $accessToken');
+
+      if (accessToken == null || accessToken.isEmpty) {
+        return LoginResult(error: "No token found", status: 401);
+      }
+
+      Response response = await dio.get(
+        "/api/v1/auth/profile",
+        options: Options(headers: {"Authorization": "Bearer $accessToken"}),
+      );
+      print('Response Data: ${response.data}');
+      print('Status: ${response.data["status"]}');
+      print('Message: ${response.data["message"]}');
+      print('Error: ${response.data["error"]}');
+      print('Data: ${response.data["data"]}');
+
+      final status = response.data["status"] as int? ?? 0;
+      final error = response.data["error"] as String?;
+      final message = response.data["message"] as String?;
+
+      if (response.statusCode == 200 && status == 200) {
+        final data = response.data["data"];
+        if (data == null || data is! Map<String, dynamic>) {
+          print('Invalid or missing data field');
+          return LoginResult(error: "Invalid response data", status: 500);
+        }
+        print('Parsing data to AuthResponse: $data');
+        AuthResponse authResponse = AuthResponse.fromRes(data);
+        authResponse.accessToken = accessToken;
+        print('Parsed AuthResponse: ${authResponse.user.email}');
+        return LoginResult(authResponse: authResponse);
+      }
+
+      if (status == 401) {
+        await storage.delete(key: 'access_token');
+        return LoginResult(
+          error: error ?? message ?? "Token expired or invalid",
+          status: 401,
+        );
+      }
+
+      return LoginResult(
+        error: message ?? error ?? "Failed to verify token",
+        status: status,
+      );
+    } catch (e, stackTrace) {
+      print('Exception in verifyToken: $e');
+      print('StackTrace: $stackTrace');
+      return LoginResult(error: "Error verifying token: $e", status: 500);
+    }
+  }
 
   Future<LoginResult> login(String email, String password) async {
     try {
@@ -27,8 +85,11 @@ class AuthService {
         final data = response.data["data"];
         AuthResponse authResponse = AuthResponse.fromJson(data);
 
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString("access_token", authResponse.accessToken);
+        final storage = FlutterSecureStorage();
+        await storage.write(
+          key: 'access_token',
+          value: authResponse.accessToken,
+        );
 
         return LoginResult(authResponse: authResponse);
       }

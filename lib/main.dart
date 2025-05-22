@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_event.dart';
 import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/bloc/task/task_bloc.dart';
 import 'package:to_do_list_app/models/category.dart';
@@ -38,7 +40,7 @@ void main() {
               ),
         ),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -53,22 +55,18 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'To do list app',
           theme: ThemeData.light(),
-
           darkTheme: ThemeData.dark(),
           themeMode:
               themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: const HomeScreen(),
+          home: const SplashScreen(), // Đặt SplashScreen làm màn hình khởi động
           debugShowCheckedModeBanner: false,
           initialRoute: '/login',
-
           routes: {
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterScreen(),
             '/forgot-password': (context) => ForgotPasswordScreen(),
-            //'/reset-password': (context) => ResetPasswordScreen(),
             '/home': (context) => const HomeScreen(),
           },
-
           onGenerateRoute: (settings) {
             if (settings.name == '/otp-verification') {
               final args = settings.arguments as Map<String, String>;
@@ -86,11 +84,88 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// SplashScreen dùng để kiểm tra token
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  bool _hasNavigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkToken();
+    });
+  }
+
+  Future<void> _checkToken() async {
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'access_token');
+    print('Token: $token');
+
+    if (!mounted) {
+      return;
+    }
+
+    context.read<AuthBloc>().add(VerifyTokenEvent());
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        if (!mounted || _hasNavigated) return;
+        _hasNavigated = true;
+        if (state is AuthAuthenticated && state.authResponse != null) {
+          await Future.microtask(() {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            }
+          });
+        } else if (state is AuthUnauthenticated || state is AuthError) {
+          await Future.microtask(() {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            }
+          });
+          if (state is AuthError) {
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(state.message)));
+                print('AuthError: ${state.message}');
+              }
+            });
+          }
+        }
+      },
+
+      child: const Scaffold(body: Center(child: CircularProgressIndicator())),
+    );
+  }
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
@@ -108,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
@@ -149,6 +223,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
     }
   }
 
@@ -307,6 +385,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
         setState(() {
           categories = [];
         });
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load categories: $e')),
         );

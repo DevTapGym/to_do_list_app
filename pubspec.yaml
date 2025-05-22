@@ -41,6 +41,7 @@ dependencies:
   provider: ^6.1.2
   intl: ^0.18.1
   image_picker: ^1.1.2
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:

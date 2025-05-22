@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:to_do_list_app/models/task.dart';
 
 class TaskService {
@@ -14,8 +14,8 @@ class TaskService {
   );
 
   Future<List<Task>> getTasks({required int userId, DateTime? dueDate}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'access_token');
 
     if (token == null) {
       throw Exception('No access token found');
@@ -41,8 +41,8 @@ class TaskService {
   }
 
   Future<Task> getTaskById(int taskId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'access_token');
 
     if (token == null) {
       throw Exception('No access token found');
@@ -61,8 +61,8 @@ class TaskService {
   }
 
   Future<bool> addTask(Task task) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'access_token');
 
     if (token == null) {
       throw Exception('No access token found');
@@ -82,8 +82,8 @@ class TaskService {
   }
 
   Future<bool> updateTask(Task task) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'access_token');
 
     if (token == null) {
       throw Exception('No access token found');
@@ -103,8 +103,8 @@ class TaskService {
   }
 
   Future<bool> deleteTask(int taskId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('access_token');
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'access_token');
 
     if (token == null) {
       throw Exception('No access token found');
