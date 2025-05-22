@@ -13,7 +13,7 @@ class TaskService {
     ),
   );
 
-  Future<List<Task>> getTasks(int userId, DateTime dueDate) async {
+  Future<List<Task>> getTasks({required int userId, DateTime? dueDate}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
 
@@ -21,9 +21,14 @@ class TaskService {
       throw Exception('No access token found');
     }
 
-    final formattedDate = DateFormat('yyyy-MM-dd').format(dueDate);
+    String url = '/api/v1/task/$userId';
+    if (dueDate != null) {
+      final formattedDate = DateFormat('yyyy-MM-dd').format(dueDate);
+      url += '?dueDate=$formattedDate';
+    }
+
     final response = await dio.get(
-      '/api/v1/task/$userId?dueDate=$formattedDate',
+      url,
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
 
@@ -31,7 +36,89 @@ class TaskService {
       final data = response.data['data'] as List;
       return data.map((e) => Task.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load tasks');
+      throw Exception('Failed to load tasks: ${response.statusCode}');
+    }
+  }
+
+  Future<Task> getTaskById(int taskId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await dio.get(
+      '/api/v1/task/byId/$taskId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    if (response.statusCode == 200) {
+      return Task.fromJson(response.data['data']);
+    } else {
+      throw Exception('Failed to load task: ${response.statusCode}');
+    }
+  }
+
+  Future<bool> addTask(Task task) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await dio.post(
+      '/api/v1/task',
+      data: task.toJson(),
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> updateTask(Task task) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await dio.put(
+      '/api/v1/task',
+      data: task.toJson(),
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> deleteTask(int taskId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('access_token');
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await dio.delete(
+      '/api/v1/task/$taskId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
     }
   }
 }

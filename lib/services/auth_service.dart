@@ -34,13 +34,16 @@ class AuthService {
       }
 
       if (status == 400 && error == "User is not active") {
-        return LoginResult(isActive: false);
+        return LoginResult(isActive: false, status: 400, error: error);
       }
 
       if (status == 500 && error == "Bad credentials") {
-        return LoginResult(error: "Sai tên đăng nhập hoặc mật khẩu");
+        return LoginResult(error: error, status: 500);
       }
 
+      if (status == 500 && error == "User not found") {
+        return LoginResult(error: error, status: 500);
+      }
       return LoginResult(error: message ?? "Đã xảy ra lỗi không xác định.");
     } catch (e) {
       return LoginResult(error: "Lỗi khi gọi API: $e");
@@ -123,7 +126,13 @@ class AuthService {
 class LoginResult {
   final AuthResponse? authResponse;
   final bool isActive;
+  final int status;
   final String? error;
 
-  LoginResult({this.authResponse, this.isActive = false, this.error});
+  LoginResult({
+    this.authResponse,
+    this.isActive = true,
+    this.status = 200,
+    this.error,
+  });
 }

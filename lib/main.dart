@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/bloc/task/task_bloc.dart';
+import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/group.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
@@ -17,7 +19,6 @@ import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/services/category_service.dart';
 import 'package:to_do_list_app/services/task_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
-import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/auth/otp_verification_screen.dart';
 import 'package:to_do_list_app/screens/auth/forgot_passowrd_screen.dart';
 
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'To do list app',
           theme: ThemeData.light(),
+
           darkTheme: ThemeData.dark(),
           themeMode:
               themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
@@ -94,14 +96,63 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
+  List<Task> taskList = [];
+  List<Category> categoriesList = [];
   // fake data
   final List<Group> groups = [];
+  // service
+  final TaskService taskService = TaskService();
+  final CategoryService categoryService = CategoryService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && authState.authResponse != null) {
+      try {
+        // Load categories
+        final categories = await categoryService.getCategories(
+          authState.authResponse!.user.id,
+        );
+        setState(() {
+          categoriesList = categories;
+        });
+
+        // Load tasks
+        final tasks = await taskService.getTasks(
+          userId: authState.authResponse!.user.id,
+          dueDate: DateTime.now(),
+        );
+        setState(() {
+          taskList = tasks;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(
+          // ignore: use_build_context_synchronously
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load data: $e')));
+        setState(() {
+          categoriesList = [];
+          taskList = [];
+        });
+      }
+    } else {
+      // Xử lý trường hợp không có auth
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+    }
+  }
 
   void _addTask(Task task) {
-    // setState(() {
-    //   tasks.add(task);
-    // });
+    _loadData();
   }
 
   void _onItemTapped(int index) {
@@ -113,7 +164,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = <Widget>[
-      Center(child: TaskScreen(onTaskAdded: _addTask)),
+      Center(
+        child: TaskScreen(
+          onTaskAdded: _addTask,
+          tasks: taskList,
+          categories: categoriesList,
+        ),
+      ),
       Center(child: GroupsScreen(groups: groups)),
       Center(child: StatsScreen()),
       Center(child: SettingScreen()),
@@ -126,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SafeArea(
       child: Scaffold(
         body: pages[_selectedIndex],
+
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -156,21 +214,17 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton:
             _selectedIndex == 0
                 ? FloatingActionButton(
-                  onPressed: () async {
-                    // final newTask = await Navigator.push<Task>(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder:
-                    //         (context) => AddTaskScreen(
-                    //           onTaskAdded: _addTask,
-                    //           categories: categories,
-                    //         ),
-                    //   ),
-                    // );
-
-                    // if (newTask != null) {
-                    //   _addTask(newTask);
-                    // }
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => AddTaskScreen(
+                              categories: categoriesList,
+                              onTaskAdded: _addTask,
+                            ),
+                      ),
+                    );
                   },
                   backgroundColor:
                       isDark

@@ -78,6 +78,7 @@ class AccountSettingsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
+                              // ignore: deprecated_member_use
                               color: colors.itemBgColor.withOpacity(0.2),
                               spreadRadius: 2,
                               blurRadius: 10,
@@ -170,6 +171,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15),
                                 boxShadow: [
                                   BoxShadow(
+                                    // ignore: deprecated_member_use
                                     color: colors.itemBgColor.withOpacity(0.3),
                                     blurRadius: 10,
                                     spreadRadius: 2,
@@ -227,6 +229,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15),
                                 boxShadow: [
                                   BoxShadow(
+                                    // ignore: deprecated_member_use
                                     color: colors.itemBgColor.withOpacity(0.3),
                                     blurRadius: 10,
                                     spreadRadius: 2,
@@ -278,7 +281,9 @@ class AccountSettingsScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
+                                    // ignore: deprecated_member_use
                                     Colors.grey.shade200.withOpacity(0.9),
+                                    // ignore: deprecated_member_use
                                     Colors.grey.shade300.withOpacity(0.9),
                                   ],
                                   begin: Alignment.centerLeft,
@@ -287,6 +292,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(25),
                                 boxShadow: [
                                   BoxShadow(
+                                    // ignore: deprecated_member_use
                                     color: Colors.grey.shade200.withOpacity(
                                       0.3,
                                     ),

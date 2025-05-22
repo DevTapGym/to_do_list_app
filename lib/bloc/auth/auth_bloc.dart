@@ -20,11 +20,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
       );
-    } else if (!response.isActive) {
-      // Tài khoản đúng nhưng chưa active
-      emit(AuthAuthenticated(authResponse: null, isActive: false));
     } else {
-      emit(AuthError(message: response.error ?? "Đăng nhập thất bại"));
+      if (!response.isActive && response.status == 400) {
+        emit(AuthAuthenticated(authResponse: null, isActive: false));
+      } else if (response.status == 500 &&
+          response.error == "Bad credentials") {
+        emit(AuthError(message: "Sai tên đăng nhập hoặc mật khẩu"));
+      } else {
+        emit(AuthError(message: "Đăng nhập thất bại"));
+      }
     }
   }
 

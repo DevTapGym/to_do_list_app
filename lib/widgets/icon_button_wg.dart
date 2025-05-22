@@ -4,6 +4,7 @@ import 'package:to_do_list_app/providers/theme_provider.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 
 class CategoryChip extends StatelessWidget {
+  final int id;
   final String label;
   final Color color;
   final bool isSelected;
@@ -11,6 +12,7 @@ class CategoryChip extends StatelessWidget {
 
   const CategoryChip({
     super.key,
+    required this.id,
     required this.label,
     required this.color,
     required this.isSelected,
@@ -57,9 +59,10 @@ class CategoryChip extends StatelessWidget {
 class CategoryList extends StatefulWidget {
   final List<CategoryChip> categories;
   final Function(List<CategoryChip>) onCategoryUpdated;
-  final Function(List<String>) onCategorySelected;
+  final Function(List<int>) onCategorySelected;
   final bool isMultiSelect;
   final bool showAddButton;
+  final VoidCallback? onAddButtonPressed;
 
   const CategoryList({
     super.key,
@@ -67,7 +70,8 @@ class CategoryList extends StatefulWidget {
     required this.onCategoryUpdated,
     required this.onCategorySelected,
     this.isMultiSelect = true,
-    this.showAddButton = true, // Mặc định hiển thị nút thêm
+    this.showAddButton = true,
+    this.onAddButtonPressed,
   });
 
   @override
@@ -76,48 +80,22 @@ class CategoryList extends StatefulWidget {
 }
 
 class _CategoryListState extends State<CategoryList> {
-  List<String> selectedCategories = [];
-  bool isAddingCategory = false;
-  final TextEditingController _controller = TextEditingController();
+  List<int> selectedCategoryIds = [];
 
-  void _toggleCategory(String label) {
+  void _toggleCategory(int id) {
     setState(() {
       if (widget.isMultiSelect) {
-        if (selectedCategories.contains(label)) {
-          selectedCategories.remove(label);
+        if (selectedCategoryIds.contains(id)) {
+          selectedCategoryIds.remove(id);
         } else {
-          selectedCategories.add(label);
+          selectedCategoryIds.add(id);
         }
       } else {
-        selectedCategories = [label];
+        selectedCategoryIds = [id];
       }
     });
 
-    widget.onCategorySelected(selectedCategories);
-  }
-
-  void _addCategory(String categoryName) {
-    if (categoryName.trim().isEmpty) {
-      setState(() {
-        isAddingCategory = false; // Ẩn TextField nếu không nhập gì
-      });
-      return;
-    } // Tránh thêm tên rỗng
-
-    setState(() {
-      final newCategory = CategoryChip(
-        label: categoryName,
-        color: Colors.grey,
-        isSelected: false,
-        onPressed: () {},
-      );
-
-      widget.categories.add(newCategory);
-      widget.onCategoryUpdated(widget.categories);
-      isAddingCategory = false;
-    });
-
-    _controller.clear();
+    widget.onCategorySelected(selectedCategoryIds);
   }
 
   @override
@@ -128,81 +106,36 @@ class _CategoryListState extends State<CategoryList> {
       height: 40,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: widget.categories.length + 1,
+        itemCount: widget.categories.length + (widget.showAddButton ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index < widget.categories.length) {
-            final category = widget.categories[index];
+          if (widget.showAddButton && index == widget.categories.length) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: CategoryChip(
-                label: category.label,
-                color: category.color,
-                isSelected: selectedCategories.contains(category.label),
-                onPressed: () => _toggleCategory(category.label),
+              child: GestureDetector(
+                onTap: widget.onAddButtonPressed,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.itemBgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.add, color: colors.textColor, size: 24),
+                ),
               ),
             );
-          } else if (widget.showAddButton) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child:
-                  isAddingCategory
-                      ? SizedBox(
-                        width: 140,
-                        child: Focus(
-                          onFocusChange: (hasFocus) {
-                            if (!hasFocus && _controller.text.isEmpty) {
-                              setState(() {
-                                isAddingCategory = false;
-                              });
-                            }
-                          },
-                          child: TextField(
-                            controller: _controller,
-                            autofocus: true,
-                            style: TextStyle(color: colors.textColor),
-                            decoration: InputDecoration(
-                              hintText: 'Enter category ...',
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            onSubmitted: _addCategory,
-                          ),
-                        ),
-                      )
-                      : GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isAddingCategory = true;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.primaryColor,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: colors.primaryColor,
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(Icons.add, color: colors.itemBgColor),
-                        ),
-                      ),
-            );
           }
-          return const SizedBox.shrink();
+          final category = widget.categories[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: CategoryChip(
+              id: category.id,
+              label: category.label,
+              color: category.color,
+              isSelected: selectedCategoryIds.contains(category.id),
+              onPressed: () => _toggleCategory(category.id),
+            ),
+          );
         },
       ),
     );

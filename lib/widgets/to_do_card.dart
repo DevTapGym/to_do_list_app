@@ -7,42 +7,25 @@ import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 class TodoCard extends StatelessWidget {
   final Task task;
   final VoidCallback onTap;
+  final VoidCallback onRefresh; // Thêm callback để làm mới
   final List<CategoryChip> categories;
 
   const TodoCard({
     super.key,
     required this.task,
     required this.onTap,
+    required this.onRefresh,
     required this.categories,
   });
 
   Color _getPriorityColor(String priority) {
     switch (priority) {
-      case "High":
+      case "HIGH":
         return Colors.red;
-      case "Medium":
+      case "MEDIUM":
         return Colors.orange;
-      case "Low":
+      case "LOW":
         return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case "Personal":
-        return Colors.red;
-      case "Finance":
-        return Colors.orange;
-      case "Study":
-        return Colors.blue;
-      case "Work":
-        return Colors.purple;
-      case "Health":
-        return Colors.green;
-      case "Shopping":
-        return Colors.pink;
       default:
         return Colors.grey;
     }
@@ -53,7 +36,7 @@ class TodoCard extends StatelessWidget {
     final colors = AppThemeConfig.getColors(context);
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap, // Thay đổi trạng thái hoàn thành
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(14),
@@ -105,11 +88,22 @@ class TodoCard extends StatelessWidget {
                             color:
                                 task.completed
                                     ? Colors.green
-                                    : _getCategoryColor(task.categoryName!),
+                                    : colors.primaryColor,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            task.categoryName!,
+                            categories
+                                .firstWhere(
+                                  (c) => c.id == task.categoryId,
+                                  orElse:
+                                      () => CategoryChip(
+                                        id: 0,
+                                        label: 'Unknown',
+                                        color: colors.primaryColor,
+                                        isSelected: false,
+                                      ),
+                                )
+                                .label,
                             style: TextStyle(
                               color: colors.textColor,
                               fontSize: 14,
@@ -164,17 +158,18 @@ class TodoCard extends StatelessWidget {
               ],
             ),
             GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder:
                         (context) => DetailTaskScreen(
-                          task: task,
+                          taskId: task.id!,
                           categories: categories,
                         ),
                   ),
                 );
+                onRefresh(); // Gọi callback để làm mới tasks
               },
               child: Icon(Icons.arrow_forward_ios, color: colors.textColor),
             ),

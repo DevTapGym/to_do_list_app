@@ -44,6 +44,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (success) {
         Navigator.push(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
             builder: (context) => OtpVerificationPage(email: email),
@@ -252,6 +253,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
     if (success) {
       Navigator.push(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (context) => ResetPasswordScreen(email: widget.email),
@@ -455,6 +457,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         });
 
         // Hiển thị thông báo thành công và quay lại màn hình đăng nhập
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Đặt lại mật khẩu thành công!'),
@@ -463,6 +466,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         );
 
         // Quay về màn hình đăng nhập
+        // ignore: use_build_context_synchronously
         Navigator.of(context).popUntil((route) => route.isFirst);
       });
     }
