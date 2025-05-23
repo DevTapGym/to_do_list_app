@@ -27,6 +27,16 @@ class TeamRepository{
     }
   }
 
+  Future<Team> getTeamById(int teamId) async {
+    final response = await apiService.get('$path/detail/$teamId');
+    if (response.statusCode == 200 && response.data['status']==200) {
+      final data = response.data['data'];
+      return Team.fromJson(data);
+    } else {
+      throw Exception('Lỗi khi tải danh sách nhóm');
+    }
+  }
+
   Future<int?> createTeam(ReqTeamDTO reqTeamDTO, int userId) async {
   try {
     final response = await apiService.post('$path/$userId', reqTeamDTO.toJson());

@@ -48,6 +48,12 @@ class _GroupListmemberState extends State<GroupListmember> {
         ),
         backgroundColor: colors.bgColor,
         iconTheme: IconThemeData(color: colors.textColor),
+        leading: IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () {
+      Navigator.of(context).pop('refresh');
+    },
+  ),
         actions: [
           Row(
             children: [

@@ -32,7 +32,7 @@ Future<void> configureDependencies() async {
   getIt.registerSingletonAsync<User>(
   () async {
     final userRepo = getIt<UserRepository>();
-    final user = await userRepo.getUserbyEmail('quang159258@gmail.com');
+    final user = await userRepo.getUserbyEmail('quang123@gmail.com');
     return user;
   },
 );

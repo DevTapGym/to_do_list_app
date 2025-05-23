@@ -7,6 +7,7 @@ import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
+import 'package:to_do_list_app/screens/team/ChooseNewLeader.dart';
 import 'package:to_do_list_app/screens/team/TeamSummaryPage.dart';
 import 'package:to_do_list_app/screens/team/group_QR_Share.dart';
 import 'package:to_do_list_app/screens/team/group_create_task.dart';
@@ -77,8 +78,8 @@ class _GroupDetailState extends State<GroupDetail> {
               // Nút Member
               IconButton(
                 icon: Icon(Icons.group, color: colors.textColor),
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder:
@@ -88,6 +89,9 @@ class _GroupDetailState extends State<GroupDetail> {
                           ),
                     ),
                   );
+                  if (result == 'refresh') {
+                    _fetchTeamDetails();
+                  }
                 },
               ),
               // Nút Setting
@@ -120,26 +124,26 @@ class _GroupDetailState extends State<GroupDetail> {
                           ),
                         );
                       } else if (value == 'Leave') {
-                        _showConfirmationLeaveDialog(widget.team);
+                        _showConfirmationLeaveDialog(widget.team, colors);
                       }
                     },
                     itemBuilder:
                         (context) => [
                           const PopupMenuItem(
                             value: 'Share',
-                            child: Text('Chia sẻ nhóm'),
+                            child: Text('Share'),
                           ),
                           const PopupMenuItem(
                             value: 'Rename',
-                            child: Text('Đổi tên'),
+                            child: Text('Rename'),
                           ),
                           const PopupMenuItem(
                             value: 'Disband',
-                            child: Text('Giải tán nhóm'),
+                            child: Text('Disband'),
                           ),
                           const PopupMenuItem(
                             value: 'Leave',
-                            child: Text('Rời nhóm'),
+                            child: Text('Leave Team'),
                           ),
                         ],
                   )
@@ -148,7 +152,7 @@ class _GroupDetailState extends State<GroupDetail> {
                     color: colors.bgColor,
                     onSelected: (value) {
                       if (value == 'Leave') {
-                        _showConfirmationLeaveDialog(widget.team);
+                        _showConfirmationLeaveDialog(widget.team, colors);
                       } else if (value == 'Share') {
                         Navigator.push(
                           context,
@@ -162,11 +166,11 @@ class _GroupDetailState extends State<GroupDetail> {
                         (context) => [
                           const PopupMenuItem(
                             value: 'Share',
-                            child: Text('Chia sẻ nhóm'),
+                            child: Text('Share'),
                           ),
                           const PopupMenuItem(
                             value: 'Leave',
-                            child: Text('Rời nhóm'),
+                            child: Text('Leave Team'),
                           ),
                         ],
                   ),
@@ -489,14 +493,18 @@ class _GroupDetailState extends State<GroupDetail> {
     );
   }
 
-  void onLeave({required int teamId, required int userId, int? newLeaderId}) async {
+  Future<void> onLeave({
+    required int teamId,
+    required int userId,
+    int? newLeaderId,
+  }) async {
     if (newLeaderId != null) {
       await teamService.ChangeMemberRole(teamId, newLeaderId, Role.LEADER);
-      await teamService.DeleteMember(teamId, userId); 
+      await teamService.DeleteMember(teamId, userId);
     } else {
       await teamService.DeleteMember(teamId, userId);
     }
-    Navigator.of(context).pop('refresh'); 
+
     Navigator.of(context).pop('refresh');
   }
 
@@ -508,31 +516,32 @@ class _GroupDetailState extends State<GroupDetail> {
     });
   }
 
-  void _showConfirmationLeaveDialog(Team team) {
-    final colors = AppThemeConfig.getColors(context); 
-
+  void _showConfirmationLeaveDialog(Team team, AppColors colors) async {
     if (widget.isLeader) {
-      final otherMembers = team.teamMembers
-          .where((member) => member.userId != user.id)
-          .toList();
+      final otherMembers =
+          team.teamMembers.where((member) => member.userId != user.id).toList();
 
       if (otherMembers.isEmpty) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return ConfirmationDialog(
-              title: 'Cannot Leave',
-              content: 'You are the only member left. You must disband the team instead.',
-              confirmText: 'OK',
-              cancelText: '', 
-              onConfirm: () {
-                Navigator.of(context).pop();
-              },
-            );
-          },
-        );
+        onDisband(team.id);
       } else {
-       
+        final int? newLeaderUserId = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => ChooseNewLeaderScreen(
+                  team: team,
+                  currentUser: user,
+                  colors: colors,
+                ),
+          ),
+        );
+        if (newLeaderUserId != null) {
+          onLeave(
+            teamId: team.id,
+            userId: user.id,
+            newLeaderId: newLeaderUserId,
+          );
+        }
       }
     } else {
       showDialog(
@@ -543,94 +552,27 @@ class _GroupDetailState extends State<GroupDetail> {
             content: 'Are you sure you want to leave team "${team.name}"?',
             confirmText: 'Confirm',
             cancelText: 'Cancel',
-            onConfirm: () => onLeave(teamId: team.id,userId:  user.id),
+            onConfirm: () async {
+              await onLeave(teamId: team.id, userId: user.id);
+            },
           );
         },
       );
     }
   }
+
+  Future<void> _fetchTeamDetails() async {
+    final updatedTeam = await teamService.getTeamById(widget.team.id);
+    if (updatedTeam != null) {
+      setState(() {
+        widget.team.teamMembers = updatedTeam.teamMembers;
+        widget.team.name = updatedTeam.name;
+        var leader = updatedTeam.teamMembers.firstWhere(
+          (member) => member.role == Role.LEADER,
+        );
+        widget.LeaderId = leader.userId;
+        widget.isLeader = widget.LeaderId == user.id;
+      });
+    }
+  }
 }
-
-
-// class ChooseNewLeaderDialog extends StatelessWidget {
-//   final Team team;
-//   final User currentUser;
-//   final Function(TeamMember) onConfirm;
-//   final AppColors colors;
-
-//   const ChooseNewLeaderDialog({
-//     super.key,
-//     required this.team,
-//     required this.currentUser,
-//     required this.onConfirm,
-//     required this.colors,
-//   });
-
-  
-
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final eligibleMembers = team.teamMembers
-//         .where((member) => member.userId != currentUser.id)
-//         .toList();
-
-//     return AlertDialog(
-//       backgroundColor: colors.bgColor,
-//       title: Text(
-//         'Choose New Leader',
-//         style: TextStyle(color: colors.textColor),
-//       ),
-//       content: eligibleMembers.isEmpty
-//           ? Text(
-//               'No other members available to transfer leadership.',
-//               style: TextStyle(color:colors.textColor),
-//             )
-//           : SingleChildScrollView(
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: eligibleMembers.map((member) {
-//                   return RadioListTile<TeamMember>(
-//                     title: Text(
-//                       member.user?.name ?? 'Unknown Member',
-//                       style: TextStyle(color: colors.textColor),
-//                     ),
-//                     value: member,
-//                     groupValue: _selectedNewLeader,
-//                     onChanged: (TeamMember? newMember) {
-//                       setState(() {
-//                         _selectedNewLeader = newMember;
-//                       });
-//                     },
-//                     activeColor: colors.primaryColor,
-//                   );
-//                 }).toList(),
-//               ),
-//             ),
-//       actions: [
-//         TextButton(
-//           onPressed: () {
-//             Navigator.of(context).pop(); 
-//           },
-//           child: Text('Cancel', style: TextStyle(color: colors.textColor)),
-//         ),
-//         TextButton(
-//           onPressed: _selectedNewLeader == null
-//               ? null
-//               : () {
-//                   onConfirm(_selectedNewLeader!);
-//                   Navigator.of(context).pop(); 
-//                 },
-//           child: Text(
-//             'Confirm',
-//             style: TextStyle(
-//               color: _selectedNewLeader == null
-//                   ? colors.subtitleColor
-//                   : colors.primaryColor,
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }

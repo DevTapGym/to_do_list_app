@@ -91,7 +91,10 @@ class TeamService {
   Future<void> DeleteMember(int teamId, int userId) async {
     await teamMemberRepository.deleteMemberAndTask(teamId, userId);
   }
-
+  Future<Team> getTeamById(int teamId) async{
+    final team= await teamRepository.getTeamById(teamId);
+    return team;
+  }
   Future<List<Team>> getTeamsByUserId(int userId) async {
     final teams = await teamRepository.getTeamsByUserId(userId);
     return teams;
