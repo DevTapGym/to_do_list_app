@@ -14,6 +14,11 @@ class TeamService {
     required this.teamMemberRepository,
     required this.teamTaskRepository,
   });
+  Future<void> ChangeMemberRole(int teamId,  int userId, Role role) async{
+    TeamMember member=await teamMemberRepository.getMemberByTeamAndUserId(teamId, userId);
+    member.role=role;
+    await teamMemberRepository.updateMember(member);
+  }
   Future<TeamMember> getMemberByTeamAndUserId(int teamId, int userId) async {
     final member = await teamMemberRepository.getMemberByTeamAndUserId(
       teamId,

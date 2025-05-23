@@ -119,6 +119,8 @@ class _GroupDetailState extends State<GroupDetail> {
                             builder: (context) => QRPage(team: widget.team),
                           ),
                         );
+                      } else if (value == 'Leave') {
+                        _showConfirmationLeaveDialog(widget.team);
                       }
                     },
                     itemBuilder:
@@ -134,6 +136,10 @@ class _GroupDetailState extends State<GroupDetail> {
                           const PopupMenuItem(
                             value: 'Disband',
                             child: Text('Giải tán nhóm'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'Leave',
+                            child: Text('Rời nhóm'),
                           ),
                         ],
                   )
@@ -222,11 +228,12 @@ class _GroupDetailState extends State<GroupDetail> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => TeamSummaryPage(
-                                  team: widget.team,
-                                  allTeamTasks: allTeamTasks,
-                                  isDark: isDark,
-                                ),
+                                builder:
+                                    (context) => TeamSummaryPage(
+                                      team: widget.team,
+                                      allTeamTasks: allTeamTasks,
+                                      isDark: isDark,
+                                    ),
                               ),
                             );
                           }
@@ -482,8 +489,14 @@ class _GroupDetailState extends State<GroupDetail> {
     );
   }
 
-  void onLeave(int teamId, int userId) async {
-    await teamService.DeleteMember(teamId, userId);
+  void onLeave({required int teamId, required int userId, int? newLeaderId}) async {
+    if (newLeaderId != null) {
+      await teamService.ChangeMemberRole(teamId, newLeaderId, Role.LEADER);
+      await teamService.DeleteMember(teamId, userId); 
+    } else {
+      await teamService.DeleteMember(teamId, userId);
+    }
+    Navigator.of(context).pop('refresh'); 
     Navigator.of(context).pop('refresh');
   }
 
@@ -496,17 +509,128 @@ class _GroupDetailState extends State<GroupDetail> {
   }
 
   void _showConfirmationLeaveDialog(Team team) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return ConfirmationDialog(
-          title: 'Confirmation',
-          content: 'Are you sure you want to leave team "${team.name}"?',
-          confirmText: 'Confirm',
-          cancelText: 'Cancel',
-          onConfirm: () => onLeave(team.id, user.id),
+    final colors = AppThemeConfig.getColors(context); 
+
+    if (widget.isLeader) {
+      final otherMembers = team.teamMembers
+          .where((member) => member.userId != user.id)
+          .toList();
+
+      if (otherMembers.isEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return ConfirmationDialog(
+              title: 'Cannot Leave',
+              content: 'You are the only member left. You must disband the team instead.',
+              confirmText: 'OK',
+              cancelText: '', 
+              onConfirm: () {
+                Navigator.of(context).pop();
+              },
+            );
+          },
         );
-      },
-    );
+      } else {
+       
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return ConfirmationDialog(
+            title: 'Confirmation',
+            content: 'Are you sure you want to leave team "${team.name}"?',
+            confirmText: 'Confirm',
+            cancelText: 'Cancel',
+            onConfirm: () => onLeave(teamId: team.id,userId:  user.id),
+          );
+        },
+      );
+    }
   }
 }
+
+
+// class ChooseNewLeaderDialog extends StatelessWidget {
+//   final Team team;
+//   final User currentUser;
+//   final Function(TeamMember) onConfirm;
+//   final AppColors colors;
+
+//   const ChooseNewLeaderDialog({
+//     super.key,
+//     required this.team,
+//     required this.currentUser,
+//     required this.onConfirm,
+//     required this.colors,
+//   });
+
+  
+
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final eligibleMembers = team.teamMembers
+//         .where((member) => member.userId != currentUser.id)
+//         .toList();
+
+//     return AlertDialog(
+//       backgroundColor: colors.bgColor,
+//       title: Text(
+//         'Choose New Leader',
+//         style: TextStyle(color: colors.textColor),
+//       ),
+//       content: eligibleMembers.isEmpty
+//           ? Text(
+//               'No other members available to transfer leadership.',
+//               style: TextStyle(color:colors.textColor),
+//             )
+//           : SingleChildScrollView(
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: eligibleMembers.map((member) {
+//                   return RadioListTile<TeamMember>(
+//                     title: Text(
+//                       member.user?.name ?? 'Unknown Member',
+//                       style: TextStyle(color: colors.textColor),
+//                     ),
+//                     value: member,
+//                     groupValue: _selectedNewLeader,
+//                     onChanged: (TeamMember? newMember) {
+//                       setState(() {
+//                         _selectedNewLeader = newMember;
+//                       });
+//                     },
+//                     activeColor: colors.primaryColor,
+//                   );
+//                 }).toList(),
+//               ),
+//             ),
+//       actions: [
+//         TextButton(
+//           onPressed: () {
+//             Navigator.of(context).pop(); 
+//           },
+//           child: Text('Cancel', style: TextStyle(color: colors.textColor)),
+//         ),
+//         TextButton(
+//           onPressed: _selectedNewLeader == null
+//               ? null
+//               : () {
+//                   onConfirm(_selectedNewLeader!);
+//                   Navigator.of(context).pop(); 
+//                 },
+//           child: Text(
+//             'Confirm',
+//             style: TextStyle(
+//               color: _selectedNewLeader == null
+//                   ? colors.subtitleColor
+//                   : colors.primaryColor,
+//             ),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
