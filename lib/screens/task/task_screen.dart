@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_state.dart';
+import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
+import 'package:intl/intl.dart';
+import 'package:to_do_list_app/services/task_service.dart';
 
 class TaskScreen extends StatefulWidget {
-  final List<Task> taskList;
   final Function(Task) onTaskAdded;
-  final List<CategoryChip> categories;
+  final List<Task> tasks;
+  final List<Category> categories;
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   const TaskScreen({
     super.key,
-    required this.taskList,
-    required this.categories,
     required this.onTaskAdded,
+    required this.tasks,
+    required this.categories,
+    required this.scaffoldKey,
   });
 
   @override
@@ -24,328 +34,357 @@ class _TaskScreenState extends State<TaskScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   List<Task> _filteredTasks = [];
-  final List<String> _selectedCategories = [];
-  bool? _completedFilter;
-  String _sortOrder = 'newest';
+  DateTime _selectedDate = DateTime.now();
+  final TaskService taskService = TaskService();
+  bool _isLoading = false;
+  List<Category> _categories = []; // Lưu danh sách categories cục bộ
 
-  // void _applyFilters() {
-  //   setState(() {
-  //     _filteredTasks = widget.taskList.where((task) {
-  //       if (_selectedCategories.isNotEmpty &&
-  //           !_selectedCategories.contains(task.category)) {
-  //         return false;
-  //       }
-  //       if (_completedFilter != null && task.completed != _completedFilter) {
-  //         return false;
-  //       }
-  //       return true;
-  //     }).toList();
+  @override
+  void initState() {
+    super.initState();
+    _filteredTasks = List.from(widget.tasks);
+    _categories = List.from(widget.categories);
 
-  //     if (_sortOrder == 'newest') {
-  //       _filteredTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-  //     } else {
-  //       _filteredTasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-  //     }
-  //   });
-  // }
-
-  void _showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-
-                children: [
-                  Text(
-                    'Filter jobs',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-
-                  // Chọn danh mục
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        ['Personal', 'Work', 'Health', 'Study']
-                            .map(
-                              (category) => ChoiceChip(
-                                label: Text(category),
-                                selected: _selectedCategories.contains(
-                                  category,
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedCategories.add(category);
-                                    } else {
-                                      _selectedCategories.remove(category);
-                                    }
-                                  });
-                                },
-                              ),
-                            )
-                            .toList(),
-                  ),
-
-                  SizedBox(height: 10),
-
-                  // Chọn trạng thái
-                  CheckboxListTile(
-                    title: Text('Completed Task'),
-                    value: _completedFilter == true,
-                    onChanged: (value) {
-                      setState(() {
-                        _completedFilter = value == true ? true : null;
-                      });
-                    },
-                  ),
-                  CheckboxListTile(
-                    title: Text('Incomplete Task'),
-                    value: _completedFilter == false,
-                    onChanged: (value) {
-                      setState(() {
-                        _completedFilter = value == true ? false : null;
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-
-                  // Chọn cách sắp xếp
-                  RadioListTile(
-                    title: Text('Sort by priority'),
-                    value: 'priority',
-                    groupValue: _sortOrder,
-                    onChanged: (value) {
-                      setState(() {
-                        _sortOrder = value.toString();
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: Text('Sort by notification time'),
-                    value: 'notification',
-                    groupValue: _sortOrder,
-                    onChanged: (value) {
-                      setState(() {
-                        _sortOrder = value.toString();
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 10),
-
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurpleAccent,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        //_applyFilters();
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Apply',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchTasksByDate();
+    });
   }
 
+  // Cập nhật _filteredTasks và _categories khi widget.tasks hoặc widget.categories thay đổi
+  @override
+  void didUpdateWidget(TaskScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tasks != oldWidget.tasks ||
+        widget.categories != oldWidget.categories) {
+      setState(() {
+        _filteredTasks = List.from(widget.tasks);
+        _categories = List.from(widget.categories);
+      });
+      _fetchTasksByDate();
+    }
+  }
+
+  // Lấy tasks từ API theo ngày được chọn
+  Future<void> _fetchTasksByDate() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && authState.authResponse != null) {
+      try {
+        final tasks = await taskService.getTasks(
+          userId: authState.authResponse!.user.id,
+          dueDate: _selectedDate,
+        );
+        setState(() {
+          _filteredTasks = tasks;
+          _isLoading = false;
+        });
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          // ignore: use_build_context_synchronously
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load tasks: $e')));
+      }
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+    }
+  }
+
+  // Tìm kiếm tasks theo từ khóa (lọc cục bộ trên widget.tasks)
   void _searchTask(String query) {
     setState(() {
-      if (query.isEmpty) {
-        _filteredTasks = List.from(widget.taskList);
-      } else {
+      if (query.isEmpty || query == '') {
+        // Khôi phục danh sách tasks theo ngày được chọn
         _filteredTasks =
-            widget.taskList
-                .where(
-                  (task) =>
-                      task.title.toLowerCase().contains(query.toLowerCase()) ||
-                      task.description!.toLowerCase().contains(
-                        query.toLowerCase(),
-                      ),
-                )
-                .toList();
+            widget.tasks.where((task) {
+              return task.taskDate.year == _selectedDate.year &&
+                  task.taskDate.month == _selectedDate.month &&
+                  task.taskDate.day == _selectedDate.day;
+            }).toList();
+      } else {
+        // Lọc tasks theo query
+        _filteredTasks =
+            _filteredTasks.where((task) {
+              return task.title.toLowerCase().contains(query.toLowerCase());
+            }).toList();
       }
     });
   }
 
-  void _addTask(Task task) {
-    setState(() {
-      widget.taskList.add(task);
-      _filteredTasks = List.from(widget.taskList);
-    });
-  }
-
-  void _navigateToAddTaskScreen() async {
-    final newTask = await Navigator.push<Task>(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => AddTaskScreen(
-              onTaskAdded: _addTask,
-              categories: widget.categories,
-            ),
-      ),
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2040),
     );
 
-    if (newTask != null) {
-      _addTask(newTask);
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+      await _fetchTasksByDate();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isSearching) {
-      _filteredTasks = List.from(widget.taskList);
-    }
+    final colors = AppThemeConfig.getColors(context);
+
     return Container(
-      decoration: BoxDecoration(color: Colors.black),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _isSearching
-                    ? Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        onChanged: (query) {
-                          _searchTask(query);
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search task...',
-                          hintStyle: TextStyle(color: Colors.white54),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: Colors.white54,
-                              width: 2,
+      decoration: BoxDecoration(color: colors.bgColor),
+      child: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _isSearching
+                      ? Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          autofocus: true,
+                          onChanged: _searchTask,
+                          decoration: InputDecoration(
+                            hintText: 'Search task...',
+                            hintStyle: TextStyle(color: colors.subtitleColor),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: colors.subtitleColor,
+                                width: 2,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurpleAccent,
+                                width: 2,
+                              ),
                             ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(
-                              color: Colors.deepPurpleAccent,
-                              width: 2,
+                          style: TextStyle(color: colors.textColor),
+                        ),
+                      )
+                      : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi there,',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: colors.textColor,
                             ),
                           ),
-                        ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    )
-                    : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hi there,',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          'Your Task',
-                          style: TextStyle(
-                            fontSize: 26,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 6),
+                          Text(
+                            'Your Task',
+                            style: TextStyle(
+                              fontSize: 26,
+                              color: colors.textColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
+                        ],
+                      ),
+                  Row(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(left: 12),
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: colors.itemBgColor,
+                          shape: BoxShape.circle,
                         ),
-                      ],
-                    ),
-                Row(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(left: 12),
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.search, color: Colors.white, size: 28),
-                        onPressed: () {
-                          setState(() {
-                            if (_isSearching) {
-                              _searchController.clear();
-                              _filteredTasks = List.from(widget.taskList);
-                            }
-                            _isSearching = !_isSearching;
-                          });
-                        },
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.filter_list,
-                          color: Colors.white,
-                          size: 28,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.search,
+                            color: colors.textColor,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (_isSearching) {
+                                _searchController.clear();
+                                _fetchTasksByDate();
+                              }
+                              _isSearching = !_isSearching;
+                            });
+                          },
                         ),
-                        onPressed: _showFilterBottomSheet,
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 12),
-              child: CategoryList(
-                categories: widget.categories,
-                isMultiSelect: true,
-                onCategoryUpdated: (category) {},
-                onCategorySelected: (category) {},
+                      const SizedBox(width: 12),
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: colors.itemBgColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.calendar_today,
+                            color: colors.textColor,
+                            size: 28,
+                          ),
+                          onPressed: () => _selectDate(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            widget.taskList.isEmpty
-                ? EmptyState(onAddTask: _navigateToAddTaskScreen)
-                : Expanded(
-                  child: ListView.builder(
-                    itemCount: _filteredTasks.length,
-                    itemBuilder: (context, index) {
-                      return TodoCard(
-                        task: _filteredTasks[index],
-                        onTap: () {
-                          setState(() {
-                            _filteredTasks[index].completed =
-                                !_filteredTasks[index].completed;
-                          });
-                        },
-                      );
-                    },
+              // CategoryList sử dụng _categories cục bộ
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 12),
+                child: CategoryList(
+                  categories:
+                      _categories
+                          .map(
+                            (c) => CategoryChip(
+                              id: c.id,
+                              label: c.name,
+                              color: Colors.deepPurpleAccent.shade700,
+                              isSelected: false,
+                            ),
+                          )
+                          .toList(),
+                  scaffoldKey: widget.scaffoldKey,
+                  isMultiSelect: true,
+                  onCategoryUpdated: (updatedCategories) {
+                    setState(() {
+                      _categories =
+                          updatedCategories.map((chip) {
+                            return Category(id: chip.id, name: chip.label);
+                          }).toList();
+                      _fetchTasksByDate(); // Làm mới tasks khi danh mục thay đổi
+                    });
+                  },
+                  onCategorySelected: (List<int> selectedCategoryIds) {
+                    setState(() {
+                      if (selectedCategoryIds.isEmpty) {
+                        _fetchTasksByDate();
+                      } else {
+                        // Lọc tasks theo danh sách danh mục được chọn
+                        _filteredTasks =
+                            widget.tasks.where((task) {
+                              return task.taskDate.year == _selectedDate.year &&
+                                  task.taskDate.month == _selectedDate.month &&
+                                  task.taskDate.day == _selectedDate.day &&
+                                  selectedCategoryIds.contains(task.categoryId);
+                            }).toList();
+                      }
+                    });
+                  },
+                ),
+              ),
+              DatePickerWidget(
+                onDateSelected: (date) async {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                  await _fetchTasksByDate();
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${_filteredTasks.length} Tasks For ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: colors.textColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-          ],
-        ),
+              ),
+              if (_filteredTasks.isEmpty && !_isLoading)
+                EmptyState(
+                  onAddTask: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => AddTaskScreen(
+                              categories: _categories,
+                              onTaskAdded: (task) {
+                                widget.onTaskAdded(task);
+                                _fetchTasksByDate();
+                              },
+                            ),
+                      ),
+                    );
+                  },
+                )
+              else
+                ..._filteredTasks.map(
+                  (task) => TodoCard(
+                    task: task,
+                    categories:
+                        _categories
+                            .map(
+                              (c) => CategoryChip(
+                                id: c.id,
+                                label: c.name,
+                                color: Colors.deepPurpleAccent.shade700,
+                                isSelected: task.categoryId == c.id,
+                              ),
+                            )
+                            .toList(),
+                    onTap: () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      try {
+                        bool result = await taskService.updateTask(
+                          task.copyWith(completed: !task.completed),
+                        );
+                        if (result) {
+                          await _fetchTasksByDate();
+                        }
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      } catch (e) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to update task: $e')),
+                        );
+                      }
+                    },
+                    onRefresh: _fetchTasksByDate,
+                  ),
+                ),
+            ],
+          ),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
 
@@ -355,40 +394,132 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+    final colors = AppThemeConfig.getColors(context);
+
     return Container(
-      margin: EdgeInsets.only(top: 24),
+      margin: const EdgeInsets.only(top: 24),
       child: Column(
         children: [
-          Icon(Icons.task, color: Colors.grey, size: 100),
-          SizedBox(height: 8),
+          Icon(Icons.task, color: colors.subtitleColor, size: 100),
+          const SizedBox(height: 8),
           Text(
             'No tasks yet',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: colors.textColor,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Add your first task to get started',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: TextStyle(fontSize: 16, color: colors.subtitleColor),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: onAddTask,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurpleAccent,
+              backgroundColor:
+                  isDark
+                      ? Colors.deepPurpleAccent
+                      : Colors.deepPurpleAccent.shade700,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.fromLTRB(40, 6, 40, 6),
+              padding: const EdgeInsets.fromLTRB(40, 6, 40, 6),
             ),
-            child: Text(
+            child: const Text(
               'Add Task',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class DatePickerWidget extends StatefulWidget {
+  final Function(DateTime) onDateSelected;
+
+  const DatePickerWidget({super.key, required this.onDateSelected});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _DatePickerWidgetState createState() => _DatePickerWidgetState();
+}
+
+class _DatePickerWidgetState extends State<DatePickerWidget> {
+  DateTime selectedDate = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
+    List<DateTime> dates = List.generate(
+      4,
+      (index) => DateTime.now().add(Duration(days: index)),
+    );
+
+    final colors = AppThemeConfig.getColors(context);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children:
+          dates.map((date) {
+            bool isSelected =
+                selectedDate.day == date.day &&
+                selectedDate.month == date.month &&
+                selectedDate.year == date.year;
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedDate = date;
+                });
+                widget.onDateSelected(date);
+              },
+              child: Container(
+                width: 80,
+                height: 100,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 15,
+                ),
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: isSelected ? colors.primaryColor : colors.itemBgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      DateFormat('EEE').format(date),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      date.day.toString(),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('MMM').format(date),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
     );
   }
 }

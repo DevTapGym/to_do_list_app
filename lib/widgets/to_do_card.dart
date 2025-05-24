@@ -1,40 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/screens/task/detail_task_screen.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
+import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class TodoCard extends StatelessWidget {
   final Task task;
   final VoidCallback onTap;
+  final VoidCallback onRefresh; // Thêm callback để làm mới
+  final List<CategoryChip> categories;
 
-  const TodoCard({super.key, required this.task, required this.onTap});
+  const TodoCard({
+    super.key,
+    required this.task,
+    required this.onTap,
+    required this.onRefresh,
+    required this.categories,
+  });
 
   Color _getPriorityColor(String priority) {
     switch (priority) {
-      case "High":
+      case "HIGH":
         return Colors.red;
-      case "Medium":
+      case "MEDIUM":
         return Colors.orange;
-      case "Low":
+      case "LOW":
         return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case "Personal":
-        return Colors.red;
-      case "Finance":
-        return Colors.orange;
-      case "Study":
-        return Colors.blue;
-      case "Work":
-        return Colors.purple;
-      case "Health":
-        return Colors.green;
-      case "Shopping":
-        return Colors.pink;
       default:
         return Colors.grey;
     }
@@ -42,19 +33,21 @@ class TodoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap, // Thay đổi trạng thái hoàn thành
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 30, 30, 30),
+          color: colors.itemBgColor,
           borderRadius: BorderRadius.circular(14),
           border: Border(
             left: BorderSide(
               color:
                   task.completed
-                      ? Colors.green
+                      ? Colors.green.shade600
                       : _getPriorityColor(task.priority),
               width: 6,
             ),
@@ -69,7 +62,7 @@ class TodoCard extends StatelessWidget {
                   task.completed
                       ? Icons.check_circle
                       : Icons.radio_button_unchecked,
-                  color: task.completed ? Colors.green : Colors.white,
+                  color: task.completed ? Colors.green : colors.textColor,
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -78,7 +71,7 @@ class TodoCard extends StatelessWidget {
                     Text(
                       task.title,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -95,13 +88,24 @@ class TodoCard extends StatelessWidget {
                             color:
                                 task.completed
                                     ? Colors.green
-                                    : _getCategoryColor(task.category),
+                                    : colors.primaryColor,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            task.category,
+                            categories
+                                .firstWhere(
+                                  (c) => c.id == task.categoryId,
+                                  orElse:
+                                      () => CategoryChip(
+                                        id: 0,
+                                        label: 'Unknown',
+                                        color: colors.primaryColor,
+                                        isSelected: false,
+                                      ),
+                                )
+                                .label,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: colors.textColor,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
@@ -112,14 +116,14 @@ class TodoCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.access_time,
-                              color: Colors.white,
+                              color: colors.textColor,
                               size: 20,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${task.taskDate.day}/${task.taskDate.month}/${task.taskDate.year}',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: colors.textColor,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -132,14 +136,14 @@ class TodoCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.notifications,
-                                color: Colors.white,
+                                color: colors.textColor,
                                 size: 20,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${task.notificationTime!.hour}:${task.notificationTime!.minute}',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: colors.textColor,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -154,15 +158,20 @@ class TodoCard extends StatelessWidget {
               ],
             ),
             GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DetailTaskScreen(task: task),
+                    builder:
+                        (context) => DetailTaskScreen(
+                          taskId: task.id!,
+                          categories: categories,
+                        ),
                   ),
                 );
+                onRefresh(); // Gọi callback để làm mới tasks
               },
-              child: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+              child: Icon(Icons.arrow_forward_ios, color: colors.textColor),
             ),
           ],
         ),

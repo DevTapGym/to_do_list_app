@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/utils/theme_config.dart';
 
 class CategoryChip extends StatelessWidget {
+  final int id;
   final String label;
   final Color color;
   final bool isSelected;
@@ -8,6 +12,7 @@ class CategoryChip extends StatelessWidget {
 
   const CategoryChip({
     super.key,
+    required this.id,
     required this.label,
     required this.color,
     required this.isSelected,
@@ -16,12 +21,14 @@ class CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return GestureDetector(
       onTap: onPressed,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white10 : Colors.black,
+          color: isSelected ? Colors.transparent : colors.itemBgColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: color, width: 2),
         ),
@@ -36,8 +43,8 @@ class CategoryChip extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colors.textColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -52,9 +59,11 @@ class CategoryChip extends StatelessWidget {
 class CategoryList extends StatefulWidget {
   final List<CategoryChip> categories;
   final Function(List<CategoryChip>) onCategoryUpdated;
-  final Function(List<String>) onCategorySelected;
+  final Function(List<int>) onCategorySelected;
   final bool isMultiSelect;
   final bool showAddButton;
+  final VoidCallback? onAddButtonPressed;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const CategoryList({
     super.key,
@@ -62,7 +71,9 @@ class CategoryList extends StatefulWidget {
     required this.onCategoryUpdated,
     required this.onCategorySelected,
     this.isMultiSelect = true,
-    this.showAddButton = true, // Mặc định hiển thị nút thêm
+    this.showAddButton = true,
+    this.onAddButtonPressed,
+    this.scaffoldKey,
   });
 
   @override
@@ -71,129 +82,64 @@ class CategoryList extends StatefulWidget {
 }
 
 class _CategoryListState extends State<CategoryList> {
-  List<String> selectedCategories = [];
-  bool isAddingCategory = false;
-  final TextEditingController _controller = TextEditingController();
+  List<int> selectedCategoryIds = [];
 
-  void _toggleCategory(String label) {
+  void _toggleCategory(int id) {
     setState(() {
       if (widget.isMultiSelect) {
-        if (selectedCategories.contains(label)) {
-          selectedCategories.remove(label);
+        if (selectedCategoryIds.contains(id)) {
+          selectedCategoryIds.remove(id);
         } else {
-          selectedCategories.add(label);
+          selectedCategoryIds.add(id);
         }
       } else {
-        selectedCategories = [label];
+        selectedCategoryIds = [id];
       }
     });
 
-    widget.onCategorySelected(selectedCategories);
-  }
-
-  void _addCategory(String categoryName) {
-    if (categoryName.trim().isEmpty) {
-      setState(() {
-        isAddingCategory = false; // Ẩn TextField nếu không nhập gì
-      });
-      return;
-    } // Tránh thêm tên rỗng
-
-    setState(() {
-      final newCategory = CategoryChip(
-        label: categoryName,
-        color: Colors.grey,
-        isSelected: false,
-        onPressed: () {},
-      );
-
-      widget.categories.add(newCategory);
-      widget.onCategoryUpdated(widget.categories);
-      isAddingCategory = false;
-    });
-
-    _controller.clear();
+    widget.onCategorySelected(selectedCategoryIds);
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return SizedBox(
       height: 40,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: widget.categories.length + 1,
+        itemCount: widget.categories.length + (widget.showAddButton ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index < widget.categories.length) {
-            final category = widget.categories[index];
+          if (widget.showAddButton && index == widget.categories.length) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: CategoryChip(
-                label: category.label,
-                color: category.color,
-                isSelected: selectedCategories.contains(category.label),
-                onPressed: () => _toggleCategory(category.label),
+              child: GestureDetector(
+                onTap: () {
+                  widget.scaffoldKey!.currentState?.openDrawer();
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.itemBgColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.add, color: colors.textColor, size: 24),
+                ),
               ),
             );
-          } else if (widget.showAddButton) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child:
-                  isAddingCategory
-                      ? SizedBox(
-                        width: 140,
-                        child: Focus(
-                          onFocusChange: (hasFocus) {
-                            if (!hasFocus && _controller.text.isEmpty) {
-                              setState(() {
-                                isAddingCategory =
-                                    false; // Ẩn khi mất focus mà không nhập
-                              });
-                            }
-                          },
-                          child: TextField(
-                            controller: _controller,
-                            autofocus: true,
-                            style: TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'Enter category ...',
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            onSubmitted: _addCategory,
-                          ),
-                        ),
-                      )
-                      : GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isAddingCategory = true;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(Icons.add, color: Colors.white),
-                        ),
-                      ),
-            );
           }
-          return const SizedBox.shrink();
+          final category = widget.categories[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: CategoryChip(
+              id: category.id,
+              label: category.label,
+              color: category.color,
+              isSelected: selectedCategoryIds.contains(category.id),
+              onPressed: () => _toggleCategory(category.id),
+            ),
+          );
         },
       ),
     );
@@ -228,6 +174,8 @@ class _WeekdaySelectorState extends State<WeekdaySelector> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppThemeConfig.getColors(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: List.generate(days.length, (index) {
@@ -240,10 +188,10 @@ class _WeekdaySelectorState extends State<WeekdaySelector> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? Colors.deepPurpleAccent : Colors.grey,
+                color: isSelected ? colors.primaryColor : Colors.grey,
                 width: 2,
               ),
-              color: isSelected ? Colors.deepPurpleAccent : Colors.transparent,
+              color: isSelected ? colors.primaryColor : colors.itemBgColor,
             ),
             alignment: Alignment.center,
             child: Text(
@@ -282,18 +230,29 @@ class _PrioritySelectorState extends State<PrioritySelector> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildPriorityButton("High", Colors.red),
-        _buildPriorityButton("Medium", Colors.orange),
-        _buildPriorityButton("Low", Colors.blue),
+        _buildPriorityButton("High", isDark ? Colors.red : Colors.red.shade700),
+        _buildPriorityButton(
+          "Medium",
+          isDark ? Colors.orange : Colors.orange.shade700,
+        ),
+        _buildPriorityButton(
+          "Low",
+          isDark ? Colors.blue : Colors.blue.shade700,
+        ),
       ],
     );
   }
 
   Widget _buildPriorityButton(String label, Color color) {
     bool isSelected = selectedPriority == label;
+    final colors = AppThemeConfig.getColors(context);
+
     return GestureDetector(
       onTap: () => selectPriority(label),
       child: Container(
@@ -301,7 +260,7 @@ class _PrioritySelectorState extends State<PrioritySelector> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color, width: 2),
-          color: isSelected ? color : Colors.transparent,
+          color: isSelected ? color : colors.itemBgColor,
         ),
         child: Text(
           label,

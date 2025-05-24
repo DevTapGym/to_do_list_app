@@ -3,10 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = true;
-  bool _isLoading = true; // ✅ Thêm trạng thái tải
+  bool _isLoading = true;
 
   bool get isDarkMode => _isDarkMode;
-  bool get isLoading => _isLoading; // ✅ Kiểm tra nếu đang tải
+  bool get isLoading => _isLoading;
 
   ThemeProvider() {
     _loadTheme();
@@ -26,7 +26,7 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     _isDarkMode = prefs.getBool('isDarkMode') ?? true;
-    _isLoading = false; // ✅ Hoàn tất tải dữ liệu
+    _isLoading = false;
     notifyListeners();
   }
 }
