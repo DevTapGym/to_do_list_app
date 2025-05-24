@@ -111,6 +111,49 @@ class AuthService {
     }
   }
 
+  Future<bool> forgotPassword(String email) async {
+    try {
+      Response response = await dio.post(
+        "/api/v1/auth/retry-password",
+        queryParameters: {"email": email},
+      );
+
+      if (response.statusCode == 200 && response.data["status"] == 200) {
+        return true;
+      } else if (response.data["status"] == 400 &&
+          response.data["error"] == "Email not found") {
+        return false;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi khi gửi yêu cầu quên mật khẩu: $e");
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword(String email, String password, String code) async {
+    try {
+      Response response = await dio.post(
+        "/api/v1/auth/change-password-retry",
+        data: {"email": email, "password": password, "code": code},
+      );
+      print("Response: ${response.data}");
+
+      if (response.statusCode == 200 && response.data["status"] == 200) {
+        return true;
+      } else if (response.data["status"] == 400 &&
+          response.data["error"] == "Invalid code") {
+        return false;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi khi đặt lại mật khẩu: $e");
+      return false;
+    }
+  }
+
   Future<String> register(
     String name,
     String email,
