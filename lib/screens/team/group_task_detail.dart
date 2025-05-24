@@ -226,7 +226,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
     return TextFormField(
       controller: TextEditingController(
         text:
-            "${widget.task.deadline.day}/${widget.task.deadline.month}/${widget.task.deadline.year}",
+            "${taskDate.day}/${taskDate.month}/${taskDate.year}",
       ),
       readOnly: true,
       enabled: canEditDeadline,
@@ -261,7 +261,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 );
                 if (pickedDate != null && pickedDate != widget.task.deadline) {
                   setState(() {
-                    widget.task.deadline = pickedDate;
+                    taskDate = pickedDate;
                   });
                 }
               }
