@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_state.dart';
+import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/services/task_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class AddTaskScreen extends StatefulWidget {
+  final List<Category> categories;
   final Function(Task) onTaskAdded;
-  final List<CategoryChip> categories;
 
   const AddTaskScreen({
     super.key,
-    required this.onTaskAdded,
     required this.categories,
+    required this.onTaskAdded,
   });
 
   @override
@@ -22,19 +27,30 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   TimeOfDay? _selectedTime;
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  List<int> selectedDays = [];
-  List<String> selectedCategories = [];
-  late String selectedPriority;
+  int? selectedCategoryId;
+  String selectedPriority = 'Medium';
+  List<int> selectedCategoryIds = [];
 
-  void handleSelectionChanged(List<int> days) {
-    setState(() {
-      selectedDays = days;
-    });
+  @override
+  void initState() {
+    super.initState();
   }
 
-  void handleselectedCategories(List<String> categories) {
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void handleSelectedCategories(List<int> ids) {
     setState(() {
-      selectedCategories = categories;
+      selectedCategoryIds = ids;
+      if (ids.isNotEmpty) {
+        selectedCategoryId = ids.first;
+      } else {
+        selectedCategoryId = null;
+      }
     });
   }
 
@@ -44,7 +60,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
-  // Hàm chọn ngày
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -63,7 +78,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: 0, minute: 0),
+      initialTime: const TimeOfDay(hour: 0, minute: 0),
     );
 
     setState(() {
@@ -71,29 +86,54 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     });
   }
 
-  void _createTask() {
-    if (_titleController.text.isEmpty || _selectedDate == null) {
+  void _createTask() async {
+    if (_titleController.text.isEmpty ||
+        _selectedDate == null ||
+        selectedCategoryIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all required fields")),
+        const SnackBar(content: Text("Please fill all required fields")),
       );
       return;
     }
 
-    // Tạm thời sử dụng categoryId là 1
-    Task newTask = Task(
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated || authState.authResponse == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      return;
+    }
+
+    final task = Task(
       title: _titleController.text,
-      description: _descriptionController.text,
+      description:
+          _descriptionController.text.isNotEmpty
+              ? _descriptionController.text
+              : null,
       taskDate: _selectedDate!,
-      categoryId: 1,
-      categoryName:
-          selectedCategories.isNotEmpty ? selectedCategories[0] : 'Personal',
+      categoryId: selectedCategoryIds.first,
       priority: selectedPriority,
-      repeatDays: selectedDays,
-      completed: false,
       notificationTime: _selectedTime,
+      completed: false,
     );
 
-    Navigator.pop(context, newTask);
+    final success = await TaskService().addTask(task);
+
+    if (success) {
+      if (mounted) {
+        widget.onTaskAdded(task);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Task created successfully!')),
+        );
+        Navigator.pop(context);
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to create task')));
+      }
+    }
   }
 
   @override
@@ -135,34 +175,43 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     color: colors.textColor,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _titleController,
                   style: TextStyle(color: colors.textColor),
                   decoration: InputDecoration(
                     hintText: 'Enter task title',
-                    hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
-                    labelStyle: TextStyle(color: Colors.white),
+                    hintStyle: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                    labelStyle: const TextStyle(color: Colors.white),
                     filled: true,
                     fillColor: colors.itemBgColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey, width: 2),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 2,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey, width: 2),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 2,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: Colors.deepPurpleAccent,
                         width: 2,
                       ),
                     ),
                   ),
                 ),
-                SizedBox(height: 18),
+                const SizedBox(height: 18),
                 Text(
                   'Task Description',
                   style: TextStyle(
@@ -171,26 +220,35 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     color: colors.textColor,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _descriptionController,
                   maxLines: 4,
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                     hintText: 'Enter task description',
-                    hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
-                    hintFadeDuration: Duration(),
+                    hintStyle: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                    hintFadeDuration: const Duration(),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey, width: 2),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 2,
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey, width: 2),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 2,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: Colors.deepPurpleAccent,
                         width: 2,
                       ),
@@ -200,7 +258,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                   style: TextStyle(color: colors.textColor),
                 ),
-                SizedBox(height: 18),
+                const SizedBox(height: 18),
                 Text(
                   'Task date',
                   style: TextStyle(
@@ -209,7 +267,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     color: colors.textColor,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -219,8 +277,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   child: OutlinedButton(
                     onPressed: () => _selectDate(context),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey, width: 2),
-                      padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+                      side: const BorderSide(color: Colors.grey, width: 2),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -233,7 +291,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           color: colors.primaryColor,
                           size: 20,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           _selectedDate == null
                               ? 'Select date'
@@ -247,7 +305,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 18),
+                const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -257,8 +315,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   child: OutlinedButton(
                     onPressed: () => _selectTime(context),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey, width: 2),
-                      padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+                      side: const BorderSide(color: Colors.grey, width: 2),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -271,7 +329,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           color: colors.primaryColor,
                           size: 20,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           _selectedTime == null
                               ? 'Select time for notification'
@@ -285,7 +343,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 18),
+                const SizedBox(height: 18),
                 Text(
                   'Select repeat days',
                   style: TextStyle(
@@ -294,19 +352,27 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     color: colors.textColor,
                   ),
                 ),
-                SizedBox(height: 8),
-                WeekdaySelector(onSelectionChanged: handleSelectionChanged),
-                SizedBox(height: 18),
+                const SizedBox(height: 8),
+                const SizedBox(height: 18),
                 PrioritySelector(onPrioritySelected: handlePrioritySelected),
-                SizedBox(height: 18),
+                const SizedBox(height: 18),
                 CategoryList(
-                  categories: widget.categories,
+                  categories:
+                      widget.categories
+                          .map(
+                            (c) => CategoryChip(
+                              id: c.id,
+                              label: c.name,
+                              color: Colors.deepPurpleAccent.shade700,
+                              isSelected: selectedCategoryIds.contains(c.id),
+                            ),
+                          )
+                          .toList(),
                   isMultiSelect: false,
-                  showAddButton: false,
-                  onCategorySelected: handleselectedCategories,
+                  onCategorySelected: handleSelectedCategories,
                   onCategoryUpdated: (covariant) {},
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -315,7 +381,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colors.primaryColor,
                         foregroundColor: colors.textColor,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           vertical: 12,
                           horizontal: 34,
                         ),
@@ -323,7 +389,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Create Task",
                         style: TextStyle(
                           color: Colors.white,

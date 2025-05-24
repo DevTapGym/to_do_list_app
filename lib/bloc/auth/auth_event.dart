@@ -8,3 +8,5 @@ class LoginEvent extends AuthEvent {
 }
 
 class LogoutEvent extends AuthEvent {}
+
+class VerifyTokenEvent extends AuthEvent {}

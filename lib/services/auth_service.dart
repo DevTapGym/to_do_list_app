@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/auth_response.dart';
 
 class AuthService {
@@ -9,8 +9,66 @@ class AuthService {
       validateStatus: (status) {
         return true;
       },
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
     ),
   );
+
+  Future<LoginResult> verifyToken() async {
+    try {
+      final storage = FlutterSecureStorage();
+      String? accessToken = await storage.read(key: 'access_token');
+      print('Access Token: $accessToken');
+
+      if (accessToken == null || accessToken.isEmpty) {
+        return LoginResult(error: "No token found", status: 401);
+      }
+
+      Response response = await dio.get(
+        "/api/v1/auth/profile",
+        options: Options(headers: {"Authorization": "Bearer $accessToken"}),
+      );
+      print('Response Data: ${response.data}');
+      print('Status: ${response.data["status"]}');
+      print('Message: ${response.data["message"]}');
+      print('Error: ${response.data["error"]}');
+      print('Data: ${response.data["data"]}');
+
+      final status = response.data["status"] as int? ?? 0;
+      final error = response.data["error"] as String?;
+      final message = response.data["message"] as String?;
+
+      if (response.statusCode == 200 && status == 200) {
+        final data = response.data["data"];
+        if (data == null || data is! Map<String, dynamic>) {
+          print('Invalid or missing data field');
+          return LoginResult(error: "Invalid response data", status: 500);
+        }
+        print('Parsing data to AuthResponse: $data');
+        AuthResponse authResponse = AuthResponse.fromRes(data);
+        authResponse.accessToken = accessToken;
+        print('Parsed AuthResponse: ${authResponse.user.email}');
+        return LoginResult(authResponse: authResponse);
+      }
+
+      if (status == 401) {
+        await storage.delete(key: 'access_token');
+        return LoginResult(
+          error: error ?? message ?? "Token expired or invalid",
+          status: 401,
+        );
+      }
+
+      return LoginResult(
+        error: message ?? error ?? "Failed to verify token",
+        status: status,
+      );
+    } catch (e, stackTrace) {
+      print('Exception in verifyToken: $e');
+      print('StackTrace: $stackTrace');
+      return LoginResult(error: "Error verifying token: $e", status: 500);
+    }
+  }
 
   Future<LoginResult> login(String email, String password) async {
     try {
@@ -27,23 +85,72 @@ class AuthService {
         final data = response.data["data"];
         AuthResponse authResponse = AuthResponse.fromJson(data);
 
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString("access_token", authResponse.accessToken);
+        final storage = FlutterSecureStorage();
+        await storage.write(
+          key: 'access_token',
+          value: authResponse.accessToken,
+        );
 
         return LoginResult(authResponse: authResponse);
       }
 
       if (status == 400 && error == "User is not active") {
-        return LoginResult(isActive: false);
+        return LoginResult(isActive: false, status: 400, error: error);
       }
 
       if (status == 500 && error == "Bad credentials") {
-        return LoginResult(error: "Sai tên đăng nhập hoặc mật khẩu");
+        return LoginResult(error: error, status: 500);
       }
 
+      if (status == 500 && error == "User not found") {
+        return LoginResult(error: error, status: 500);
+      }
       return LoginResult(error: message ?? "Đã xảy ra lỗi không xác định.");
     } catch (e) {
       return LoginResult(error: "Lỗi khi gọi API: $e");
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    try {
+      Response response = await dio.post(
+        "/api/v1/auth/retry-password",
+        queryParameters: {"email": email},
+      );
+
+      if (response.statusCode == 200 && response.data["status"] == 200) {
+        return true;
+      } else if (response.data["status"] == 400 &&
+          response.data["error"] == "Email not found") {
+        return false;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi khi gửi yêu cầu quên mật khẩu: $e");
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword(String email, String password, String code) async {
+    try {
+      Response response = await dio.post(
+        "/api/v1/auth/change-password-retry",
+        data: {"email": email, "password": password, "code": code},
+      );
+      print("Response: ${response.data}");
+
+      if (response.statusCode == 200 && response.data["status"] == 200) {
+        return true;
+      } else if (response.data["status"] == 400 &&
+          response.data["error"] == "Invalid code") {
+        return false;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi khi đặt lại mật khẩu: $e");
+      return false;
     }
   }
 
@@ -123,7 +230,13 @@ class AuthService {
 class LoginResult {
   final AuthResponse? authResponse;
   final bool isActive;
+  final int status;
   final String? error;
 
-  LoginResult({this.authResponse, this.isActive = false, this.error});
+  LoginResult({
+    this.authResponse,
+    this.isActive = true,
+    this.status = 200,
+    this.error,
+  });
 }

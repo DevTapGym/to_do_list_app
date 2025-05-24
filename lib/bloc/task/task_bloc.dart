@@ -19,7 +19,10 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
   ) async {
     emit(TaskLoading());
     try {
-      final tasks = await taskService.getTasks(event.userId, event.dueDate!);
+      final tasks = await taskService.getTasks(
+        userId: event.userId,
+        dueDate: event.dueDate!,
+      );
       final categories = await categoryService.getCategories(event.userId);
       emit(TaskLoaded(tasks: tasks, categories: categories));
     } catch (e) {

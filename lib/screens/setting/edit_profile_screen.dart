@@ -93,6 +93,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: colors.itemBgColor,
                       boxShadow: [
                         BoxShadow(
+                          // ignore: deprecated_member_use
                           color: colors.itemBgColor.withOpacity(0.2),
                           blurRadius: 20,
                           spreadRadius: 5,
@@ -161,6 +162,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
+                      // ignore: deprecated_member_use
                       color: colors.itemBgColor.withOpacity(0.2),
                       spreadRadius: 2,
                       blurRadius: 10,
@@ -210,6 +212,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
+                        // ignore: deprecated_member_use
                         color: colors.subtitleColor.withOpacity(0.3),
                         blurRadius: 10,
                         spreadRadius: 2,

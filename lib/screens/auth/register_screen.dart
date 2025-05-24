@@ -42,9 +42,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       final result = await AuthService().register(name, email, password, phone);
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
 
       if (result == "success") {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Đăng ký thành công!"),
@@ -54,8 +56,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
         await Future.delayed(const Duration(seconds: 2));
 
+        // ignore: use_build_context_synchronously
         Navigator.pushReplacementNamed(context, '/login');
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result), backgroundColor: Colors.red),
         );

@@ -31,8 +31,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _showMessage('New password must be different from old password');
       return;
     }
-
-    // TODO: call backend to change password
     _showMessage('Password changed successfully', success: true);
 
     _oldPasswordController.clear();
@@ -91,6 +89,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
+                        // ignore: deprecated_member_use
                         color: colors.itemBgColor.withOpacity(0.2),
                         spreadRadius: 2,
                         blurRadius: 10,
@@ -122,10 +121,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty)
+                          if (value == null || value.isEmpty) {
                             return 'Please enter new password';
-                          if (value == _oldPasswordController.text)
+                          }
+                          if (value == _oldPasswordController.text) {
                             return 'New password must differ from old password';
+                          }
                           return null;
                         },
                       ),
@@ -158,10 +159,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty)
+                          if (value == null || value.isEmpty) {
                             return 'Please confirm your new password';
-                          if (value != _newPasswordController.text)
+                          }
+                          if (value != _newPasswordController.text) {
                             return 'Passwords do not match';
+                          }
                           return null;
                         },
                       ),
@@ -175,6 +178,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
+                        // ignore: deprecated_member_use
                         color: colors.subtitleColor.withOpacity(0.3),
                         blurRadius: 10,
                         spreadRadius: 2,

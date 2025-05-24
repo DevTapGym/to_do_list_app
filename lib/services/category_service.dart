@@ -1,7 +1,5 @@
-import 'dart:ffi';
-
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/category.dart';
 
 class CategoryService {
@@ -16,9 +14,9 @@ class CategoryService {
 
   Future<List<Category>> getCategories(int userId) async {
     try {
-      // Lấy token từ SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('access_token');
+      // Lấy token từ FlutterSecureStorage
+      final storage = FlutterSecureStorage();
+      String? token = await storage.read(key: 'access_token');
 
       if (token == null) {
         throw Exception('No access token found');
@@ -46,38 +44,6 @@ class CategoryService {
       return data.map((json) => Category.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch categories: $e');
-    }
-  }
-
-  Future<Category> createCategory(Category category) async {
-    try {
-      final response = await dio.post(
-        '/api/v1/category',
-        data: category.toJson(),
-      );
-      return Category.fromJson(response.data['data']);
-    } catch (e) {
-      throw Exception('Failed to create category: $e');
-    }
-  }
-
-  Future<Category> updateCategory(Category category) async {
-    try {
-      final response = await dio.put(
-        '/api/v1/category',
-        data: category.toJson(),
-      );
-      return Category.fromJson(response.data['data']);
-    } catch (e) {
-      throw Exception('Failed to update category: $e');
-    }
-  }
-
-  Future<void> deleteCategory(int id) async {
-    try {
-      await dio.delete('/api/v1/category/$id');
-    } catch (e) {
-      throw Exception('Failed to delete category: $e');
     }
   }
 }
