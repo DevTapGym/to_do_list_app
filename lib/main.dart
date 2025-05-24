@@ -19,13 +19,16 @@ import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/services/category_service.dart';
+import 'package:to_do_list_app/services/injections.dart';
 import 'package:to_do_list_app/services/task_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/screens/auth/otp_verification_screen.dart';
 import 'package:to_do_list_app/screens/auth/forgot_passowrd_screen.dart';
 
-void main() {
+void main() async {
   final AuthService authService = AuthService();
+  await configureDependencies();
+  await getIt.allReady();
 
   runApp(
     MultiProvider(
