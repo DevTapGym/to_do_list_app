@@ -71,170 +71,193 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
 
-    return Scaffold(
-      backgroundColor: colors.bgColor,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Register',
-                  style: TextStyle(
-                    color: colors.textColor,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: colors.bgColor,
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: AssetImage(
+                          'assets/images/logo-removebg-preview.png',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Register',
+                    style: TextStyle(
+                      color: colors.textColor,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 36),
 
-                // Full Name
-                TextFormField(
-                  controller: _fullNameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _buildInputDecoration('Full Name', Icons.person),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Nhập tên của bạn'
-                              : null,
-                ),
-                const SizedBox(height: 20),
+                  // Full Name
+                  TextFormField(
+                    controller: _fullNameController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _buildInputDecoration(
+                      'Full Name',
+                      Icons.person,
+                    ),
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Enter your name'
+                                : null,
+                  ),
+                  const SizedBox(height: 16),
 
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _buildInputDecoration('Email', Icons.email),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nhập email';
-                    }
-                    if (!RegExp(
-                      r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Email không hợp lệ';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                  // Email
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _buildInputDecoration('Email', Icons.email),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter email';
+                      }
+                      if (!RegExp(
+                        r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(value)) {
+                        return 'Invalid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
 
-                // Phone
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _buildInputDecoration('Phone', Icons.phone),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nhập số điện thoại';
-                    }
-                    if (value.length != 10) {
-                      return 'Số điện thoại không hợp lệ';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                  // Phone
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _buildInputDecoration('Phone', Icons.phone),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter phone number';
+                      }
+                      if (value.length != 10) {
+                        return 'Invalid phone number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
 
-                // Password
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _buildInputDecoration('Password', Icons.lock),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nhập mật khẩu';
-                    }
-                    if (value.length < 6) {
-                      return 'Mật khẩu ít nhất 6 ký tự';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                    SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Mật khẩu phải trên 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colors.subtitleColor,
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _buildInputDecoration('Password', Icons.lock),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter password';
+                      }
+                      if (value.length < 8) {
+                        return 'Password at least 8 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Confirm Password
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _buildInputDecoration(
+                      'Confirm Password',
+                      Icons.lock,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Confirm Password';
+                      }
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Password must be more than 8 characters, including uppercase, lowercase, numbers and special characters.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.subtitleColor,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Confirm Password
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _buildInputDecoration(
-                    'Confirm Password',
-                    Icons.lock,
+                    ],
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Xác nhận mật khẩu';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Mật khẩu không khớp';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 30),
+                  const SizedBox(height: 16),
 
-                // Submit button
-                ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.primaryColor,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Already have account
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already have an account? ',
-                      style: TextStyle(color: colors.subtitleColor),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Login',
-                        style: TextStyle(color: colors.subtitleColor),
+                  // Submit button
+                  ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primaryColor,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ],
-                ),
-              ],
+                    child: const Text(
+                      'Register',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Already have account
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: TextStyle(color: colors.subtitleColor),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          'Login',
+                          style: TextStyle(color: colors.subtitleColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -18,6 +18,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginResult response = await authService.login(event.email, event.password);
 
     if (response.authResponse != null) {
+      // if (getIt.isRegistered<User>()) {
+      //   getIt.unregister<User>();
+      // }
+      // getIt.registerSingleton<User>(response.authResponse!.user);
+
       emit(
         AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
       );
@@ -47,6 +52,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginResult response = await authService.verifyToken();
 
     if (response.authResponse != null) {
+      // if (getIt.isRegistered<User>()) {
+      //   getIt.unregister<User>();
+      // }
+      // getIt.registerSingleton<User>(response.authResponse!.user);
+
       emit(
         AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
       );
