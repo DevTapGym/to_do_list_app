@@ -56,7 +56,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
 
     final filteredMembers =
         widget.team.teamMembers.where((member) {
-          final userName = member.user?.name?.toLowerCase() ?? '';
+          final userName = member.user?.name.toLowerCase() ?? '';
           return userName.contains(_searchQuery.toLowerCase());
         }).toList();
 
@@ -132,7 +132,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
-                      borderSide: BorderSide(color: colors.subtitleColor!),
+                      borderSide: BorderSide(color: colors.subtitleColor),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),

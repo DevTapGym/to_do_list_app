@@ -1,6 +1,6 @@
-import 'package:to_do_list_app/Repositories/Team/teamMemberRepository.dart';
-import 'package:to_do_list_app/Repositories/Team/teamRepository.dart';
-import 'package:to_do_list_app/Repositories/Team/teamTaskRepository.dart';
+import 'package:to_do_list_app/repositories/team/team_member_repository.dart';
+import 'package:to_do_list_app/repositories/team/team_repository.dart';
+import 'package:to_do_list_app/repositories/team/team_task_repository.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
 
@@ -114,7 +114,10 @@ class TeamService {
     final tasks = await teamTaskRepository.getTeamTasksByTeamId(teamId);
     return tasks;
   }
-
+  Future<User> getUserbyEmail(String email)async{
+    User user=await teamRepository.getUserbyEmail(email);
+    return user;
+  }
   Future<void> createTeamWithMembers(Team team, int userId) async {
     ReqTeamDTO reqTeamDTO = ReqTeamDTO(id: null, name: team.name);
     final teamId = await teamRepository.createTeam(reqTeamDTO, userId);

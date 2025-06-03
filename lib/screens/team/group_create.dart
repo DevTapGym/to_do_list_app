@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
-import 'package:to_do_list_app/repositories/userrepository.dart';
-import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/services/injections.dart';
+import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/Dialog_OneTextField.dart';
 import 'package:to_do_list_app/widgets/team_member_card.dart';
@@ -17,11 +16,8 @@ class GroupCreate extends StatefulWidget {
 class _GroupCreateState extends State<GroupCreate> {
   final TextEditingController _nameController = TextEditingController();
   final List<TeamMember> _members = [];
-  late final UserRepository _userRepository = UserRepository(
-    getIt.get<AuthService>(),
-  );
   User user = getIt.get<User>();
-
+  TeamService _teamService = getIt.get<TeamService>();
   @override
   void initState() {
     super.initState();
@@ -196,6 +192,7 @@ class _GroupCreateState extends State<GroupCreate> {
     final team = Team(
       id: 0,
       name: _nameController.text.trim(),
+      code: '',
       teamMembers: _members,
     );
     Navigator.pop(context, team);
@@ -203,7 +200,7 @@ class _GroupCreateState extends State<GroupCreate> {
 
   void onAddMember(String email) async {
     try {
-      User user = await _userRepository.getUserbyEmail(email);
+      User user = await _teamService.getUserbyEmail(email);
       if (user != null) {
         _addMember(user);
         Navigator.of(context).pop();

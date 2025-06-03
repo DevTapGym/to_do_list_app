@@ -12,12 +12,16 @@ class QRPage extends StatelessWidget {
     final colors = AppThemeConfig.getColors(context);
     return Scaffold(
       backgroundColor: colors.primaryColor,
-      appBar: AppBar(title: Text("Team ${team.name}", style: TextStyle(color: colors.textColor))),
+      appBar: AppBar(
+        title: Text(
+          "Team ${team.name}",
+          style: TextStyle(color: colors.textColor),
+        ),
+      ),
       body: Center(
-        
         child: QrImageView(
           backgroundColor: Colors.white,
-          data: team.id.toString(),
+          data: team.code.toString(),
           version: QrVersions.auto,
           size: 220.0,
         ),

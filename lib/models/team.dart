@@ -8,9 +8,15 @@ enum Priority { HIGH, MEDIUM, LOW }
 class Team {
   int id;
   String name;
+  String code;
   List<TeamMember> teamMembers;
 
-  Team({required this.id, required this.name, required this.teamMembers});
+  Team({
+    required this.id,
+    required this.name,
+    required this.teamMembers,
+    required this.code,
+  });
 
   factory Team.fromJson(Map<String, dynamic> json) {
     var memberList = json['teamMembers'] as List?;
@@ -24,6 +30,7 @@ class Team {
     return Team(
       id: json['id'] as int,
       name: json['name'] as String? ?? 'Unknown',
+      code: json['code'] as String? ?? '',
       teamMembers: members,
     );
   }

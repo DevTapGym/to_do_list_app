@@ -64,8 +64,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2018),
-      lastDate: DateTime(2040),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
     if (pickedDate != null) {
@@ -78,7 +78,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: const TimeOfDay(hour: 0, minute: 0),
+      initialTime: const TimeOfDay(hour: 00, minute: 00),
     );
 
     setState(() {
@@ -116,6 +116,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       notificationTime: _selectedTime,
       completed: false,
     );
+    print('Creating task: $task');
 
     final success = await TaskService().addTask(task);
 
@@ -333,7 +334,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         Text(
                           _selectedTime == null
                               ? 'Select time for notification'
-                              : '${_selectedTime!.hour}:${_selectedTime!.minute}',
+                              : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(
                             fontSize: 16,
                             color: colors.textColor,

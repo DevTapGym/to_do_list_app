@@ -82,7 +82,7 @@ class _GroupDetailState extends State<GroupDetail> {
                     context,
                     MaterialPageRoute(
                       builder:
-                          (context) => GroupListmember(
+                          (context) => GroupListMember(
                             team: widget.team,
                             LeaderId: widget.LeaderId!,
                           ),
@@ -562,16 +562,14 @@ class _GroupDetailState extends State<GroupDetail> {
 
   Future<void> _fetchTeamDetails() async {
     final updatedTeam = await teamService.getTeamById(widget.team.id);
-    if (updatedTeam != null) {
-      setState(() {
-        widget.team.teamMembers = updatedTeam.teamMembers;
-        widget.team.name = updatedTeam.name;
-        var leader = updatedTeam.teamMembers.firstWhere(
-          (member) => member.role == Role.LEADER,
-        );
-        widget.LeaderId = leader.userId;
-        widget.isLeader = widget.LeaderId == user.id;
-      });
-    }
+    setState(() {
+      widget.team.teamMembers = updatedTeam.teamMembers;
+      widget.team.name = updatedTeam.name;
+      var leader = updatedTeam.teamMembers.firstWhere(
+        (member) => member.role == Role.LEADER,
+      );
+      widget.LeaderId = leader.userId;
+      widget.isLeader = widget.LeaderId == user.id;
+    });
   }
 }

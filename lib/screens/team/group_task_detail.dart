@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/services/injections.dart';
 import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
-import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class TeamTaskDetail extends StatefulWidget {
   final TeamTask task;
@@ -225,8 +223,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
 
     return TextFormField(
       controller: TextEditingController(
-        text:
-            "${widget.task.deadline.day}/${widget.task.deadline.month}/${widget.task.deadline.year}",
+        text: "${taskDate.day}/${taskDate.month}/${taskDate.year}",
       ),
       readOnly: true,
       enabled: canEditDeadline,
@@ -261,7 +258,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 );
                 if (pickedDate != null && pickedDate != widget.task.deadline) {
                   setState(() {
-                    widget.task.deadline = pickedDate;
+                    taskDate = pickedDate;
                   });
                 }
               }
@@ -305,7 +302,6 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 );
               }).toList(),
           onChanged: canEditPriority ? onChanged : null,
-          
         ),
       ],
     );

@@ -2,30 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:to_do_list_app/bloc/Team/team_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_event.dart';
 import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/bloc/task/task_bloc.dart';
+import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/category.dart';
-import 'package:to_do_list_app/models/group.dart';
 import 'package:to_do_list_app/models/task.dart';
+import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
 import 'package:to_do_list_app/screens/auth/login_screen.dart';
 import 'package:to_do_list_app/screens/auth/register_screen.dart';
-import 'package:to_do_list_app/screens/group/group_screen.dart';
 import 'package:to_do_list_app/screens/setting/setting_screen.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
+import 'package:to_do_list_app/screens/team/QR_JoinGroup.dart';
+import 'package:to_do_list_app/screens/team/group_create.dart';
+import 'package:to_do_list_app/screens/team/group_detail.dart';
+import 'package:to_do_list_app/screens/team/group_screen.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/services/category_service.dart';
 import 'package:to_do_list_app/services/injections.dart';
 import 'package:to_do_list_app/services/task_service.dart';
+import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/screens/auth/otp_verification_screen.dart';
 import 'package:to_do_list_app/screens/auth/forgot_passowrd_screen.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   final AuthService authService = AuthService();
   await configureDependencies();
   await getIt.allReady();
@@ -42,6 +50,7 @@ void main() async {
                 categoryService: CategoryService(),
               ),
         ),
+        BlocProvider(create: (_) => getIt<TeamBloc>()),
       ],
       child: const MyApp(),
     ),
@@ -177,11 +186,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<Task> taskList = [];
   List<Category> categoriesList = [];
-  // fake data
-  final List<Group> groups = [];
   // service
   final TaskService taskService = TaskService();
   final CategoryService categoryService = CategoryService();
+  //Drawer
+  late TeamBloc _teamBloc;
+  int user_id = -99;
+  final teamService = getIt.get<TeamService>();
 
   @override
   void initState() {
@@ -211,6 +222,11 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           taskList = tasks;
         });
+        if (user_id == -99) {
+          final user = authState.authResponse!.user;
+          getIt.registerSingleton<User>(user);
+          user_id = user.id;
+        }
       } catch (e) {
         ScaffoldMessenger.of(
           // ignore: use_build_context_synchronously
@@ -254,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
           scaffoldKey: _scaffoldKey,
         ),
       ),
-      Center(child: GroupsScreen(groups: groups)),
+      Center(child: GroupsScreen()),
       Center(child: StatsScreen()),
       Center(child: SettingScreen()),
     ];
@@ -263,17 +279,68 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isDark = themeProvider.isDarkMode;
     final colors = AppThemeConfig.getColors(context);
 
+    _teamBloc = context.read<TeamBloc>();
+    _teamBloc.add(LoadTeamsByUserId(user_id));
+
     return SafeArea(
       child: Scaffold(
         key: _scaffoldKey,
         body: pages[_selectedIndex],
-        drawer: CategoryDrawer(
-          onCategoryUpdated: (updatedCategories) {
-            setState(() {
-              categoriesList = updatedCategories;
-            });
-          },
-        ),
+        drawer:
+            _selectedIndex == 0
+                ? CategoryDrawer(
+                  onCategoryUpdated: (updatedCategories) {
+                    setState(() {
+                      categoriesList = updatedCategories;
+                    });
+                  },
+                )
+                : _selectedIndex == 1
+                ? Drawer(
+                  child: BlocBuilder<TeamBloc, TeamState>(
+                    bloc: _teamBloc,
+                    builder: (context, state) {
+                      if (state is TeamLoaded) {
+                        return ListView(
+                          children: [
+                            const DrawerHeader(
+                              child: Text(
+                                'Your groups',
+                                style: TextStyle(fontSize: 20),
+                              ),
+                            ),
+                            ...state.teams.map(
+                              (team) => ListTile(
+                                title: Text(team.name),
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => GroupDetail(
+                                            team: team,
+                                            LeaderId: -1,
+                                          ),
+                                    ),
+                                  );
+
+                                  if (result == 'refresh') {
+                                    context.read<TeamBloc>().add(
+                                      LoadTeamsByUserId(user_id),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                )
+                : null,
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -327,7 +394,81 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
                 : _selectedIndex == 1
                 ? FloatingActionButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    if (_selectedIndex == 1) {
+                      showModalBottomSheet(
+                        context: context,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        builder:
+                            (context) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.group_add),
+                                  title: const Text('Tạo nhóm mới'),
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GroupCreate(),
+                                      ),
+                                    );
+                                    if (result is Team) {
+                                      await teamService.createTeamWithMembers(
+                                        result,
+                                        user_id,
+                                      );
+                                      _teamBloc.add(LoadTeamsByUserId(user_id));
+                                    }
+                                  },
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.qr_code_scanner),
+                                  title: const Text('Quét mã QR để vào nhóm'),
+                                  onTap: () async {
+                                    final TeamMember? result =
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => QR_JoinGroup(),
+                                          ),
+                                        );
+                                    if (result != null) {
+                                      await teamService.AddTeamMemberWithQR(
+                                        result,
+                                      );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Tham gia nhóm thành công',
+                                          ),
+                                        ),
+                                      );
+                                      _teamBloc.add(LoadTeamsByUserId(user_id));
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Khong thể tham gia nhóm',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                      );
+                    }
+                  },
                   backgroundColor:
                       isDark
                           ? Colors.deepPurpleAccent
@@ -384,6 +525,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
         setState(() {
           categories = fetched;
         });
+        widget.onCategoryUpdated(categories); // Notify parent
       } catch (e) {
         setState(() {
           categories = [];
@@ -404,15 +546,75 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
   }
 
   void _addCategory(String name) async {
-    // Để trống theo yêu cầu
+    if (name.isEmpty || defaultCategoryNames.contains(name)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid category name')));
+      return;
+    }
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      try {
+        final newCategory = await categoryService.createCategory(
+          name: name,
+          userId: authState.authResponse!.user.id,
+        );
+        setState(() {
+          categories.add(newCategory);
+        });
+        widget.onCategoryUpdated(categories); // Notify parent
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Category added successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add category: $e')));
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+    }
   }
 
   void _updateCategory(int id, String newName) async {
-    // Để trống theo yêu cầu
-  }
+    if (newName.isEmpty || defaultCategoryNames.contains(newName)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid category name')));
+      return;
+    }
 
-  void _deleteCategory(int id) async {
-    // Để trống theo yêu cầu
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      try {
+        final updatedCategory = await categoryService.updateCategory(
+          id: id,
+          name: newName,
+          userId: authState.authResponse!.user.id,
+        );
+        setState(() {
+          final index = categories.indexWhere((c) => c.id == id);
+          if (index != -1) {
+            categories[index] = updatedCategory;
+          }
+        });
+        widget.onCategoryUpdated(categories); // Notify parent
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Category updated successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update category: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+    }
   }
 
   @override
@@ -517,8 +719,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                   decoration: BoxDecoration(
                                     color:
                                         isDefault
-                                            ? Colors
-                                                .blueAccent // Màu khác cho danh mục mặc định
+                                            ? Colors.blueAccent
                                             : Colors.deepPurpleAccent.shade700,
                                     shape: BoxShape.circle,
                                   ),
@@ -533,7 +734,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                 ),
                                 trailing:
                                     isDefault
-                                        ? null // Ẩn nút cho danh mục mặc định
+                                        ? null
                                         : Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -678,16 +879,6 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                                 );
                                               },
                                             ),
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.delete_outline,
-                                                color: colors.subtitleColor,
-                                              ),
-                                              onPressed:
-                                                  () => _deleteCategory(
-                                                    category.id,
-                                                  ),
-                                            ),
                                           ],
                                         ),
                               ),
@@ -721,88 +912,129 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                   elevation: 4,
                 ),
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      String newCategory = '';
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        backgroundColor: colors.itemBgColor,
-                        title: Text(
-                          'Add New Category',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textColor,
-                          ),
-                        ),
-                        content: TextField(
-                          onChanged: (value) => newCategory = value,
-                          decoration: InputDecoration(
-                            labelText: 'Category Name',
-                            labelStyle: TextStyle(color: colors.subtitleColor),
-                            filled: true,
-                            fillColor:
-                                isDark
-                                    ? Colors.grey.shade800
-                                    : Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                  if (categories.length >= 7) {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.deepPurpleAccent,
-                                width: 2,
-                              ),
-                            ),
-                            errorText:
-                                defaultCategoryNames.contains(newCategory)
-                                    ? 'This category name is reserved'
-                                    : null,
-                          ),
-                          style: TextStyle(color: colors.textColor),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(
-                              'Cancel',
+                            backgroundColor: colors.itemBgColor,
+                            title: Text(
+                              'Limit Reached',
                               style: TextStyle(
-                                color: colors.subtitleColor,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (!defaultCategoryNames.contains(newCategory)) {
-                                _addCategory(newCategory);
-                                Navigator.pop(context);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurpleAccent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Add',
-                              style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: colors.textColor,
                               ),
                             ),
+                            content: Text(
+                              'You can only have up to 7 categories.',
+                              style: TextStyle(color: colors.subtitleColor),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(
+                                  'OK',
+                                  style: TextStyle(
+                                    color: colors.subtitleColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      );
-                    },
-                  );
+                    );
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        String newCategory = '';
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          backgroundColor: colors.itemBgColor,
+                          title: Text(
+                            'Add New Category',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textColor,
+                            ),
+                          ),
+                          content: TextField(
+                            onChanged: (value) => newCategory = value,
+                            decoration: InputDecoration(
+                              labelText: 'Category Name',
+                              labelStyle: TextStyle(
+                                color: colors.subtitleColor,
+                              ),
+                              filled: true,
+                              fillColor:
+                                  isDark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade100,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.deepPurpleAccent,
+                                  width: 2,
+                                ),
+                              ),
+                              errorText:
+                                  defaultCategoryNames.contains(newCategory)
+                                      ? 'This category name is reserved'
+                                      : null,
+                            ),
+                            style: TextStyle(color: colors.textColor),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: colors.subtitleColor,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                if (!defaultCategoryNames.contains(
+                                  newCategory,
+                                )) {
+                                  _addCategory(newCategory);
+                                  Navigator.pop(context);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.deepPurpleAccent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Add',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
                 },
               ),
             ),

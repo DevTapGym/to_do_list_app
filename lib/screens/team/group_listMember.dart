@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:to_do_list_app/Repositories/UserRepository.dart';
 import 'package:to_do_list_app/bloc/Team/teamMember_bloc.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
@@ -12,22 +11,22 @@ import 'package:to_do_list_app/widgets/Dialog_Confirmation.dart';
 import 'package:to_do_list_app/widgets/Dialog_OneTextField.dart';
 import 'package:to_do_list_app/widgets/team_member_card.dart';
 
-class GroupListmember extends StatefulWidget {
+// ignore: must_be_immutable
+class GroupListMember extends StatefulWidget {
   final int LeaderId;
   bool isLeader = false;
 
   final Team team;
-  GroupListmember({super.key, required this.team, required this.LeaderId});
+  GroupListMember({super.key, required this.team, required this.LeaderId});
 
   @override
-  State<GroupListmember> createState() => _GroupListmemberState();
+  State<GroupListMember> createState() => _GroupListMemberState();
 }
 
-class _GroupListmemberState extends State<GroupListmember> {
+class _GroupListMemberState extends State<GroupListMember> {
   TeamMemberBloc teamMemberBloc = getIt<TeamMemberBloc>();
   TeamService teamService = getIt.get<TeamService>();
 
-  final _userRepository = getIt.get<UserRepository>();
   final int _userId = getIt.get<User>().id;
 
   @override
@@ -49,11 +48,11 @@ class _GroupListmemberState extends State<GroupListmember> {
         backgroundColor: colors.bgColor,
         iconTheme: IconThemeData(color: colors.textColor),
         leading: IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () {
-      Navigator.of(context).pop('refresh');
-    },
-  ),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop('refresh');
+          },
+        ),
         actions: [
           Row(
             children: [
@@ -175,18 +174,10 @@ class _GroupListmemberState extends State<GroupListmember> {
 
   void onAddMember(String email) async {
     try {
-      User user = await _userRepository.getUserbyEmail(email);
-      if (user != null) {
-        await teamService.AddTeamMember(widget.team.id, user.id);
-        Navigator.of(context).pop();
-        teamMemberBloc.add(LoadTeamMembersByTeamId(widget.team.id));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Không tìm thấy người dùng với email: $email"),
-          ),
-        );
-      }
+      User user = await teamService.getUserbyEmail(email);
+      await teamService.AddTeamMember(widget.team.id, user.id);
+      Navigator.of(context).pop();
+      teamMemberBloc.add(LoadTeamMembersByTeamId(widget.team.id));
     } catch (e) {
       ScaffoldMessenger.of(
         context,

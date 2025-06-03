@@ -9,10 +9,46 @@ class AuthService {
       validateStatus: (status) {
         return true;
       },
-      connectTimeout: const Duration(seconds: 5),
-      receiveTimeout: const Duration(seconds: 5),
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
     ),
   );
+
+  Future<String?> _getToken() async {
+    final storage = FlutterSecureStorage();
+    String? accessToken = await storage.read(key: 'access_token');
+    return accessToken;
+  }
+
+  Future<Options> _getOptionsWithToken() async {
+    final token = await _getToken();
+    return Options(
+      headers: {"Authorization": "Bearer $token"},
+      validateStatus: (status) {
+        return true;
+      },
+    );
+  }
+
+  Future<Response> get(String path) async {
+    final options = await _getOptionsWithToken();
+    return await dio.get(path, options: options);
+  }
+
+  Future<Response> post(String path, dynamic data) async {
+    final options = await _getOptionsWithToken();
+    return await dio.post(path, data: data, options: options);
+  }
+
+  Future<Response> put(String path, dynamic data) async {
+    final options = await _getOptionsWithToken();
+    return await dio.put(path, data: data, options: options);
+  }
+
+  Future<Response> delete(String path) async {
+    final options = await _getOptionsWithToken();
+    return await dio.delete(path, options: options);
+  }
 
   Future<LoginResult> verifyToken() async {
     try {
