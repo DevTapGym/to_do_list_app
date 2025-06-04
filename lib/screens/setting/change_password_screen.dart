@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
+import 'package:to_do_list_app/bloc/auth/auth_state.dart';
+import 'package:to_do_list_app/services/profile_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -16,8 +20,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool _autoValidate = false;
+  bool _isLoading = false; // Thêm trạng thái tải
 
-  void _handleChangePassword() {
+  void _handleChangePassword() async {
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _autoValidate = true);
+      return;
+    }
+
     final oldPass = _oldPasswordController.text.trim();
     final newPass = _newPasswordController.text.trim();
     final confirmPass = _confirmPasswordController.text.trim();
@@ -31,11 +41,40 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _showMessage('New password must be different from old password');
       return;
     }
-    _showMessage('Password changed successfully', success: true);
 
-    _oldPasswordController.clear();
-    _newPasswordController.clear();
-    _confirmPasswordController.clear();
+    setState(() {
+      _isLoading = true;
+    });
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && authState.authResponse != null) {
+      final userId = authState.authResponse!.user.id;
+      try {
+        final profileService = ProfileService();
+        await profileService.changePassWord({
+          'userId': userId,
+          'newPassword': newPass,
+          'oldPassword': oldPass,
+        });
+
+        _showMessage('Password changed successfully', success: true);
+        _oldPasswordController.clear();
+        _newPasswordController.clear();
+        _confirmPasswordController.clear();
+        Navigator.pop(context);
+      } catch (e) {
+        _showMessage('Failed to change password: $e');
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage('User not authenticated');
+    }
   }
 
   void _showMessage(String message, {bool success = false}) {
@@ -71,149 +110,163 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         centerTitle: true,
       ),
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Form(
-            key: _formKey,
-            autovalidateMode:
-                _autoValidate
-                    ? AutovalidateMode.always
-                    : AutovalidateMode.disabled,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: colors.itemBgColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        // ignore: deprecated_member_use
-                        color: colors.itemBgColor.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _oldPasswordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Old Password',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator:
-                            (value) =>
-                                value == null || value.isEmpty
-                                    ? 'Please enter old password'
-                                    : null,
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _newPasswordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'New Password',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter new password';
-                          }
-                          if (value == _oldPasswordController.text) {
-                            return 'New password must differ from old password';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: const [
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'Mật khẩu phải trên 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Form(
+                key: _formKey,
+                autovalidateMode:
+                    _autoValidate
+                        ? AutovalidateMode.always
+                        : AutovalidateMode.disabled,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colors.itemBgColor,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            // ignore: deprecated_member_use
+                            color: colors.itemBgColor.withOpacity(0.2),
+                            spreadRadius: 2,
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Confirm Password',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm your new password';
-                          }
-                          if (value != _newPasswordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _oldPasswordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Old Password',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Please enter old password'
+                                        : null,
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _newPasswordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'New Password',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter new password';
+                              }
+                              if (value == _oldPasswordController.text) {
+                                return 'New password must differ from old password';
+                              }
+                              if (value.length < 8 ||
+                                  !RegExp(r'(?=.*[A-Z])').hasMatch(value) ||
+                                  !RegExp(r'(?=.*[a-z])').hasMatch(value) ||
+                                  !RegExp(r'(?=.*[0-9])').hasMatch(value) ||
+                                  !RegExp(
+                                    r'(?=.*[!@#\$%^&*])',
+                                  ).hasMatch(value)) {
+                                return 'Password must be at least 8 characters long, include uppercase, lowercase, number, and special character.';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _confirmPasswordController,
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Confirm Password',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your new password';
+                              }
+                              if (value != _newPasswordController.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: const [
+                              Icon(
+                                Icons.info_outline,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Password must be more than 8 characters, including uppercase, lowercase, numbers and special characters.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Container(
-                  decoration: BoxDecoration(
-                    color: colors.primaryColor,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        // ignore: deprecated_member_use
-                        color: colors.subtitleColor.withOpacity(0.3),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() => _autoValidate = true);
-                      if (_formKey.currentState!.validate()) {
-                        _handleChangePassword();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
+                    ),
+                    const SizedBox(height: 30),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colors.primaryColor,
                         borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            // ignore: deprecated_member_use
+                            color: colors.subtitleColor.withOpacity(0.3),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _handleChangePassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        child:
+                            _isLoading
+                                ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                                : Text(
+                                  'Change Password',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textColor,
+                                  ),
+                                ),
                       ),
                     ),
-                    child: Text(
-                      'Change Password',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textColor,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+            if (_isLoading) const Center(child: CircularProgressIndicator()),
+          ],
         ),
       ),
     );

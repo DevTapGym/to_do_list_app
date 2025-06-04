@@ -68,13 +68,43 @@ class SummaryService {
     );
 
     if (response.statusCode == 200 && response.data['data'] != null) {
+      print('Streak data: ${response.data['data']}');
       return {
+        'id': response.data['data']['id'],
         'currentStreak': response.data['data']['currentStreak'],
         'longestStreak': response.data['data']['longestStreak'],
         'lastCompletedDate': response.data['data']['lastCompletedDate'],
+        'userId': response.data['data']['userId'],
       };
     } else {
       throw Exception('Failed to fetch streak: ${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateStreak(
+    Map<String, dynamic> updatedStreak,
+  ) async {
+    final headers = await _getAuthHeaders();
+
+    final response = await dio.put(
+      '/api/v1/streak',
+      data: updatedStreak,
+      options: Options(headers: headers),
+    );
+
+    if (response.statusCode == 200 && response.data['data'] != null) {
+      print('Streak updated successfully: ${response.data}');
+      return {
+        'id': response.data['data']['id'],
+        'currentStreak': response.data['data']['currentStreak'],
+        'longestStreak': response.data['data']['longestStreak'],
+        'lastCompletedDate': response.data['data']['lastCompletedDate'],
+        'userId': response.data['data']['userId'],
+      };
+    } else {
+      throw Exception(
+        'Failed to update streak: ${response.statusCode} - ${response.data}',
+      );
     }
   }
 }

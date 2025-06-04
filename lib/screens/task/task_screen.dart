@@ -5,6 +5,7 @@ import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/services/summary_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
@@ -139,27 +140,18 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 
   Future<void> _showConfirmationDialog(Task task) async {
-    //final colors = AppThemeConfig.getColors(context);
     return showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            //backgroundColor: colors.itemBgColor,
-            title: Text(
-              'Confirm Task Completion',
-              //style: TextStyle(color: colors.textColor),
-            ),
+            title: Text('Confirm Task Completion'),
             content: Text(
               'Marking this task as completed is irreversible. Are you sure you want to proceed?',
-              //style: TextStyle(color: colors.subtitleColor),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  //style: TextStyle(color: colors.textColor),
-                ),
+                child: Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -187,10 +179,90 @@ class _TaskScreenState extends State<TaskScreen> {
       );
       if (result) {
         await _fetchTasksByDate();
+
+        // Logic kiểm tra và cập nhật streak
+        final authState = context.read<AuthBloc>().state;
+        if (authState is AuthAuthenticated && authState.authResponse != null) {
+          final userId = authState.authResponse!.user.id;
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final SummaryService summaryService = SummaryService();
+
+          // Đếm số task hoàn thành trong ngày hiện tại
+          final completedTasksToday = await summaryService
+              .countCompletedTasksInDay(userId, today);
+
+          // Kiểm tra nếu đã hoàn thành ít nhất 3 task
+          if (completedTasksToday >= 3) {
+            try {
+              // Lấy thông tin streak hiện tại
+              final streakData = await summaryService.getStreak(userId);
+              print('Before update: $streakData');
+              int currentStreak = streakData['currentStreak'] ?? 0;
+              int longestStreak = streakData['longestStreak'] ?? 0;
+              String? lastCompletedDateStr = streakData['lastCompletedDate'];
+              DateTime? lastCompletedDate =
+                  lastCompletedDateStr != null
+                      ? DateTime.parse(lastCompletedDateStr)
+                      : null;
+
+              // Kiểm tra nếu streak đã được cập nhật trong ngày
+              if (lastCompletedDate != null &&
+                  lastCompletedDate.year == today.year &&
+                  lastCompletedDate.month == today.month &&
+                  lastCompletedDate.day == today.day) {
+                print('Streak already updated today');
+                return;
+              }
+
+              // Chuẩn hóa ngày để so sánh
+              final yesterday = today.subtract(const Duration(days: 1));
+
+              if (lastCompletedDate != null &&
+                  lastCompletedDate.year == yesterday.year &&
+                  lastCompletedDate.month == yesterday.month &&
+                  lastCompletedDate.day == yesterday.day) {
+                // Nếu lastCompletedDate là ngày hôm qua, tăng currentStreak
+                currentStreak += 1;
+              } else {
+                // Nếu không phải ngày hôm qua, đặt currentStreak thành 1
+                currentStreak = 1;
+              }
+
+              // Cập nhật longestStreak nếu currentStreak lớn hơn
+              if (currentStreak > longestStreak) {
+                longestStreak = currentStreak;
+              }
+
+              // Cập nhật streak qua API
+              final updatedStreak = await summaryService.updateStreak({
+                'id': streakData['id'] ?? 0,
+                'userId': userId,
+                'currentStreak': currentStreak,
+                'longestStreak': longestStreak,
+                'lastCompletedDate': DateFormat('yyyy-MM-dd').format(today),
+              });
+              print('After update: $updatedStreak');
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Streak updated! Current: ${updatedStreak['currentStreak']}, Longest: ${updatedStreak['longestStreak']}',
+                  ),
+                ),
+              );
+            } catch (e) {
+              print('Lỗi khi cập nhật streak: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update streak: $e')),
+              );
+            }
+          }
+        }
+        setState(() {
+          _isLoading = false;
+        });
       }
-      setState(() {
-        _isLoading = false;
-      });
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -424,8 +496,6 @@ class _TaskScreenState extends State<TaskScreen> {
                       }
                       if (!task.completed) {
                         await _showConfirmationDialog(task);
-                      } else {
-                        await _updateTaskStatus(task);
                       }
                     },
                     onRefresh: _fetchTasksByDate,
