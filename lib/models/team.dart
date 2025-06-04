@@ -15,7 +15,7 @@ class Team {
     required this.id,
     required this.name,
     required this.teamMembers,
-    required this.code,
+    this.code='',
   });
 
   factory Team.fromJson(Map<String, dynamic> json) {

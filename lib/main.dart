@@ -224,8 +224,10 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         if (user_id == -99) {
           final user = authState.authResponse!.user;
+          if(getIt.isRegistered<User>())
+            getIt.unregister<User>();
           getIt.registerSingleton<User>(user);
-          user_id = user.id;
+          user_id=user.id;
         }
       } catch (e) {
         ScaffoldMessenger.of(

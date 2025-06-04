@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/services/injections.dart';
 import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
+import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class TeamTaskDetail extends StatefulWidget {
   final TeamTask task;
@@ -156,14 +158,14 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                           if (isSuccess) {
                             setState(() {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Cập nhật thành công')),
+                                SnackBar(content: Text('Updated successfully')),
                               );
                             });
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Cập nhật thất bại. Vui lòng thử lại',
+                                  'Update failed. Please try again.',
                                 ),
                               ),
                             );
@@ -223,7 +225,8 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
 
     return TextFormField(
       controller: TextEditingController(
-        text: "${taskDate.day}/${taskDate.month}/${taskDate.year}",
+        text:
+            "${taskDate.day}/${taskDate.month}/${taskDate.year}",
       ),
       readOnly: true,
       enabled: canEditDeadline,
@@ -302,6 +305,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 );
               }).toList(),
           onChanged: canEditPriority ? onChanged : null,
+          
         ),
       ],
     );
@@ -353,23 +357,22 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
       ),
     );
   }
-
   void _showConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Xác nhận'),
-          content: Text('Bạn có chắc muốn xóa Task này ?'),
+          title: const Text('Confirm'),
+          content: Text('Are you sure you want to delete this Task?'),
           actions: [
             TextButton(
-              child: const Text('Hủy'),
+              child: const Text('Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Xác nhận'),
+              child: const Text('Confirm'),
               onPressed: () async {
                 await teamService.DeleteTeamTask(widget.task.id!);
                 Navigator.of(context).pop();
