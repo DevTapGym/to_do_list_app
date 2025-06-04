@@ -10,3 +10,11 @@ class LoginEvent extends AuthEvent {
 class LogoutEvent extends AuthEvent {}
 
 class VerifyTokenEvent extends AuthEvent {}
+
+class UpdateProfileEvent extends AuthEvent {
+  final String name;
+  final String phone;
+  final String? avatar;
+
+  UpdateProfileEvent({required this.name, required this.phone, this.avatar});
+}

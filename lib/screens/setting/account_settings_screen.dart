@@ -53,23 +53,30 @@ class AccountSettingsScreen extends StatelessWidget {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      //Avatar
+                      // Avatar
                       Padding(
                         padding: const EdgeInsets.only(top: 50, bottom: 20),
                         child: CircleAvatar(
                           radius: 65,
                           backgroundColor: colors.itemBgColor,
-                          child: Text(
-                            initials,
-                            style: TextStyle(
-                              fontSize: 50,
-                              fontWeight: FontWeight.bold,
-                              color: colors.primaryColor,
-                            ),
-                          ),
+                          backgroundImage:
+                              user.avatar != null && user.avatar!.isNotEmpty
+                                  ? NetworkImage(user.avatar!)
+                                  : null, // Sử dụng NetworkImage nếu có avatar URL
+                          child:
+                              user.avatar == null || user.avatar!.isEmpty
+                                  ? Text(
+                                    initials,
+                                    style: TextStyle(
+                                      fontSize: 50,
+                                      fontWeight: FontWeight.bold,
+                                      color: colors.primaryColor,
+                                    ),
+                                  )
+                                  : null, // Hiển thị initials nếu không có avatar
                         ),
                       ),
-                      //User Info
+                      // User Info
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                         padding: const EdgeInsets.all(20),
@@ -157,7 +164,7 @@ class AccountSettingsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      //Update and Logout Buttons
+                      // Update and Logout Buttons
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -187,8 +194,9 @@ class AccountSettingsScreen extends StatelessWidget {
                                       builder:
                                           (context) => EditProfileScreen(
                                             name: user.name,
-                                            email: user.email,
                                             phone: user.phone,
+                                            avatar:
+                                                user.avatar, // Truyền avatar để chỉnh sửa
                                           ),
                                     ),
                                   );
