@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/main.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/services/injections.dart';
@@ -23,6 +24,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
 
   TeamService _teamService = getIt.get<TeamService>();
   List<User> _teamMembers = [];
+  
 
   @override
   void initState() {
@@ -83,26 +85,17 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                       style: TextStyle(color: colors.textColor),
                       decoration: InputDecoration(
                         hintText: 'Enter task title',
-                        hintStyle: TextStyle(
-                          fontSize: 16,
-                          color: colors.subtitleColor,
-                        ),
+                        hintStyle: TextStyle(fontSize: 16, color: colors.subtitleColor),
                         labelStyle: TextStyle(color: colors.textColor),
                         filled: true,
                         fillColor: colors.itemBgColor,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: colors.textColor,
-                            width: 2,
-                          ),
+                          borderSide: BorderSide(color: colors.textColor  , width: 2),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: colors.textColor,
-                            width: 2,
-                          ),
+                          borderSide: BorderSide(color: colors.textColor, width: 2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -131,23 +124,14 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                         fillColor: colors.itemBgColor,
                         filled: true,
                         hintText: 'Enter task description',
-                        hintStyle: TextStyle(
-                          fontSize: 16,
-                          color: colors.subtitleColor,
-                        ),
+                        hintStyle: TextStyle(fontSize: 16, color: colors.subtitleColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: colors.textColor,
-                            width: 2,
-                          ),
+                          borderSide: BorderSide(color: colors.textColor, width: 2),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: colors.textColor,
-                            width: 2,
-                          ),
+                          borderSide: BorderSide(color: colors.textColor, width: 2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -237,10 +221,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                         fillColor: colors.itemBgColor,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: colors.textColor,
-                            width: 2,
-                          ),
+                          borderSide: BorderSide(color: colors.textColor, width: 2),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -264,7 +245,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed: () async {
+                          onPressed: () async{
                             if (_selectedDate == null ||
                                 _selectedMember == null ||
                                 _titleController.text.isEmpty ||
@@ -272,7 +253,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    "Vui lòng điền đầy đủ thông tin!",
+                                    "Please fill in all information!",
                                   ),
                                 ),
                               );
@@ -320,7 +301,6 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
       debugShowCheckedModeBanner: false,
     );
   }
-
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -335,7 +315,6 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
       });
     }
   }
-
   void _loadTeamMembers() async {
     final members = await _teamService.getMembersByTeamId(widget.team.id);
     setState(() {

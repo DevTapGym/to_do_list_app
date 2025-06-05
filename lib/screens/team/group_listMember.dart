@@ -175,13 +175,21 @@ class _GroupListMemberState extends State<GroupListMember> {
   void onAddMember(String email) async {
     try {
       User user = await teamService.getUserbyEmail(email);
-      await teamService.AddTeamMember(widget.team.id, user.id);
-      Navigator.of(context).pop();
-      teamMemberBloc.add(LoadTeamMembersByTeamId(widget.team.id));
+      if (user != null) {
+        await teamService.AddTeamMember(widget.team.id, user.id);
+        Navigator.of(context).pop();
+        teamMemberBloc.add(LoadTeamMembersByTeamId(widget.team.id));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("No user found with email: $email"),
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Lỗi: ${e.toString()}")));
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
     }
   }
 

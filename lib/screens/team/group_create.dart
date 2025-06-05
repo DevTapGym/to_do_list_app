@@ -192,7 +192,6 @@ class _GroupCreateState extends State<GroupCreate> {
     final team = Team(
       id: 0,
       name: _nameController.text.trim(),
-      code: '',
       teamMembers: _members,
     );
     Navigator.pop(context, team);
@@ -207,7 +206,7 @@ class _GroupCreateState extends State<GroupCreate> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Không tìm thấy người dùng với email: $email"),
+            content: Text("No user found with email: $email"),
           ),
         );
       }

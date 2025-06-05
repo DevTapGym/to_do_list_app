@@ -73,25 +73,47 @@ class _GroupDetailState extends State<GroupDetail> {
         iconTheme: IconThemeData(color: colors.textColor),
         actions: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Nút Member
-              IconButton(
-                icon: Icon(Icons.group, color: colors.textColor),
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => GroupListMember(
-                            team: widget.team,
-                            LeaderId: widget.LeaderId!,
-                          ),
-                    ),
-                  );
-                  if (result == 'refresh') {
-                    _fetchTeamDetails();
-                  }
-                },
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color:colors.bgColor
+                ),
+                child: InkWell(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => GroupListMember(
+                              team: widget.team,
+                              LeaderId: widget.LeaderId!,
+                            ),
+                      ),
+                    );
+                    if (result == 'refresh') {
+                      _fetchTeamDetails();
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.group, color: colors.textColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        widget.team.teamMembers.length.toString(),
+                        style: TextStyle(
+                          color: colors.textColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               // Nút Setting
               widget.isLeader
@@ -562,14 +584,16 @@ class _GroupDetailState extends State<GroupDetail> {
 
   Future<void> _fetchTeamDetails() async {
     final updatedTeam = await teamService.getTeamById(widget.team.id);
-    setState(() {
-      widget.team.teamMembers = updatedTeam.teamMembers;
-      widget.team.name = updatedTeam.name;
-      var leader = updatedTeam.teamMembers.firstWhere(
-        (member) => member.role == Role.LEADER,
-      );
-      widget.LeaderId = leader.userId;
-      widget.isLeader = widget.LeaderId == user.id;
-    });
+    if (updatedTeam != null) {
+      setState(() {
+        widget.team.teamMembers = updatedTeam.teamMembers;
+        widget.team.name = updatedTeam.name;
+        var leader = updatedTeam.teamMembers.firstWhere(
+          (member) => member.role == Role.LEADER,
+        );
+        widget.LeaderId = leader.userId;
+        widget.isLeader = widget.LeaderId == user.id;
+      });
+    }
   }
 }
