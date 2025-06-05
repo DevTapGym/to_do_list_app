@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:to_do_list_app/models/auth_response.dart';
 import '../../services/auth_service.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -11,6 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginEvent>(_onLogin);
     on<LogoutEvent>(_onLogout);
     on<VerifyTokenEvent>(_onVerifyToken);
+    on<UpdateProfileEvent>(_onUpdateProfile);
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -47,6 +49,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginResult response = await authService.verifyToken();
 
     if (response.authResponse != null) {
+      // if (getIt.isRegistered<User>()) {
+      //   getIt.unregister<User>();
+      // }
+      // getIt.registerSingleton<User>(response.authResponse!.user);
+
       emit(
         AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
       );
@@ -54,6 +61,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthUnauthenticated());
       if (response.error != null) {
         emit(AuthError(message: response.error!));
+      }
+    }
+  }
+
+  Future<void> _onUpdateProfile(
+    UpdateProfileEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is AuthAuthenticated) {
+      final currentState = state as AuthAuthenticated;
+      if (currentState.authResponse != null) {
+        final updatedUser = User(
+          id: currentState.authResponse!.user.id,
+          email: currentState.authResponse!.user.email,
+          name: event.name,
+          phone: event.phone,
+          avatar: event.avatar ?? currentState.authResponse!.user.avatar,
+        );
+        final updatedAuthResponse = AuthResponse(
+          accessToken: currentState.authResponse!.accessToken,
+          user: updatedUser,
+        );
+        emit(
+          AuthAuthenticated(
+            authResponse: updatedAuthResponse,
+            isActive: currentState.isActive,
+          ),
+        );
       }
     }
   }

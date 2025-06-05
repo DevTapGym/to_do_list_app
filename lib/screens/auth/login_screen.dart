@@ -52,6 +52,21 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Container(
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage(
+                            'assets/images/logo-removebg-preview.png',
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       'Login',
                       style: TextStyle(
@@ -190,28 +205,22 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         //Navigator.pushNamed(context, '/home');
                       },
-                      icon: const Icon(
-                        Icons.g_mobiledata_outlined,
-                        color: Colors.black,
+                      icon: Image.asset(
+                        'assets/images/google_icon_logo.png',
+                        height: 26,
+                        width: 26,
                       ),
-                      label: const Text('Login with Google'),
+                      label: Text(
+                        'Login with Google',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: colors.primaryColor,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.facebook, color: Colors.white),
-                      label: const Text('Login with Facebook'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3b5998),
-                        foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

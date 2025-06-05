@@ -66,7 +66,7 @@ class Task {
       'completed': completed,
       'notificationTime':
           notificationTime != null
-              ? '${notificationTime!.hour}:${notificationTime!.minute}'
+              ? '${notificationTime!.hour.toString().padLeft(2, '0')}:${notificationTime!.minute.toString().padLeft(2, '0')}'
               : null,
       'priority': priority,
     };

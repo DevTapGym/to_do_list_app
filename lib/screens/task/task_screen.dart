@@ -5,6 +5,7 @@ import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/services/summary_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
@@ -37,7 +38,7 @@ class _TaskScreenState extends State<TaskScreen> {
   DateTime _selectedDate = DateTime.now();
   final TaskService taskService = TaskService();
   bool _isLoading = false;
-  List<Category> _categories = []; // Lưu danh sách categories cục bộ
+  List<Category> _categories = [];
 
   @override
   void initState() {
@@ -50,7 +51,6 @@ class _TaskScreenState extends State<TaskScreen> {
     });
   }
 
-  // Cập nhật _filteredTasks và _categories khi widget.tasks hoặc widget.categories thay đổi
   @override
   void didUpdateWidget(TaskScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -64,7 +64,6 @@ class _TaskScreenState extends State<TaskScreen> {
     }
   }
 
-  // Lấy tasks từ API theo ngày được chọn
   Future<void> _fetchTasksByDate() async {
     setState(() {
       _isLoading = true;
@@ -86,7 +85,6 @@ class _TaskScreenState extends State<TaskScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(
-          // ignore: use_build_context_synchronously
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to load tasks: $e')));
       }
@@ -100,11 +98,9 @@ class _TaskScreenState extends State<TaskScreen> {
     }
   }
 
-  // Tìm kiếm tasks theo từ khóa (lọc cục bộ trên widget.tasks)
   void _searchTask(String query) {
     setState(() {
-      if (query.isEmpty || query == '') {
-        // Khôi phục danh sách tasks theo ngày được chọn
+      if (query.isEmpty) {
         _filteredTasks =
             widget.tasks.where((task) {
               return task.taskDate.year == _selectedDate.year &&
@@ -112,7 +108,6 @@ class _TaskScreenState extends State<TaskScreen> {
                   task.taskDate.day == _selectedDate.day;
             }).toList();
       } else {
-        // Lọc tasks theo query
         _filteredTasks =
             _filteredTasks.where((task) {
               return task.title.toLowerCase().contains(query.toLowerCase());
@@ -134,6 +129,147 @@ class _TaskScreenState extends State<TaskScreen> {
         _selectedDate = pickedDate;
       });
       await _fetchTasksByDate();
+    }
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
+  Future<void> _showConfirmationDialog(Task task) async {
+    return showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Confirm Task Completion'),
+            content: Text(
+              'Marking this task as completed is irreversible. Are you sure you want to proceed?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _updateTaskStatus(task);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurpleAccent,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Confirm'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _updateTaskStatus(Task task) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      bool result = await taskService.updateTask(
+        task.copyWith(completed: !task.completed),
+      );
+      if (result) {
+        await _fetchTasksByDate();
+
+        // Logic kiểm tra và cập nhật streak
+        final authState = context.read<AuthBloc>().state;
+        if (authState is AuthAuthenticated && authState.authResponse != null) {
+          final userId = authState.authResponse!.user.id;
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final SummaryService summaryService = SummaryService();
+
+          // Đếm số task hoàn thành trong ngày hiện tại
+          final completedTasksToday = await summaryService
+              .countCompletedTasksInDay(userId, today);
+
+          // Kiểm tra nếu đã hoàn thành ít nhất 3 task
+          if (completedTasksToday >= 3) {
+            try {
+              // Lấy thông tin streak hiện tại
+              final streakData = await summaryService.getStreak(userId);
+              print('Before update: $streakData');
+              int currentStreak = streakData['currentStreak'] ?? 0;
+              int longestStreak = streakData['longestStreak'] ?? 0;
+              String? lastCompletedDateStr = streakData['lastCompletedDate'];
+              DateTime? lastCompletedDate =
+                  lastCompletedDateStr != null
+                      ? DateTime.parse(lastCompletedDateStr)
+                      : null;
+
+              // Kiểm tra nếu streak đã được cập nhật trong ngày
+              if (lastCompletedDate != null &&
+                  lastCompletedDate.year == today.year &&
+                  lastCompletedDate.month == today.month &&
+                  lastCompletedDate.day == today.day) {
+                print('Streak already updated today');
+                return;
+              }
+
+              // Chuẩn hóa ngày để so sánh
+              final yesterday = today.subtract(const Duration(days: 1));
+
+              if (lastCompletedDate != null &&
+                  lastCompletedDate.year == yesterday.year &&
+                  lastCompletedDate.month == yesterday.month &&
+                  lastCompletedDate.day == yesterday.day) {
+                // Nếu lastCompletedDate là ngày hôm qua, tăng currentStreak
+                currentStreak += 1;
+              } else {
+                // Nếu không phải ngày hôm qua, đặt currentStreak thành 1
+                currentStreak = 1;
+              }
+
+              // Cập nhật longestStreak nếu currentStreak lớn hơn
+              if (currentStreak > longestStreak) {
+                longestStreak = currentStreak;
+              }
+
+              // Cập nhật streak qua API
+              final updatedStreak = await summaryService.updateStreak({
+                'id': streakData['id'] ?? 0,
+                'userId': userId,
+                'currentStreak': currentStreak,
+                'longestStreak': longestStreak,
+                'lastCompletedDate': DateFormat('yyyy-MM-dd').format(today),
+              });
+              print('After update: $updatedStreak');
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Streak updated! Current: ${updatedStreak['currentStreak']}, Longest: ${updatedStreak['longestStreak']}',
+                  ),
+                ),
+              );
+            } catch (e) {
+              print('Lỗi khi cập nhật streak: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update streak: $e')),
+              );
+            }
+          }
+        }
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to update task: $e')));
     }
   }
 
@@ -247,7 +383,6 @@ class _TaskScreenState extends State<TaskScreen> {
                   ),
                 ],
               ),
-              // CategoryList sử dụng _categories cục bộ
               Padding(
                 padding: const EdgeInsets.only(top: 12, bottom: 12),
                 child: CategoryList(
@@ -267,10 +402,13 @@ class _TaskScreenState extends State<TaskScreen> {
                   onCategoryUpdated: (updatedCategories) {
                     setState(() {
                       _categories =
-                          updatedCategories.map((chip) {
-                            return Category(id: chip.id, name: chip.label);
-                          }).toList();
-                      _fetchTasksByDate(); // Làm mới tasks khi danh mục thay đổi
+                          updatedCategories
+                              .map(
+                                (chip) =>
+                                    Category(id: chip.id, name: chip.label),
+                              )
+                              .toList();
+                      _fetchTasksByDate();
                     });
                   },
                   onCategorySelected: (List<int> selectedCategoryIds) {
@@ -278,7 +416,6 @@ class _TaskScreenState extends State<TaskScreen> {
                       if (selectedCategoryIds.isEmpty) {
                         _fetchTasksByDate();
                       } else {
-                        // Lọc tasks theo danh sách danh mục được chọn
                         _filteredTasks =
                             widget.tasks.where((task) {
                               return task.taskDate.year == _selectedDate.year &&
@@ -347,27 +484,18 @@ class _TaskScreenState extends State<TaskScreen> {
                             )
                             .toList(),
                     onTap: () async {
-                      setState(() {
-                        _isLoading = true;
-                      });
-                      try {
-                        bool result = await taskService.updateTask(
-                          task.copyWith(completed: !task.completed),
-                        );
-                        if (result) {
-                          await _fetchTasksByDate();
-                        }
-                        setState(() {
-                          _isLoading = false;
-                        });
-                      } catch (e) {
-                        setState(() {
-                          _isLoading = false;
-                        });
-                        // ignore: use_build_context_synchronously
+                      if (!_isToday(task.taskDate)) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to update task: $e')),
+                          const SnackBar(
+                            content: Text(
+                              'Only tasks for today can be marked as completed.',
+                            ),
+                          ),
                         );
+                        return;
+                      }
+                      if (!task.completed) {
+                        await _showConfirmationDialog(task);
                       }
                     },
                     onRefresh: _fetchTasksByDate,
@@ -445,7 +573,6 @@ class DatePickerWidget extends StatefulWidget {
   const DatePickerWidget({super.key, required this.onDateSelected});
 
   @override
-  // ignore: library_private_types_in_public_api
   _DatePickerWidgetState createState() => _DatePickerWidgetState();
 }
 
@@ -458,7 +585,6 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
       4,
       (index) => DateTime.now().add(Duration(days: index)),
     );
-
     final colors = AppThemeConfig.getColors(context);
 
     return Row(
