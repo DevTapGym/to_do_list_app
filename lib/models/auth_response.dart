@@ -24,18 +24,19 @@ class User {
   final int id;
   final String email;
   final String name;
-  final String phone;
+  final String? phone;
   final String? avatar;
 
   User({
     required this.id,
     required this.email,
     required this.name,
-    required this.phone,
+    this.phone,
     this.avatar,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    print("Parsing User JSON: $json");
     return User(
       id: json["id"],
       email: json["email"],

@@ -153,7 +153,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                 ),
                               ),
                               subtitle: Text(
-                                user.phone,
+                                user.phone ?? 'Not provided',
                                 style: TextStyle(
                                   color: colors.textColor,
                                   fontSize: 18,
@@ -194,7 +194,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                       builder:
                                           (context) => EditProfileScreen(
                                             name: user.name,
-                                            phone: user.phone,
+                                            phone: user.phone ?? '',
                                             avatar:
                                                 user.avatar, // Truyền avatar để chỉnh sửa
                                           ),

@@ -84,8 +84,38 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     }
   }
 
+  bool _canEditTask() {
+    if (task == null) return false;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final taskDay = DateTime(taskDate.year, taskDate.month, taskDate.day);
+
+    // Cho phép chỉnh sửa task chưa hoàn thành ở hiện tại hoặc tương lai
+    return !task!.completed &&
+        (taskDay.isAfter(today) || taskDay.isAtSameMomentAs(today));
+  }
+
+  bool _canDeleteTask() {
+    if (task == null) return false;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final taskDay = DateTime(taskDate.year, taskDate.month, taskDate.day);
+
+    // Chỉ cho phép xóa task chưa hoàn thành và trong tương lai (không phải hôm nay)
+    return !task!.completed && taskDay.isAfter(today);
+  }
+
   Future<void> _updateTask() async {
     if (task == null) return;
+
+    if (!_canEditTask()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot update completed or past tasks')),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -136,6 +166,15 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
 
   Future<void> _deleteTask() async {
     if (task == null) return;
+
+    if (!_canDeleteTask()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot delete completed, past, or today\'s tasks'),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -204,17 +243,23 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTextField('Title', titleController),
+                        _buildTextField(
+                          'Title',
+                          titleController,
+                          isEdit: !_canEditTask(),
+                        ),
                         const SizedBox(height: 12),
                         _buildDropdownField(
                           'Priority',
                           ['LOW', 'MEDIUM', 'HIGH'],
                           selectedPriority,
-                          (value) {
-                            setState(() {
-                              selectedPriority = value;
-                            });
-                          },
+                          _canEditTask()
+                              ? (value) {
+                                setState(() {
+                                  selectedPriority = value;
+                                });
+                              }
+                              : null,
                         ),
                         const SizedBox(height: 12),
                         Padding(
@@ -223,29 +268,34 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                             categories: widget.categories,
                             isMultiSelect: false,
                             onCategoryUpdated: (category) {},
-                            onCategorySelected: (List<int> selectedCategories) {
-                              setState(() {
-                                selectedCategoryId =
-                                    selectedCategories.isNotEmpty
-                                        ? selectedCategories.first
-                                        : null;
-                                categoryController.text =
-                                    selectedCategoryId != null
-                                        ? widget.categories
-                                            .firstWhere(
-                                              (c) => c.id == selectedCategoryId,
-                                              orElse:
-                                                  () => CategoryChip(
-                                                    id: 0,
-                                                    label: 'Unknown',
-                                                    color: Colors.grey,
-                                                    isSelected: false,
-                                                  ),
-                                            )
-                                            .label
-                                        : '';
-                              });
-                            },
+                            onCategorySelected:
+                                _canEditTask()
+                                    ? (List<int> selectedCategories) {
+                                      setState(() {
+                                        selectedCategoryId =
+                                            selectedCategories.isNotEmpty
+                                                ? selectedCategories.first
+                                                : null;
+                                        categoryController.text =
+                                            selectedCategoryId != null
+                                                ? widget.categories
+                                                    .firstWhere(
+                                                      (c) =>
+                                                          c.id ==
+                                                          selectedCategoryId,
+                                                      orElse:
+                                                          () => CategoryChip(
+                                                            id: 0,
+                                                            label: 'Unknown',
+                                                            color: Colors.grey,
+                                                            isSelected: false,
+                                                          ),
+                                                    )
+                                                    .label
+                                                : '';
+                                      });
+                                    }
+                                    : (List<int> selectedCategories) {},
                           ),
                         ),
                         _buildTextField(
@@ -271,6 +321,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                           controller: descriptionController,
                           maxLines: 4,
                           keyboardType: TextInputType.multiline,
+                          readOnly: !_canEditTask(),
                           decoration: _inputDecoration(
                             'Enter task description',
                           ),
@@ -283,14 +334,18 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                             _buildOutlinedButton(
                               icon: Icons.update,
                               label: 'Update',
-                              color: colors.primaryColor,
-                              onPressed: _updateTask,
+                              color:
+                                  _canEditTask()
+                                      ? colors.primaryColor
+                                      : Colors.grey,
+                              onPressed: _canEditTask() ? _updateTask : () {},
                             ),
                             _buildOutlinedButton(
                               icon: Icons.delete,
                               label: 'Delete',
-                              color: Colors.red,
-                              onPressed: _deleteTask,
+                              color:
+                                  _canDeleteTask() ? Colors.red : Colors.grey,
+                              onPressed: _canDeleteTask() ? _deleteTask : () {},
                             ),
                           ],
                         ),
@@ -322,7 +377,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          readOnly: isEdit,
+          readOnly: isEdit || !_canEditTask(),
           controller: controller,
           decoration: _inputDecoration('Enter $label'),
           style: TextStyle(color: colors.textColor),
@@ -362,20 +417,23 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         ),
         suffixIcon: Icon(Icons.calendar_today, color: colors.primaryColor),
       ),
-      onTap: () async {
-        final pickedDate = await showDatePicker(
-          context: context,
-          initialDate: taskDate,
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
+      onTap:
+          _canEditTask()
+              ? () async {
+                final pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: taskDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
 
-        if (pickedDate != null && pickedDate != taskDate) {
-          setState(() {
-            taskDate = pickedDate;
-          });
-        }
-      },
+                if (pickedDate != null && pickedDate != taskDate) {
+                  setState(() {
+                    taskDate = pickedDate;
+                  });
+                }
+              }
+              : null,
     );
   }
 
@@ -413,18 +471,21 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         ),
         suffixIcon: Icon(Icons.access_time, color: colors.primaryColor),
       ),
-      onTap: () async {
-        final pickedTime = await showTimePicker(
-          context: context,
-          initialTime: notificationTime ?? TimeOfDay.now(),
-        );
+      onTap:
+          _canEditTask()
+              ? () async {
+                final pickedTime = await showTimePicker(
+                  context: context,
+                  initialTime: notificationTime ?? TimeOfDay.now(),
+                );
 
-        if (pickedTime != null) {
-          setState(() {
-            notificationTime = pickedTime;
-          });
-        }
-      },
+                if (pickedTime != null) {
+                  setState(() {
+                    notificationTime = pickedTime;
+                  });
+                }
+              }
+              : null,
     );
   }
 
@@ -432,7 +493,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     String label,
     List<String> items,
     String? selectedValue,
-    ValueChanged<String?> onChanged,
+    ValueChanged<String?>? onChanged,
   ) {
     final colors = AppThemeConfig.getColors(context);
     return Column(

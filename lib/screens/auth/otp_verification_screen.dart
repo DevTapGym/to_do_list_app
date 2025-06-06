@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 
@@ -13,9 +14,12 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final TextEditingController _otpController = TextEditingController();
   final AuthService _authService = AuthService();
-
+  final List<TextEditingController> _otpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
   int _secondsRemaining = 90;
   bool _isResendAvailable = false;
@@ -31,7 +35,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    _otpController.dispose();
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (var focusNode in _focusNodes) {
+      focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -57,16 +66,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   Future<void> _sendCode() async {
-    final success = await _authService.sendCode(widget.email);
-    if (!success) {
-      _showMessage("Gửi mã thất bại. Vui lòng thử lại sau.");
-    }
+    await _authService.sendCode(widget.email);
   }
 
   Future<void> _verifyCode() async {
-    final code = _otpController.text.trim();
+    final code = _otpControllers.map((controller) => controller.text).join();
     if (code.length != 6 || int.tryParse(code) == null) {
-      _showMessage("Vui lòng nhập mã OTP hợp lệ.");
+      _showMessage("Vui lòng nhập mã OTP hợp lệ (6 chữ số).");
       return;
     }
 
@@ -80,7 +86,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     });
 
     if (success) {
-      // ignore: use_build_context_synchronously
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       _showMessage("Mã xác thực không đúng.");
@@ -93,17 +98,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _onOtpChanged(int index, String value) {
+    if (value.isNotEmpty && index < 5) {
+      _focusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final email = widget.email;
     final colors = AppThemeConfig.getColors(context);
 
     return Scaffold(
       backgroundColor: colors.bgColor,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: colors.textColor),
           onPressed: () {
+            Navigator.pop(context);
             Navigator.pop(context);
           },
         ),
@@ -140,24 +153,65 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Chúng tôi đã gửi mã xác minh đến\n$email',
+                  'Chúng tôi đã gửi mã xác minh đến\n${widget.email}',
                   style: TextStyle(fontSize: 16, color: colors.subtitleColor),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                TextField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Mã OTP',
-                    counterText: '',
-                    prefixIcon: Icon(Icons.pin, color: colors.subtitleColor),
-                  ),
-                  style: const TextStyle(fontSize: 18, letterSpacing: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(6, (index) {
+                    return SizedBox(
+                      width: 50,
+                      child: TextField(
+                        controller: _otpControllers[index],
+                        focusNode: _focusNodes[index],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: colors.textColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: colors.itemBgColor,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color:
+                                  _focusNodes[index].hasFocus
+                                      ? colors.primaryColor
+                                      : colors.subtitleColor,
+                              width: 3,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: colors.primaryColor,
+                              width: 3,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: colors.subtitleColor,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (value) => _onOtpChanged(index, value),
+                      ),
+                    );
+                  }),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
                 Text(
                   _isResendAvailable
                       ? 'Bạn có thể gửi lại mã'

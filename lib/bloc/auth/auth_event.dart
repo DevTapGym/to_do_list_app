@@ -11,6 +11,8 @@ class LogoutEvent extends AuthEvent {}
 
 class VerifyTokenEvent extends AuthEvent {}
 
+class GoogleLoginEvent extends AuthEvent {}
+
 class UpdateProfileEvent extends AuthEvent {
   final String name;
   final String phone;

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/auth_response.dart';
 
 class AuthService {
@@ -13,6 +15,86 @@ class AuthService {
       receiveTimeout: const Duration(seconds: 10),
     ),
   );
+
+  Future<LoginResult> loginWithGoogle() async {
+    try {
+      await GoogleSignIn().signOut();
+
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        return LoginResult(error: "Người dùng huỷ đăng nhập");
+      }
+
+      final googleAuth = await googleUser.authentication;
+      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        return LoginResult(error: "Không thể lấy thông tin xác thực từ Google");
+      }
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      final user = userCredential.user;
+
+      if (user == null) {
+        return LoginResult(error: "Không thể đăng nhập bằng Google");
+      }
+
+      if (user.email == null) {
+        return LoginResult(error: "Email người dùng không khả dụng");
+      }
+
+      // Lấy thông tin người dùng
+      final email = user.email!;
+      final name = user.displayName ?? "";
+      final avatar = user.photoURL ?? "";
+
+      print("Đăng nhập thành công với Google: $email, $name, $avatar");
+
+      // Gửi dữ liệu về backend
+      final response = await dio.post(
+        "/api/v1/auth/login-google",
+        data: {"email": email, "displayName": name, "photoURL": avatar},
+      );
+
+      print("Response từ server: ${response.data}");
+
+      final status = response.data["status"] as int?;
+      final error = response.data["error"] as String?;
+      final message = response.data["message"] as String?;
+
+      if (response.statusCode == 200 && status == 200) {
+        final data = response.data["data"];
+        AuthResponse authResponse = AuthResponse.fromJson(data);
+
+        final storage = FlutterSecureStorage();
+        await storage.write(
+          key: 'access_token',
+          value: authResponse.accessToken,
+        );
+
+        return LoginResult(authResponse: authResponse);
+      }
+
+      if (status == 400 && error == "User is not active") {
+        return LoginResult(isActive: false, status: 400, error: error);
+      }
+
+      if (status == 500 && error == "User not found") {
+        return LoginResult(error: error, status: 500);
+      }
+
+      return LoginResult(error: message ?? "Lỗi không xác định từ server.");
+    } catch (e) {
+      final errorMessage = e.toString();
+      print("Lỗi khi đăng nhập bằng Google: $errorMessage");
+      return LoginResult(error: "Lỗi khi đăng nhập bằng Google: $errorMessage");
+    }
+  }
 
   Future<String?> _getToken() async {
     final storage = FlutterSecureStorage();

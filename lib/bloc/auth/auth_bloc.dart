@@ -10,6 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc({required this.authService}) : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
+    on<GoogleLoginEvent>(_onGoogleLogin);
     on<LogoutEvent>(_onLogout);
     on<VerifyTokenEvent>(_onVerifyToken);
     on<UpdateProfileEvent>(_onUpdateProfile);
@@ -31,6 +32,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthError(message: "Sai tên đăng nhập hoặc mật khẩu"));
       } else {
         emit(AuthError(message: "Đăng nhập thất bại"));
+      }
+    }
+  }
+
+  Future<void> _onGoogleLogin(
+    GoogleLoginEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final response = await authService.loginWithGoogle();
+
+    if (response.authResponse != null) {
+      emit(
+        AuthAuthenticated(authResponse: response.authResponse!, isActive: true),
+      );
+    } else {
+      if (!response.isActive && response.status == 400) {
+        emit(AuthAuthenticated(authResponse: null, isActive: false));
+      } else if (response.status == 500 && response.error == "User not found") {
+        emit(AuthError(message: "Người dùng không tồn tại"));
+      } else {
+        emit(AuthError(message: response.error ?? "Đăng nhập Google thất bại"));
       }
     }
   }

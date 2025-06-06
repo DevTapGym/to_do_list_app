@@ -203,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: () {
-                        //Navigator.pushNamed(context, '/home');
+                        context.read<AuthBloc>().add(GoogleLoginEvent());
                       },
                       icon: Image.asset(
                         'assets/images/google_icon_logo.png',

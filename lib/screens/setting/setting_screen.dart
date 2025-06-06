@@ -13,6 +13,9 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
+  bool _showCompletedTasks = false; // Trạng thái cho Show Completed Tasks
+  bool _notificationsEnabled = true; // Trạng thái cho Notifications
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
@@ -59,20 +62,40 @@ class _SettingScreenState extends State<SettingScreen> {
                         title: "Show Completed Tasks",
                         subtitle: "Display completed tasks in your task list",
                         hasSwitch: true,
-                        isSwitchOn: isDark,
+                        isSwitchOn: _showCompletedTasks,
                         iconBgColor:
                             isDark ? Colors.green.shade900 : Colors.green,
                         backgroundColor: colors.itemBgColor,
-                        onTap: () {},
+                        onSwitchChanged: (value) {
+                          setState(() {
+                            _showCompletedTasks = value;
+                          });
+                        },
+                        onTap: () {
+                          setState(() {
+                            _showCompletedTasks = !_showCompletedTasks;
+                          });
+                        },
                       ),
                       TaskSettingItem(
                         icon: Icons.notifications,
                         title: "Notifications",
-                        subtitle: "Manage notification settings",
+                        subtitle: "Enable or disable notifications",
+                        hasSwitch: true,
+                        isSwitchOn: _notificationsEnabled,
                         iconBgColor:
                             isDark ? Colors.orange.shade900 : Colors.orange,
                         backgroundColor: colors.itemBgColor,
-                        onTap: () {},
+                        onSwitchChanged: (value) {
+                          setState(() {
+                            _notificationsEnabled = value;
+                          });
+                        },
+                        onTap: () {
+                          setState(() {
+                            _notificationsEnabled = !_notificationsEnabled;
+                          });
+                        },
                       ),
                       TaskSettingItem(
                         icon: Icons.lock,
@@ -105,8 +128,7 @@ class _SettingScreenState extends State<SettingScreen> {
                             isDark ? Colors.blue.shade900 : Colors.blue,
                         backgroundColor: colors.itemBgColor,
                         onSwitchChanged: (value) {
-                          themeProvider
-                              .toggleTheme(); // Cập nhật trạng thái theme
+                          themeProvider.toggleTheme();
                         },
                         onTap: () {
                           themeProvider.toggleTheme();
@@ -154,22 +176,6 @@ class _SettingScreenState extends State<SettingScreen> {
                         backgroundColor: colors.itemBgColor,
                         onTap: () {},
                       ),
-                      // const SizedBox(height: 10),
-                      // ElevatedButton.icon(
-                      //   onPressed: () {
-                      //     Navigator.pushNamed(context, '/login');
-                      //   },
-                      //   icon: const Icon(Icons.logout, color: Colors.black),
-                      //   label: const Text('Logout'),
-                      //   style: ElevatedButton.styleFrom(
-                      //     backgroundColor: Colors.white,
-                      //     foregroundColor: Colors.black,
-                      //     minimumSize: const Size(double.infinity, 50),
-                      //     shape: RoundedRectangleBorder(
-                      //       borderRadius: BorderRadius.circular(12),
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),

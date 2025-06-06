@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -25,6 +26,7 @@ import 'package:to_do_list_app/screens/team/group_screen.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/services/category_service.dart';
 import 'package:to_do_list_app/services/injections.dart';
+import 'package:to_do_list_app/services/notification_service.dart';
 import 'package:to_do_list_app/services/task_service.dart';
 import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
@@ -34,9 +36,15 @@ import 'package:to_do_list_app/screens/auth/forgot_passowrd_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp();
+
   final AuthService authService = AuthService();
   await configureDependencies();
   await getIt.allReady();
+
+  final notificationService = NotificationService();
+  await notificationService.init();
+  await notificationService.requestPermissions();
 
   runApp(
     MultiProvider(
@@ -224,10 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         if (user_id == -99) {
           final user = authState.authResponse!.user;
-          if(getIt.isRegistered<User>())
-            getIt.unregister<User>();
+          if (getIt.isRegistered<User>()) getIt.unregister<User>();
           getIt.registerSingleton<User>(user);
-          user_id=user.id;
+          user_id = user.id;
         }
       } catch (e) {
         ScaffoldMessenger.of(

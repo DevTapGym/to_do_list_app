@@ -5,6 +5,7 @@ import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
+import 'package:to_do_list_app/services/notification_service.dart';
 import 'package:to_do_list_app/services/summary_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
@@ -244,12 +245,12 @@ class _TaskScreenState extends State<TaskScreen> {
               });
               print('After update: $updatedStreak');
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Streak updated! Current: ${updatedStreak['currentStreak']}, Longest: ${updatedStreak['longestStreak']}',
-                  ),
-                ),
+              final notificationService = NotificationService();
+              await notificationService.init();
+              await notificationService.requestPermissions();
+              await notificationService.showNotification(
+                'Streak Updated',
+                'Your streak has been updated to $currentStreak days!',
               );
             } catch (e) {
               print('Lỗi khi cập nhật streak: $e');
