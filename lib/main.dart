@@ -8,6 +8,7 @@ import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_event.dart';
 import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/bloc/task/task_bloc.dart';
+import 'package:to_do_list_app/bloc/team/teamTask_bloc.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/category.dart';
 import 'package:to_do_list_app/models/task.dart';
@@ -32,6 +33,7 @@ import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/screens/auth/otp_verification_screen.dart';
 import 'package:to_do_list_app/screens/auth/forgot_passowrd_screen.dart';
+import 'package:to_do_list_app/widgets/to_do_card_Team.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,7 +47,8 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.init();
   await notificationService.requestPermissions();
-
+  if (getIt.isRegistered<TeamTaskBloc>()) getIt.unregister<TeamTaskBloc>();
+  getIt.registerFactory<TeamTaskBloc>(() => TeamTaskBloc(getIt<TeamService>()));
   runApp(
     MultiProvider(
       providers: [
@@ -58,6 +61,7 @@ void main() async {
                 categoryService: CategoryService(),
               ),
         ),
+        BlocProvider(create: (_) => getIt<TeamTaskBloc>()),
         BlocProvider(create: (_) => getIt<TeamBloc>()),
       ],
       child: const MyApp(),
@@ -199,6 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final CategoryService categoryService = CategoryService();
   //Drawer
   late TeamBloc _teamBloc;
+  late TeamTaskBloc _teamTaskBloc;
   int user_id = -99;
   final teamService = getIt.get<TeamService>();
 
@@ -236,6 +241,10 @@ class _HomeScreenState extends State<HomeScreen> {
           getIt.registerSingleton<User>(user);
           user_id = user.id;
         }
+        _teamBloc = context.read<TeamBloc>();
+        _teamBloc.add(LoadTeamsByUserId(user_id));
+        _teamTaskBloc = getIt<TeamTaskBloc>();
+        _teamTaskBloc.add(LoadTeamTasksByUserId(user_id));
       } catch (e) {
         ScaffoldMessenger.of(
           context,
@@ -285,9 +294,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     bool isDark = themeProvider.isDarkMode;
     final colors = AppThemeConfig.getColors(context);
-
-    _teamBloc = context.read<TeamBloc>();
-    _teamBloc.add(LoadTeamsByUserId(user_id));
 
     return SafeArea(
       child: Scaffold(
@@ -1005,15 +1011,15 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
 
 class GroupDrawer extends StatelessWidget {
   final int userId;
-
   const GroupDrawer({super.key, required this.userId});
-
+  
+  
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final colors = AppThemeConfig.getColors(context);
     final isDark = themeProvider.isDarkMode;
-
+    TeamTaskBloc teamTaskBloc = getIt<TeamTaskBloc>();
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -1043,7 +1049,7 @@ class GroupDrawer extends StatelessWidget {
                   Icon(Icons.group, color: Colors.white, size: 40),
                   const SizedBox(height: 8),
                   Text(
-                    'Manage Groups',
+                    'Manage Tasks',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -1054,12 +1060,16 @@ class GroupDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            // Danh sách nhóm
+            // Danh sách task
             Expanded(
-              child: BlocBuilder<TeamBloc, TeamState>(
+              child: BlocBuilder<TeamTaskBloc, TeamTaskState>(
+                bloc: teamTaskBloc,
                 builder: (context, state) {
-                  if (state is TeamLoaded) {
-                    return state.teams.isEmpty
+                  if (state is TeamTaskInitial) {
+                    teamTaskBloc.add(LoadTeamTasksByUserId(userId));
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is TeamTaskLoaded) {
+                    return state.tasks.isEmpty
                         ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1071,7 +1081,7 @@ class GroupDrawer extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'No groups yet',
+                                'No Tasks yet',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: colors.subtitleColor,
@@ -1083,79 +1093,21 @@ class GroupDrawer extends StatelessWidget {
                         )
                         : ListView.builder(
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: state.teams.length,
+                          itemCount: state.tasks.length,
                           itemBuilder: (context, index) {
-                            final team = state.teams[index];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              child: Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                color:
-                                    isDark ? colors.itemBgColor : Colors.white,
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
-                                  ),
-                                  leading: Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: Colors.deepPurpleAccent.shade700,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        team.name[0].toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    team.name,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: colors.textColor,
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => GroupDetail(
-                                              team: team,
-                                              LeaderId: -1,
-                                            ),
-                                      ),
-                                    );
-                                    if (result == 'refresh') {
-                                      context.read<TeamBloc>().add(
-                                        LoadTeamsByUserId(userId),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            );
+                            final task = state.tasks[index];
+                            return TodoCardTeam(task: task,isLeader: false,canEdit: true,onChanged: (){
+                              teamTaskBloc.add(LoadTeamTasksByUserId(userId));
+                            },);
+                            
                           },
                         );
-                  } else if (state is TeamLoading) {
+                  } else if (state is TeamTaskLoading) {
                     return const Center(child: CircularProgressIndicator());
                   } else {
                     return Center(
                       child: Text(
-                        'Failed to load groups',
+                        'Failed to load tasks',
                         style: TextStyle(color: colors.subtitleColor),
                       ),
                     );

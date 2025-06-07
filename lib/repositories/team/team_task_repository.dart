@@ -15,6 +15,15 @@ class TeamTaskRepository {
       throw Exception('Lỗi khi tải task nhóm');
     }
   }
+  Future<List<TeamTask>> getTeamTasksByUserId(int teamId) async {
+    final response = await authService.get('$path/by-user/$teamId');
+    if (response.statusCode == 200 && response.data['status'] == 200) {
+      List<dynamic> data = response.data['data'];
+      return data.map((team) => TeamTask.fromJson(team)).toList();
+    } else {
+      throw Exception('Lỗi khi tải task nhóm');
+    }
+  }
 
   Future<List<TeamTask>> getTeamTasksByMemberId(int memberId) async {
     final response = await authService.get('$path/by-member/$memberId');
