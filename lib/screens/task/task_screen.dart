@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/models/category.dart';
@@ -40,15 +41,24 @@ class _TaskScreenState extends State<TaskScreen> {
   final TaskService taskService = TaskService();
   bool _isLoading = false;
   List<Category> _categories = [];
+  bool _showCompletedTasks = false;
 
   @override
   void initState() {
     super.initState();
     _filteredTasks = List.from(widget.tasks);
     _categories = List.from(widget.categories);
+    _loadShowCompletedTasks();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchTasksByDate();
+    });
+  }
+
+  Future<void> _loadShowCompletedTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _showCompletedTasks = prefs.getBool('show_completed_tasks') ?? false;
     });
   }
 
@@ -78,7 +88,10 @@ class _TaskScreenState extends State<TaskScreen> {
           dueDate: _selectedDate,
         );
         setState(() {
-          _filteredTasks = tasks;
+          _filteredTasks =
+              _showCompletedTasks
+                  ? tasks
+                  : tasks.where((task) => !task.completed).toList();
           _isLoading = false;
         });
       } catch (e) {
@@ -104,14 +117,21 @@ class _TaskScreenState extends State<TaskScreen> {
       if (query.isEmpty) {
         _filteredTasks =
             widget.tasks.where((task) {
-              return task.taskDate.year == _selectedDate.year &&
+              final matchesDate =
+                  task.taskDate.year == _selectedDate.year &&
                   task.taskDate.month == _selectedDate.month &&
                   task.taskDate.day == _selectedDate.day;
+              final matchesCompletion = _showCompletedTasks || !task.completed;
+              return matchesDate && matchesCompletion;
             }).toList();
       } else {
         _filteredTasks =
             _filteredTasks.where((task) {
-              return task.title.toLowerCase().contains(query.toLowerCase());
+              final matchesTitle = task.title.toLowerCase().contains(
+                query.toLowerCase(),
+              );
+              final matchesCompletion = _showCompletedTasks || !task.completed;
+              return matchesTitle && matchesCompletion;
             }).toList();
       }
     });
@@ -419,10 +439,17 @@ class _TaskScreenState extends State<TaskScreen> {
                       } else {
                         _filteredTasks =
                             widget.tasks.where((task) {
-                              return task.taskDate.year == _selectedDate.year &&
+                              final matchesDate =
+                                  task.taskDate.year == _selectedDate.year &&
                                   task.taskDate.month == _selectedDate.month &&
-                                  task.taskDate.day == _selectedDate.day &&
-                                  selectedCategoryIds.contains(task.categoryId);
+                                  task.taskDate.day == _selectedDate.day;
+                              final matchesCategory = selectedCategoryIds
+                                  .contains(task.categoryId);
+                              final matchesCompletion =
+                                  _showCompletedTasks || !task.completed;
+                              return matchesDate &&
+                                  matchesCategory &&
+                                  matchesCompletion;
                             }).toList();
                       }
                     });

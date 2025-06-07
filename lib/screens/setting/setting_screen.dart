@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
 import 'package:to_do_list_app/screens/setting/account_settings_screen.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
@@ -13,8 +14,60 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  bool _showCompletedTasks = false; // Trạng thái cho Show Completed Tasks
-  bool _notificationsEnabled = true; // Trạng thái cho Notifications
+  bool _showCompletedTasks = false;
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _showCompletedTasks = prefs.getBool('show_completed_tasks') ?? false;
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    });
+  }
+
+  Future<void> _saveShowCompletedTasks(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('show_completed_tasks', value);
+  }
+
+  Future<void> _saveNotificationsEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', value);
+  }
+
+  Future<bool> _showNotificationDisableDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Disable Notifications?'),
+                content: const Text(
+                  'Disabling notifications may lead to a poor app experience.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Agree'),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +88,7 @@ class _SettingScreenState extends State<SettingScreen> {
         children: [
           Center(
             child: Container(
-              margin: EdgeInsets.symmetric(vertical: 10),
+              margin: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
                 'Setting',
                 style: TextStyle(
@@ -69,11 +122,13 @@ class _SettingScreenState extends State<SettingScreen> {
                         onSwitchChanged: (value) {
                           setState(() {
                             _showCompletedTasks = value;
+                            _saveShowCompletedTasks(value);
                           });
                         },
                         onTap: () {
                           setState(() {
                             _showCompletedTasks = !_showCompletedTasks;
+                            _saveShowCompletedTasks(_showCompletedTasks);
                           });
                         },
                       ),
@@ -86,15 +141,40 @@ class _SettingScreenState extends State<SettingScreen> {
                         iconBgColor:
                             isDark ? Colors.orange.shade900 : Colors.orange,
                         backgroundColor: colors.itemBgColor,
-                        onSwitchChanged: (value) {
-                          setState(() {
-                            _notificationsEnabled = value;
-                          });
+                        onSwitchChanged: (value) async {
+                          if (!value) {
+                            final agreed =
+                                await _showNotificationDisableDialog();
+                            if (agreed) {
+                              setState(() {
+                                _notificationsEnabled = value;
+                                _saveNotificationsEnabled(value);
+                              });
+                            }
+                          } else {
+                            setState(() {
+                              _notificationsEnabled = value;
+                              _saveNotificationsEnabled(value);
+                            });
+                          }
                         },
-                        onTap: () {
-                          setState(() {
-                            _notificationsEnabled = !_notificationsEnabled;
-                          });
+                        onTap: () async {
+                          final newValue = !_notificationsEnabled;
+                          if (!newValue) {
+                            final agreed =
+                                await _showNotificationDisableDialog();
+                            if (agreed) {
+                              setState(() {
+                                _notificationsEnabled = newValue;
+                                _saveNotificationsEnabled(newValue);
+                              });
+                            }
+                          } else {
+                            setState(() {
+                              _notificationsEnabled = newValue;
+                              _saveNotificationsEnabled(newValue);
+                            });
+                          }
                         },
                       ),
                       TaskSettingItem(

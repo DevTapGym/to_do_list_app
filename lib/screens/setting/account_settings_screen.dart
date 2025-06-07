@@ -61,7 +61,12 @@ class AccountSettingsScreen extends StatelessWidget {
                           backgroundColor: colors.itemBgColor,
                           backgroundImage:
                               user.avatar != null && user.avatar!.isNotEmpty
-                                  ? NetworkImage(user.avatar!)
+                                  ? NetworkImage(
+                                    user.avatar!.replaceFirst(
+                                      'localhost',
+                                      '10.0.2.2',
+                                    ),
+                                  )
                                   : null, // Sử dụng NetworkImage nếu có avatar URL
                           child:
                               user.avatar == null || user.avatar!.isEmpty

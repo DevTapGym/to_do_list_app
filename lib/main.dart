@@ -238,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } catch (e) {
         ScaffoldMessenger.of(
-          // ignore: use_build_context_synchronously
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to load data: $e')));
         setState(() {
@@ -247,7 +246,6 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } else {
-      // Xử lý trường hợp không có auth
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
@@ -305,50 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 )
                 : _selectedIndex == 1
-                ? Drawer(
-                  child: BlocBuilder<TeamBloc, TeamState>(
-                    bloc: _teamBloc,
-                    builder: (context, state) {
-                      if (state is TeamLoaded) {
-                        return ListView(
-                          children: [
-                            const DrawerHeader(
-                              child: Text(
-                                'Your groups',
-                                style: TextStyle(fontSize: 20),
-                              ),
-                            ),
-                            ...state.teams.map(
-                              (team) => ListTile(
-                                title: Text(team.name),
-                                onTap: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => GroupDetail(
-                                            team: team,
-                                            LeaderId: -1,
-                                          ),
-                                    ),
-                                  );
-
-                                  if (result == 'refresh') {
-                                    context.read<TeamBloc>().add(
-                                      LoadTeamsByUserId(user_id),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      } else {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  ),
-                )
+                ? GroupDrawer(userId: user_id)
                 : null,
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
@@ -404,79 +359,73 @@ class _HomeScreenState extends State<HomeScreen> {
                 : _selectedIndex == 1
                 ? FloatingActionButton(
                   onPressed: () {
-                    if (_selectedIndex == 1) {
-                      showModalBottomSheet(
-                        context: context,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
                         ),
-                        builder:
-                            (context) => Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ListTile(
-                                  leading: const Icon(Icons.group_add),
-                                  title: const Text('Tạo nhóm mới'),
-                                  onTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => GroupCreate(),
+                      ),
+                      builder:
+                          (context) => Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.group_add),
+                                title: const Text('Tạo nhóm mới'),
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => GroupCreate(),
+                                    ),
+                                  );
+                                  if (result is Team) {
+                                    await teamService.createTeamWithMembers(
+                                      result,
+                                      user_id,
+                                    );
+                                    _teamBloc.add(LoadTeamsByUserId(user_id));
+                                  }
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.qr_code_scanner),
+                                title: const Text('Quét mã QR để vào nhóm'),
+                                onTap: () async {
+                                  final TeamMember? result =
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => QR_JoinGroup(),
+                                        ),
+                                      );
+                                  if (result != null) {
+                                    await teamService.AddTeamMemberWithQR(
+                                      result,
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Tham gia nhóm thành công',
+                                        ),
                                       ),
                                     );
-                                    if (result is Team) {
-                                      await teamService.createTeamWithMembers(
-                                        result,
-                                        user_id,
-                                      );
-                                      _teamBloc.add(LoadTeamsByUserId(user_id));
-                                    }
-                                  },
-                                ),
-                                ListTile(
-                                  leading: const Icon(Icons.qr_code_scanner),
-                                  title: const Text('Quét mã QR để vào nhóm'),
-                                  onTap: () async {
-                                    final TeamMember? result =
-                                        await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => QR_JoinGroup(),
-                                          ),
-                                        );
-                                    if (result != null) {
-                                      await teamService.AddTeamMemberWithQR(
-                                        result,
-                                      );
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Tham gia nhóm thành công',
-                                          ),
+                                    _teamBloc.add(LoadTeamsByUserId(user_id));
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Không thể tham gia nhóm',
                                         ),
-                                      );
-                                      _teamBloc.add(LoadTeamsByUserId(user_id));
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Khong thể tham gia nhóm',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                      );
-                    }
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                    );
                   },
                   backgroundColor:
                       isDark
@@ -1042,6 +991,173 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                           ],
                         );
                       },
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class GroupDrawer extends StatelessWidget {
+  final int userId;
+
+  const GroupDrawer({super.key, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final colors = AppThemeConfig.getColors(context);
+    final isDark = themeProvider.isDarkMode;
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors:
+                      isDark
+                          ? [
+                            Colors.deepPurpleAccent,
+                            Colors.deepPurple.shade700,
+                          ]
+                          : [
+                            Colors.deepPurpleAccent.shade700,
+                            Colors.deepPurple,
+                          ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.group, color: Colors.white, size: 40),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Manage Groups',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Danh sách nhóm
+            Expanded(
+              child: BlocBuilder<TeamBloc, TeamState>(
+                builder: (context, state) {
+                  if (state is TeamLoaded) {
+                    return state.teams.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.group_outlined,
+                                size: 60,
+                                color: colors.subtitleColor,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No groups yet',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: colors.subtitleColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: state.teams.length,
+                          itemBuilder: (context, index) {
+                            final team = state.teams[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              child: Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                color:
+                                    isDark ? colors.itemBgColor : Colors.white,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
+                                  leading: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: Colors.deepPurpleAccent.shade700,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        team.name[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    team.name,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.textColor,
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => GroupDetail(
+                                              team: team,
+                                              LeaderId: -1,
+                                            ),
+                                      ),
+                                    );
+                                    if (result == 'refresh') {
+                                      context.read<TeamBloc>().add(
+                                        LoadTeamsByUserId(userId),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                  } else if (state is TeamLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return Center(
+                      child: Text(
+                        'Failed to load groups',
+                        style: TextStyle(color: colors.subtitleColor),
+                      ),
                     );
                   }
                 },

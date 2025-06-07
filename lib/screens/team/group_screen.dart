@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
+import 'package:to_do_list_app/providers/theme_provider.dart';
 import 'package:to_do_list_app/services/injections.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/bloc/Team/team_bloc.dart';
@@ -16,6 +18,7 @@ class GroupsScreen extends StatefulWidget {
 
 class _GroupsScreenState extends State<GroupsScreen> {
   final int _userId = getIt.get<User>().id;
+
   @override
   void initState() {
     super.initState();
@@ -24,38 +27,69 @@ class _GroupsScreenState extends State<GroupsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+
     return Container(
       color: colors.bgColor,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+      child: Column(
+        children: [
+          // Header with gradient
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors:
+                    isDark
+                        ? [Colors.deepPurpleAccent, Colors.deepPurple.shade700]
+                        : [Colors.deepPurpleAccent.shade700, Colors.deepPurple],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Row(
               children: [
                 Builder(
                   builder:
                       (context) => IconButton(
-                        icon: Icon(Icons.menu, color: colors.textColor),
+                        icon: const Icon(Icons.menu, color: Colors.white),
                         onPressed: () {
                           Scaffold.of(context).openDrawer();
                         },
                       ),
                 ),
+                const SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    getIt.get<User>().name[0].toUpperCase(),
+                    style: TextStyle(
+                      color:
+                          isDark
+                              ? Colors.deepPurple.shade700
+                              : Colors.deepPurple,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hi there,',
-                      style: TextStyle(fontSize: 16, color: colors.textColor),
+                      'Hi there, ${getIt.get<User>().name}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
+                    const SizedBox(height: 4),
+                    const Text(
                       'Your groups',
                       style: TextStyle(
                         fontSize: 26,
-                        color: colors.textColor,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -63,12 +97,16 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 ),
               ],
             ),
-            Expanded(
+          ),
+          // Group list
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
               child: BlocBuilder<TeamBloc, TeamState>(
                 builder: (context, state) {
                   if (state is TeamInitial) {
                     context.read<TeamBloc>().add(LoadTeamsByUserId(_userId));
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   } else if (state is TeamLoaded) {
                     final groups = state.teams;
 
@@ -94,17 +132,45 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             )
                             .toList();
 
+                    if (leaderGroups.isEmpty && memberGroups.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.group_outlined,
+                              size: 60,
+                              color: colors.subtitleColor,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No groups yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: colors.subtitleColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     return ListView(
                       children: [
                         if (leaderGroups.isNotEmpty) ...[
-                          Text(
-                            'Leader of Teams',
-                            style: TextStyle(
-                              color: colors.textColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                            child: Text(
+                              'Leader of Teams',
+                              style: TextStyle(
+                                color: colors.textColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
+                          const SizedBox(height: 8),
                           ...leaderGroups.map(
                             (g) => TeamWidget(
                               team: g,
@@ -120,14 +186,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           const SizedBox(height: 16),
                         ],
                         if (memberGroups.isNotEmpty) ...[
-                          Text(
-                            'Member of Teams',
-                            style: TextStyle(
-                              color: colors.textColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
+                            child: Text(
+                              'Member of Teams',
+                              style: TextStyle(
+                                color: colors.textColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
+                          const SizedBox(height: 8),
                           ...memberGroups.map(
                             (g) => TeamWidget(
                               team: g,
@@ -147,8 +217,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
