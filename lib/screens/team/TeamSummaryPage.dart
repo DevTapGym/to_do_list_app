@@ -197,6 +197,18 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                         ),
                         numeric: true,
                       ),
+                      DataColumn(
+                        label: Text(
+                          'Late',
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: colors.textColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        numeric: true,
+                      ),
                     ],
                     rows:
                         filteredMembers.map((member) {
@@ -206,36 +218,55 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                                     (task) => task.teamMemberId == member.id,
                                   )
                                   .toList();
-                          final memberCompletedTasks =
+                          final now = DateTime.now();
+                          final completed =
+                              memberTasks.where((t) => t.isCompleted).length;
+                          final pendingNotLate =
                               memberTasks
-                                  .where((task) => task.isCompleted)
+                                  .where(
+                                    (t) =>
+                                        !t.isCompleted &&
+                                        t.deadline.isAfter(now),
+                                  )
                                   .length;
-                          final memberPendingTasks =
+                          final pendingLate =
                               memberTasks
-                                  .where((task) => !task.isCompleted)
+                                  .where(
+                                    (t) =>
+                                        !t.isCompleted &&
+                                        t.deadline.isBefore(now),
+                                  )
                                   .length;
 
                           return DataRow(
                             cells: [
                               DataCell(
                                 Text(
-                                  '${member.user?.name ?? 'Unknown'}',
-                                  style: TextStyle(color: colors.textColor),
+                                  member.user?.name ?? 'Unknown',
+                                  style:  TextStyle(color: colors.textColor),
                                 ),
                               ),
                               DataCell(
                                 Center(
                                   child: Text(
-                                    memberCompletedTasks.toString(),
-                                    style: TextStyle(color: colors.textColor),
+                                    completed.toString(),
+                                    style:  TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),
                               DataCell(
                                 Center(
                                   child: Text(
-                                    memberPendingTasks.toString(),
-                                    style: TextStyle(color: colors.textColor),
+                                    pendingNotLate.toString(),
+                                    style:  TextStyle(color: colors.textColor),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    pendingLate.toString(),
+                                    style:  TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),
