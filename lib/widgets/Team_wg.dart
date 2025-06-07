@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/screens/team/group_detail.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 
 class TeamWidget extends StatelessWidget {
   final Team team;
-  final int LeaderId;
   final bool isLeader;
+  final int LeaderId;
   final VoidCallback onRefresh;
   const TeamWidget({
     super.key,
@@ -19,6 +20,9 @@ class TeamWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
+    final User? Leader=team.teamMembers.firstWhere((member)=> member.role==Role.LEADER).user;
+    final int finalLeaderId =
+        (LeaderId == Leader?.id) ? LeaderId : -1;
     return Card(
       color: colors.itemBgColor,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -27,7 +31,7 @@ class TeamWidget extends StatelessWidget {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => GroupDetail(team: team, LeaderId: LeaderId),
+              builder: (context) => GroupDetail(team: team, LeaderId:finalLeaderId),
             ),
           );
           if (result == 'refresh') {
@@ -57,7 +61,7 @@ class TeamWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '@${team.id}',
+                      '${Leader?.name}',
                       style: TextStyle(color: colors.subtitleColor),
                     ),
                   ],

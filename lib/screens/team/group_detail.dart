@@ -97,7 +97,8 @@ class _GroupDetailState extends State<GroupDetail> {
                       ),
                     );
                     if (result == 'refresh') {
-                      _fetchTeamDetails();
+                      await _fetchTeamDetails();
+                      onChanged();
                     }
                   },
                   child: Row(
@@ -593,6 +594,9 @@ class _GroupDetailState extends State<GroupDetail> {
         );
         widget.LeaderId = leader.userId;
         widget.isLeader = widget.LeaderId == user.id;
+        teamMember = widget.team.teamMembers.firstWhere(
+      (member) => member.userId == user.id,
+    );
       });
     }
   }
