@@ -200,20 +200,13 @@ class _GroupCreateState extends State<GroupCreate> {
   void onAddMember(String email) async {
     try {
       User user = await _teamService.getUserbyEmail(email);
-      if (user != null) {
-        _addMember(user);
-        Navigator.of(context).pop();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("No user found with email: $email"),
-          ),
-        );
-      }
+      _addMember(user);
+      Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User with email not found: $email")),
+      );
     }
   }
 }
