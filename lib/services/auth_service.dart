@@ -146,11 +146,6 @@ class AuthService {
         "/api/v1/auth/profile",
         options: Options(headers: {"Authorization": "Bearer $accessToken"}),
       );
-      print('Response Data: ${response.data}');
-      print('Status: ${response.data["status"]}');
-      print('Message: ${response.data["message"]}');
-      print('Error: ${response.data["error"]}');
-      print('Data: ${response.data["data"]}');
 
       final status = response.data["status"] as int? ?? 0;
       final error = response.data["error"] as String?;
@@ -306,23 +301,35 @@ class AuthService {
     }
   }
 
-  Future<bool> checkCode(String email, String code) async {
+  Future<LoginResult> checkCode(String email, String code) async {
     try {
       Response response = await dio.post(
         "/api/v1/auth/check-code",
         data: {"email": email, "code": code},
       );
 
-      if (response.statusCode == 200 && response.data["status"] == 200) {
-        print("Mã xác thực đúng.");
-        return true;
+      final status = response.data["status"];
+      final message = response.data["message"];
+      final error = response.data["error"];
+
+      if (response.statusCode == 200 && status == 200) {
+        final data = response.data["data"];
+        AuthResponse authResponse = AuthResponse.fromJson(data);
+
+        final storage = FlutterSecureStorage();
+        await storage.write(
+          key: 'access_token',
+          value: authResponse.accessToken,
+        );
+
+        return LoginResult(authResponse: authResponse);
       } else {
-        print("Mã xác thực sai hoặc lỗi khác: ${response.data["message"]}");
+        return LoginResult(error: message ?? error ?? "Mã xác thực sai hoặc lỗi khác", status: status ?? 500);
       }
     } catch (e) {
       print("Lỗi khi kiểm tra mã: $e");
+      return LoginResult(error: "Lỗi khi kiểm tra mã: $e", status: 500);
     }
-    return false;
   }
 
   Future<bool> sendCode(String email) async {

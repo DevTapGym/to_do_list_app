@@ -7,6 +7,7 @@ import 'package:to_do_list_app/bloc/auth/auth_event.dart';
 import 'package:to_do_list_app/bloc/auth/auth_state.dart';
 import 'package:to_do_list_app/services/profile_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String name;
@@ -54,8 +55,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       final fileName = image.path.split('/').last;
-      print('Picked image name: $fileName');
-      print('Full image path: ${image.path}');
       setState(() {
         _avatarImagePath = fileName; // Lưu tên file
         _fullImagePath = image.path; // Lưu đường dẫn đầy đủ
@@ -67,7 +66,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_nameController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Name cannot be empty')));
+      ).showSnackBar(SnackBar(content: Text('nameEmpty'.tr())));
       return;
     }
 
@@ -122,18 +121,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         });
 
         // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thông tin đã được cập nhật.')),
-        );
-      } catch (e) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update profile: $e')));
+        ).showSnackBar(SnackBar(content: Text('profileUpdated'.tr())));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('updateProfileFailed'.tr(args: [e.toString()])),
+          ),
+        );
       }
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('userNotAuthenticated'.tr())));
     }
 
     setState(() {
@@ -156,7 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
         ),
         title: Text(
-          'Edit Profile',
+          'editProfile'.tr(),
           style: TextStyle(
             color: colors.textColor,
             fontWeight: FontWeight.bold,
@@ -299,16 +300,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       children: [
                         TextField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Name',
+                          decoration: InputDecoration(
+                            labelText: 'name'.tr(),
                             border: OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 20),
                         TextField(
                           controller: _phoneController,
-                          decoration: const InputDecoration(
-                            labelText: 'Phone',
+                          decoration: InputDecoration(
+                            labelText: 'phone'.tr(),
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -349,7 +350,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   color: Colors.white,
                                 )
                                 : Text(
-                                  'Save',
+                                  'save'.tr(),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,

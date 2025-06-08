@@ -1,6 +1,7 @@
 import 'dart:async';
-
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
 
@@ -43,7 +44,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
 
       if (success) {
-        // Để trống logic khi thành công theo yêu cầu
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -51,7 +51,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         );
       } else {
-        _showMessage("Email không hợp lệ");
+        _showMessage('invalid_email'.tr());
       }
     }
   }
@@ -66,7 +66,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Quên mật khẩu',
+          'forgot_password'.tr(),
           style: TextStyle(
             color: colors.textColor,
             fontSize: 20,
@@ -99,7 +99,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 30),
                     Text(
-                      'Đặt lại mật khẩu',
+                      'reset_password'.tr(),
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -109,7 +109,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Nhập email của bạn để nhận mã OTP',
+                      'enter_email_for_otp'.tr(),
                       style: TextStyle(
                         fontSize: 16,
                         color: colors.subtitleColor,
@@ -123,7 +123,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'email'.tr(),
                         prefixIcon: Icon(
                           Icons.email,
                           color: colors.subtitleColor,
@@ -132,12 +132,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       style: const TextStyle(fontSize: 16),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Vui lòng nhập email của bạn';
+                          return 'please_enter_email'.tr();
                         }
                         if (!RegExp(
                           r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                         ).hasMatch(value)) {
-                          return 'Vui lòng nhập email hợp lệ';
+                          return 'please_enter_valid_email'.tr();
                         }
                         return null;
                       },
@@ -165,8 +165,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   strokeWidth: 3,
                                 ),
                               )
-                              : const Text(
-                                'Gửi mã OTP',
+                              : Text(
+                                'send_otp'.tr(),
                                 style: TextStyle(fontSize: 16),
                               ),
                     ),
@@ -202,8 +202,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
   Timer? _timer;
-  int _secondsRemaining = 90; // 1 phút 30 giây
+  int _secondsRemaining = 90;
   bool _isResendAvailable = false;
+
+  // Add controllers for each OTP digit
+  final List<TextEditingController> _otpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   @override
   void initState() {
@@ -217,6 +224,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     _codeController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
+    for (var c in _otpControllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -253,10 +266,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
 
     if (success) {
-      _showMessage('Mã OTP mới đã được gửi', success: true);
+      _showMessage('otp_resent_success'.tr(), success: true);
       _startCountdown();
     } else {
-      _showMessage('Gửi mã OTP thất bại. Vui lòng thử lại.');
+      _showMessage('otp_resent_failed'.tr());
     }
   }
 
@@ -283,7 +296,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showMessage('Mật khẩu mới và xác nhận mật khẩu không khớp');
+        _showMessage('passwords_not_match'.tr());
         return;
       }
 
@@ -298,7 +311,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       });
 
       if (success) {
-        _showMessage('Đặt lại mật khẩu thành công', success: true);
+        _showMessage('password_reset_success'.tr(), success: true);
         _codeController.clear();
         _newPasswordController.clear();
         _confirmPasswordController.clear();
@@ -308,9 +321,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ).pushNamedAndRemoveUntil('/login', (route) => false);
         });
       } else {
-        _showMessage('Đặt lại mật khẩu thất bại. Vui lòng kiểm tra mã OTP.');
+        _showMessage('password_reset_failed'.tr());
       }
     }
+  }
+
+  void _onOtpChanged(int index, String value) {
+    if (value.isNotEmpty && index < 5) {
+      _focusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    }
+    // Update _codeController with the combined value
+    _codeController.text = _otpControllers.map((c) => c.text).join();
   }
 
   @override
@@ -327,7 +350,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
         ),
         title: Text(
-          'Đặt lại mật khẩu',
+          'reset_password'.tr(),
           style: TextStyle(
             color: colors.textColor,
             fontWeight: FontWeight.bold,
@@ -348,6 +371,103 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // OTP Input Container
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  margin: const EdgeInsets.only(bottom: 30),
+                  decoration: BoxDecoration(
+                    color: colors.itemBgColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.itemBgColor.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'enter_6_digit_otp'.tr(),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: colors.textColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(6, (index) {
+                          return SizedBox(
+                            width: 40,
+                            child: TextField(
+                              controller: _otpControllers[index],
+                              focusNode: _focusNodes[index],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              maxLength: 1,
+                              style: TextStyle(
+                                fontSize: 22,
+                                color: colors.textColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                counterText: '',
+                                filled: true,
+                                fillColor: colors.bgColor,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: colors.primaryColor,
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: colors.primaryColor,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              onChanged: (value) => _onOtpChanged(index, value),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _isResendAvailable
+                            ? 'you_can_resend_otp'.tr()
+                            : 'resend_code_in'.tr(args: ['$_secondsRemaining']),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colors.subtitleColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (_isResendAvailable)
+                        TextButton(
+                          onPressed: _isLoading ? null : _resendCode,
+                          child: Text(
+                            'resend_otp_code'.tr(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: colors.primaryColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Password Input Container
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -364,62 +484,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Trường nhập mã OTP
-                      TextFormField(
-                        controller: _codeController,
-                        keyboardType: TextInputType.number,
-                        maxLength: 6,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          labelText: 'Mã OTP',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.pin,
-                            color: colors.subtitleColor,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập mã OTP';
-                          }
-                          if (value.trim().length != 6 ||
-                              int.tryParse(value.trim()) == null) {
-                            return 'Mã OTP phải gồm 6 chữ số';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _isResendAvailable
-                            ? 'Bạn có thể gửi lại mã OTP'
-                            : 'Gửi lại mã sau $_secondsRemaining giây',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colors.subtitleColor,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (_isResendAvailable)
-                        TextButton(
-                          onPressed: _isLoading ? null : _resendCode,
-                          child: Text(
-                            'Gửi lại mã OTP',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: colors.primaryColor,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 20),
-                      // Trường nhập mật khẩu mới
+                      // New Password Field
                       TextFormField(
                         controller: _newPasswordController,
                         obscureText: _obscureNewPassword,
                         decoration: InputDecoration(
-                          labelText: 'Mật khẩu mới',
+                          labelText: 'new_password'.tr(),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -443,44 +513,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập mật khẩu mới';
+                            return 'please_enter_new_password'.tr();
                           }
                           final passwordRegex = RegExp(
                             r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
                           );
                           if (!passwordRegex.hasMatch(value.trim())) {
-                            return 'Mật khẩu phải trên 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
+                            return 'password_requirements'.tr();
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: colors.subtitleColor,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'Mật khẩu phải trên 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colors.subtitleColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 20),
-                      // Trường xác nhận mật khẩu
+                      // Confirm Password Field
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
                         decoration: InputDecoration(
-                          labelText: 'Xác nhận mật khẩu',
+                          labelText: 'confirm_password'.tr(),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -505,14 +555,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng xác nhận mật khẩu';
+                            return 'please_confirm_password'.tr();
                           }
                           if (value.trim() !=
                               _newPasswordController.text.trim()) {
-                            return 'Mật khẩu không khớp';
+                            return 'passwords_not_match'.tr();
                           }
                           return null;
                         },
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: colors.subtitleColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'password_requirements'.tr(),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colors.subtitleColor,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -560,7 +630,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                             )
                             : Text(
-                              'Đặt lại mật khẩu',
+                              'reset_password'.tr(),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
