@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:to_do_list_app/bloc/Team/teamTask_bloc.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/providers/theme_provider.dart';
@@ -180,6 +181,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                 context.read<TeamBloc>().add(
                                   LoadTeamsByUserId(getIt.get<User>().id),
                                 );
+                                getIt<TeamTaskBloc>().add(
+                                  LoadTeamTasksByUserId(getIt.get<User>().id),
+                                );
                               },
                             ),
                           ),
@@ -204,6 +208,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                               onRefresh: () {
                                 context.read<TeamBloc>().add(
                                   LoadTeamsByUserId(getIt.get<User>().id),
+                                );
+                                getIt<TeamTaskBloc>().add(
+                                  LoadTeamTasksByUserId(getIt.get<User>().id),
                                 );
                               },
                             ),

@@ -114,6 +114,10 @@ class TeamService {
     final tasks = await teamTaskRepository.getTeamTasksByTeamId(teamId);
     return tasks;
   }
+  Future<List<TeamTask>> getTeamTasksByUserId(int userId) async {
+    final tasks = await teamTaskRepository.getTeamTasksByUserId(userId);
+    return tasks;
+  }
   Future<User> getUserbyEmail(String email)async{
     User user=await teamRepository.getUserbyEmail(email);
     return user;

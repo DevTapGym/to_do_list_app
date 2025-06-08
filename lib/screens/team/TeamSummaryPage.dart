@@ -24,7 +24,7 @@ class TeamSummaryPage extends StatefulWidget {
 class _TeamSummaryPageState extends State<TeamSummaryPage> {
   late TextEditingController _searchController;
   String _searchQuery = '';
-
+  
   @override
   void initState() {
     super.initState();
@@ -47,13 +47,21 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
     final colors = AppThemeConfig.getColors(context);
-
+    final isDark = widget.isDark;
     int teamCompletedTasksCount =
         widget.allTeamTasks.where((task) => task.isCompleted).length;
     int teamPendingTasksCount =
-        widget.allTeamTasks.where((task) => !task.isCompleted).length;
-
+        widget.allTeamTasks.where((task) => !task.isCompleted && task.deadline.isAfter(now)).length;
+    int teamPendingLateTasksCount =
+                    widget.allTeamTasks
+                        .where(
+                          (task) =>
+                              !task.isCompleted &&
+                              task.deadline.isBefore(DateTime.now()),
+                        )
+                        .length;
     final filteredMembers =
         widget.team.teamMembers.where((member) {
           final userName = member.user?.name.toLowerCase() ?? '';
@@ -84,29 +92,51 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SummaryCard(
-                    title: "Completed",
-                    value: teamCompletedTasksCount.toString(),
-                    icon: Icons.check_circle,
-                    borderColor:
-                        widget.isDark ? Colors.green.shade600 : Colors.green,
-                    iconColor:
-                        widget.isDark ? Colors.green : Colors.greenAccent,
+              SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: SummaryCard(
+                            title: "Pending & Late",
+                            value: teamPendingLateTasksCount.toString(),
+                            icon: Icons.warning_amber_rounded,
+                            borderColor:
+                                isDark ? Colors.red.shade900 : Colors.red,
+                            iconColor:
+                                isDark
+                                    ? Colors.redAccent.shade100
+                                    : Colors.redAccent,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: SummaryCard(
+                            title: "Pending",
+                            value: teamPendingTasksCount.toString(),
+                            icon: Icons.access_time,
+                            borderColor:
+                                isDark ? Colors.orange.shade900 : Colors.orange,
+                            iconColor:
+                                isDark ? Colors.orange : Colors.orangeAccent,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: SummaryCard(
+                            title: "Completed",
+                            value: teamCompletedTasksCount.toString(),
+                            icon: Icons.check_circle,
+                            borderColor:
+                                isDark ? Colors.green.shade600 : Colors.green,
+                            iconColor:
+                                isDark ? Colors.green : Colors.greenAccent,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  SummaryCard(
-                    title: "Pending",
-                    value: teamPendingTasksCount.toString(),
-                    icon: Icons.access_time,
-                    borderColor:
-                        widget.isDark ? Colors.orange.shade900 : Colors.orange,
-                    iconColor:
-                        widget.isDark ? Colors.orange : Colors.orangeAccent,
-                  ),
-                ],
-              ),
               const SizedBox(height: 20),
 
               Text(
@@ -197,6 +227,18 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                         ),
                         numeric: true,
                       ),
+                      DataColumn(
+                        label: Text(
+                          'Late',
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: colors.textColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        numeric: true,
+                      ),
                     ],
                     rows:
                         filteredMembers.map((member) {
@@ -206,36 +248,55 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                                     (task) => task.teamMemberId == member.id,
                                   )
                                   .toList();
-                          final memberCompletedTasks =
+                          final now = DateTime.now();
+                          final completed =
+                              memberTasks.where((t) => t.isCompleted).length;
+                          final pendingNotLate =
                               memberTasks
-                                  .where((task) => task.isCompleted)
+                                  .where(
+                                    (t) =>
+                                        !t.isCompleted &&
+                                        t.deadline.isAfter(now),
+                                  )
                                   .length;
-                          final memberPendingTasks =
+                          final pendingLate =
                               memberTasks
-                                  .where((task) => !task.isCompleted)
+                                  .where(
+                                    (t) =>
+                                        !t.isCompleted &&
+                                        t.deadline.isBefore(now),
+                                  )
                                   .length;
 
                           return DataRow(
                             cells: [
                               DataCell(
                                 Text(
-                                  '${member.user?.name ?? 'Unknown'}',
-                                  style: TextStyle(color: colors.textColor),
+                                  member.user?.name ?? 'Unknown',
+                                  style:  TextStyle(color: colors.textColor),
                                 ),
                               ),
                               DataCell(
                                 Center(
                                   child: Text(
-                                    memberCompletedTasks.toString(),
-                                    style: TextStyle(color: colors.textColor),
+                                    completed.toString(),
+                                    style:  TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),
                               DataCell(
                                 Center(
                                   child: Text(
-                                    memberPendingTasks.toString(),
-                                    style: TextStyle(color: colors.textColor),
+                                    pendingNotLate.toString(),
+                                    style:  TextStyle(color: colors.textColor),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Center(
+                                  child: Text(
+                                    pendingLate.toString(),
+                                    style:  TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),

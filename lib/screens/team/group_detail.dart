@@ -81,9 +81,7 @@ class _GroupDetailState extends State<GroupDetail> {
                   horizontal: 10,
                   vertical: 6,
                 ),
-                decoration: BoxDecoration(
-                  color:colors.bgColor
-                ),
+                decoration: BoxDecoration(color: colors.bgColor),
                 child: InkWell(
                   onTap: () async {
                     final result = await Navigator.push(
@@ -207,30 +205,56 @@ class _GroupDetailState extends State<GroupDetail> {
           child: BlocBuilder<TeamTaskBloc, TeamTaskState>(
             bloc: teamTaskBloc,
             builder: (context, state) {
+              final now = DateTime.now();
               int teamCompletedTasksCount = 0;
               int teamPendingTasksCount = 0;
+              int teamPendingLateTasksCount = 0;
               List<TeamTask> allTeamTasks = [];
 
               int myCompletedTasksCount = 0;
               int myPendingTasksCount = 0;
-
+              int myPendingLate = 0;
               if (state is TeamTaskLoaded) {
                 allTeamTasks = state.tasks;
                 teamCompletedTasksCount =
                     allTeamTasks.where((task) => task.isCompleted).length;
                 teamPendingTasksCount =
-                    allTeamTasks.where((task) => !task.isCompleted).length;
-
+                    allTeamTasks
+                        .where(
+                          (task) =>
+                              !task.isCompleted && task.deadline.isAfter(now),
+                        )
+                        .length;
+                teamPendingLateTasksCount =
+                    allTeamTasks
+                        .where(
+                          (task) =>
+                              !task.isCompleted &&
+                              task.deadline.isBefore(DateTime.now()),
+                        )
+                        .length;
                 // Tính toán thống kê cá nhân nếu teamMember tồn tại
                 if (teamMember != null) {
                   final myTasks =
                       allTeamTasks
                           .where((task) => task.teamMemberId == teamMember!.id)
                           .toList();
+
                   myCompletedTasksCount =
                       myTasks.where((task) => task.isCompleted).length;
                   myPendingTasksCount =
-                      myTasks.where((task) => !task.isCompleted).length;
+                      myTasks
+                          .where(
+                            (task) =>
+                                !task.isCompleted && task.deadline.isAfter(now),
+                          )
+                          .length;
+                  myPendingLate =
+                      myTasks
+                          .where(
+                            (t) => !t.isCompleted && t.deadline.isBefore(now),
+                          )
+                          .length;
                 }
               }
 
@@ -276,26 +300,50 @@ class _GroupDetailState extends State<GroupDetail> {
                     ],
                   ),
                   SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SummaryCard(
-                        title: "Completed",
-                        value: teamCompletedTasksCount.toString(),
-                        icon: Icons.check_circle,
-                        borderColor:
-                            isDark ? Colors.green.shade600 : Colors.green,
-                        iconColor: isDark ? Colors.green : Colors.greenAccent,
-                      ),
-                      SummaryCard(
-                        title: "Pending",
-                        value: teamPendingTasksCount.toString(),
-                        icon: Icons.access_time,
-                        borderColor:
-                            isDark ? Colors.orange.shade900 : Colors.orange,
-                        iconColor: isDark ? Colors.orange : Colors.orangeAccent,
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: SummaryCard(
+                            title: "Pending & Late",
+                            value: teamPendingLateTasksCount.toString(),
+                            icon: Icons.warning_amber_rounded,
+                            borderColor:
+                                isDark ? Colors.red.shade900 : Colors.red,
+                            iconColor:
+                                isDark
+                                    ? Colors.redAccent.shade100
+                                    : Colors.redAccent,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: SummaryCard(
+                            title: "Pending",
+                            value: teamPendingTasksCount.toString(),
+                            icon: Icons.access_time,
+                            borderColor:
+                                isDark ? Colors.orange.shade900 : Colors.orange,
+                            iconColor:
+                                isDark ? Colors.orange : Colors.orangeAccent,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: SummaryCard(
+                            title: "Completed",
+                            value: teamCompletedTasksCount.toString(),
+                            icon: Icons.check_circle,
+                            borderColor:
+                                isDark ? Colors.green.shade600 : Colors.green,
+                            iconColor:
+                                isDark ? Colors.green : Colors.greenAccent,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 20),
                   // Thống kê theo thành viên
@@ -314,27 +362,52 @@ class _GroupDetailState extends State<GroupDetail> {
                       ],
                     ),
                     SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SummaryCard(
-                          title: "My Completed",
-                          value: myCompletedTasksCount.toString(),
-                          icon: Icons.check_circle,
-                          borderColor:
-                              isDark ? Colors.green.shade600 : Colors.green,
-                          iconColor: isDark ? Colors.green : Colors.greenAccent,
-                        ),
-                        SummaryCard(
-                          title: "My Pending",
-                          value: myPendingTasksCount.toString(),
-                          icon: Icons.access_time,
-                          borderColor:
-                              isDark ? Colors.orange.shade900 : Colors.orange,
-                          iconColor:
-                              isDark ? Colors.orange : Colors.orangeAccent,
-                        ),
-                      ],
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SummaryCard(
+                              title: "Pending & Late",
+                              value: myPendingLate.toString(),
+                              icon: Icons.warning_amber_rounded,
+                              borderColor:
+                                  isDark ? Colors.red.shade900 : Colors.red,
+                              iconColor:
+                                  isDark
+                                      ? Colors.redAccent.shade100
+                                      : Colors.redAccent,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SummaryCard(
+                              title: "Pending",
+                              value: myPendingTasksCount.toString(),
+                              icon: Icons.access_time,
+                              borderColor:
+                                  isDark
+                                      ? Colors.orange.shade900
+                                      : Colors.orange,
+                              iconColor:
+                                  isDark ? Colors.orange : Colors.orangeAccent,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SummaryCard(
+                              title: "Completed",
+                              value: myCompletedTasksCount.toString(),
+                              icon: Icons.check_circle,
+                              borderColor:
+                                  isDark ? Colors.green.shade600 : Colors.green,
+                              iconColor:
+                                  isDark ? Colors.green : Colors.greenAccent,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     SizedBox(height: 12),
                   ],
@@ -595,8 +668,8 @@ class _GroupDetailState extends State<GroupDetail> {
         widget.LeaderId = leader.userId;
         widget.isLeader = widget.LeaderId == user.id;
         teamMember = widget.team.teamMembers.firstWhere(
-      (member) => member.userId == user.id,
-    );
+          (member) => member.userId == user.id,
+        );
       });
     }
   }
