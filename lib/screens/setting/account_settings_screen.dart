@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
@@ -20,7 +21,7 @@ class AccountSettingsScreen extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: colors.bgColor,
           title: Text(
-            'Account Settings',
+            'accountSettings'.tr(),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -107,7 +108,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                 color: colors.primaryColor,
                               ),
                               title: Text(
-                                'Name',
+                                'name'.tr(),
                                 style: TextStyle(
                                   color: colors.textColor,
                                   fontSize: 14,
@@ -129,7 +130,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                 color: colors.primaryColor,
                               ),
                               title: Text(
-                                'Email',
+                                'email'.tr(),
                                 style: TextStyle(
                                   color: colors.textColor,
                                   fontSize: 14,
@@ -151,14 +152,14 @@ class AccountSettingsScreen extends StatelessWidget {
                                 color: colors.primaryColor,
                               ),
                               title: Text(
-                                'Phone',
+                                'phone'.tr(),
                                 style: TextStyle(
                                   color: colors.textColor,
                                   fontSize: 14,
                                 ),
                               ),
                               subtitle: Text(
-                                user.phone ?? 'Not provided',
+                                user.phone ?? 'notProvided'.tr(),
                                 style: TextStyle(
                                   color: colors.textColor,
                                   fontSize: 18,
@@ -214,7 +215,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
@@ -224,7 +225,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                     ),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Update',
+                                      'update'.tr(),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -268,7 +269,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
@@ -278,7 +279,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                     ),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Change Password',
+                                      'changePassword'.tr(),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -331,7 +332,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(25),
                                   ),
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
@@ -341,7 +342,7 @@ class AccountSettingsScreen extends StatelessWidget {
                                     ),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Logout',
+                                      'logout'.tr(),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,

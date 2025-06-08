@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -98,9 +99,9 @@ class _TaskScreenState extends State<TaskScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load tasks: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('failed_to_load_tasks'.tr(args: ['$e']))),
+        );
       }
     } else {
       setState(() {
@@ -108,7 +109,7 @@ class _TaskScreenState extends State<TaskScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('user_not_authenticated'.tr())));
     }
   }
 
@@ -165,14 +166,12 @@ class _TaskScreenState extends State<TaskScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('Confirm Task Completion'),
-            content: Text(
-              'Marking this task as completed is irreversible. Are you sure you want to proceed?',
-            ),
+            title: Text('confirm_task_completion'.tr()),
+            content: Text('mark_task_irreversible'.tr()),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
+                child: Text('cancel'.tr()),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -183,7 +182,7 @@ class _TaskScreenState extends State<TaskScreen> {
                   backgroundColor: Colors.deepPurpleAccent,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Confirm'),
+                child: Text('confirm'.tr()),
               ),
             ],
           ),
@@ -218,7 +217,6 @@ class _TaskScreenState extends State<TaskScreen> {
             try {
               // Lấy thông tin streak hiện tại
               final streakData = await summaryService.getStreak(userId);
-              print('Before update: $streakData');
               int currentStreak = streakData['currentStreak'] ?? 0;
               int longestStreak = streakData['longestStreak'] ?? 0;
               String? lastCompletedDateStr = streakData['lastCompletedDate'];
@@ -232,7 +230,6 @@ class _TaskScreenState extends State<TaskScreen> {
                   lastCompletedDate.year == today.year &&
                   lastCompletedDate.month == today.month &&
                   lastCompletedDate.day == today.day) {
-                print('Streak already updated today');
                 return;
               }
 
@@ -256,26 +253,26 @@ class _TaskScreenState extends State<TaskScreen> {
               }
 
               // Cập nhật streak qua API
-              final updatedStreak = await summaryService.updateStreak({
+              await summaryService.updateStreak({
                 'id': streakData['id'] ?? 0,
                 'userId': userId,
                 'currentStreak': currentStreak,
                 'longestStreak': longestStreak,
                 'lastCompletedDate': DateFormat('yyyy-MM-dd').format(today),
               });
-              print('After update: $updatedStreak');
 
               final notificationService = NotificationService();
               await notificationService.init();
               await notificationService.requestPermissions();
               await notificationService.showNotification(
-                'Streak Updated',
-                'Your streak has been updated to $currentStreak days!',
+                'streak_updated'.tr(),
+                'streak_updated_message'.tr(args: ['$currentStreak']),
               );
             } catch (e) {
-              print('Lỗi khi cập nhật streak: $e');
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to update streak: $e')),
+                SnackBar(
+                  content: Text('failed_to_update_streak'.tr(args: ['$e'])),
+                ),
               );
             }
           }
@@ -290,7 +287,7 @@ class _TaskScreenState extends State<TaskScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update task: $e')));
+      ).showSnackBar(SnackBar(content: Text('failed_to_update_task'.tr())));
     }
   }
 
@@ -315,7 +312,7 @@ class _TaskScreenState extends State<TaskScreen> {
                           autofocus: true,
                           onChanged: _searchTask,
                           decoration: InputDecoration(
-                            hintText: 'Search task...',
+                            hintText: 'search_task'.tr(),
                             hintStyle: TextStyle(color: colors.subtitleColor),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -339,7 +336,7 @@ class _TaskScreenState extends State<TaskScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hi there,',
+                            'hi_there'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               color: colors.textColor,
@@ -347,7 +344,7 @@ class _TaskScreenState extends State<TaskScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Your Task',
+                            'your_task'.tr(),
                             style: TextStyle(
                               fontSize: 26,
                               color: colors.textColor,
@@ -469,7 +466,12 @@ class _TaskScreenState extends State<TaskScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '${_filteredTasks.length} Tasks For ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
+                    'tasks_for'.tr(
+                      args: [
+                        '${_filteredTasks.length}',
+                        DateFormat('dd/MM/yyyy').format(_selectedDate),
+                      ],
+                    ),
                     style: TextStyle(
                       fontSize: 16,
                       color: colors.textColor,
@@ -514,11 +516,7 @@ class _TaskScreenState extends State<TaskScreen> {
                     onTap: () async {
                       if (!_isToday(task.taskDate)) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Only tasks for today can be marked as completed.',
-                            ),
-                          ),
+                          SnackBar(content: Text('only_today_tasks'.tr())),
                         );
                         return;
                       }
@@ -561,7 +559,7 @@ class EmptyState extends StatelessWidget {
           Icon(Icons.task, color: colors.subtitleColor, size: 100),
           const SizedBox(height: 8),
           Text(
-            'No tasks yet',
+            'no_tasks_yet'.tr(),
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -570,7 +568,7 @@ class EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Add your first task to get started',
+            'add_first_task'.tr(),
             style: TextStyle(fontSize: 16, color: colors.subtitleColor),
           ),
           const SizedBox(height: 24),
@@ -584,8 +582,8 @@ class EmptyState extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.fromLTRB(40, 6, 40, 6),
             ),
-            child: const Text(
-              'Add Task',
+            child: Text(
+              'add_task'.tr(),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),

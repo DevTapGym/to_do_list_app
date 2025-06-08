@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/services/task_service.dart';
@@ -59,7 +60,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                     orElse:
                         () => CategoryChip(
                           id: 0,
-                          label: 'Unknown',
+                          label: 'unknown'.tr(),
                           color: Colors.grey,
                           isSelected: false,
                         ),
@@ -79,7 +80,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load task: $e')));
+        ).showSnackBar(SnackBar(content: Text('failed_to_load_task'.tr())));
       }
     }
   }
@@ -112,7 +113,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
 
     if (!_canEditTask()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot update completed or past tasks')),
+        SnackBar(content: Text('cannot_update_completed_or_past_tasks'.tr())),
       );
       return;
     }
@@ -140,13 +141,13 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Task updated successfully!')),
+            SnackBar(content: Text('task_updated_successfully'.tr())),
           );
           Navigator.pop(context);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update task')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('failed_to_update_task'.tr())));
         }
         setState(() {
           _isLoading = false;
@@ -159,7 +160,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update task: $e')));
+        ).showSnackBar(SnackBar(content: Text('failed_to_update_task'.tr())));
       }
     }
   }
@@ -169,8 +170,8 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
 
     if (!_canDeleteTask()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot delete completed, past, or today\'s tasks'),
+        SnackBar(
+          content: Text('cannot_delete_completed_past_or_today_tasks'.tr()),
         ),
       );
       return;
@@ -185,13 +186,13 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Task deleted successfully!')),
+            SnackBar(content: Text('task_deleted_successfully'.tr())),
           );
           Navigator.pop(context);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to delete task')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('failed_to_delete_task'.tr())));
         }
         setState(() {
           _isLoading = false;
@@ -204,7 +205,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete task: $e')));
+        ).showSnackBar(SnackBar(content: Text('failed_to_delete_task'.tr())));
       }
     }
   }
@@ -224,7 +225,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
             icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
           ),
           title: Text(
-            'Detail Task',
+            'detail_task'.tr(),
             style: TextStyle(
               color: colors.textColor,
               fontWeight: FontWeight.bold,
@@ -244,13 +245,13 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTextField(
-                          'Title',
+                          'title'.tr(),
                           titleController,
                           isEdit: !_canEditTask(),
                         ),
                         const SizedBox(height: 12),
                         _buildDropdownField(
-                          'Priority',
+                          'priority'.tr(),
                           ['LOW', 'MEDIUM', 'HIGH'],
                           selectedPriority,
                           _canEditTask()
@@ -286,7 +287,8 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                                                       orElse:
                                                           () => CategoryChip(
                                                             id: 0,
-                                                            label: 'Unknown',
+                                                            label:
+                                                                'unknown'.tr(),
                                                             color: Colors.grey,
                                                             isSelected: false,
                                                           ),
@@ -299,7 +301,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                           ),
                         ),
                         _buildTextField(
-                          'Category',
+                          'category'.tr(),
                           categoryController,
                           isEdit: true,
                         ),
@@ -309,7 +311,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                         _buildTimePicker(context),
                         const SizedBox(height: 12),
                         Text(
-                          'Description',
+                          'description'.tr(),
                           style: TextStyle(
                             color: colors.textColor,
                             fontWeight: FontWeight.bold,
@@ -323,7 +325,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                           keyboardType: TextInputType.multiline,
                           readOnly: !_canEditTask(),
                           decoration: _inputDecoration(
-                            'Enter task description',
+                            'enter_description'.tr(),
                           ),
                           style: TextStyle(color: colors.textColor),
                         ),
@@ -333,7 +335,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                           children: [
                             _buildOutlinedButton(
                               icon: Icons.update,
-                              label: 'Update',
+                              label: 'update'.tr(),
                               color:
                                   _canEditTask()
                                       ? colors.primaryColor
@@ -342,7 +344,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                             ),
                             _buildOutlinedButton(
                               icon: Icons.delete,
-                              label: 'Delete',
+                              label: 'delete'.tr(),
                               color:
                                   _canDeleteTask() ? Colors.red : Colors.grey,
                               onPressed: _canDeleteTask() ? _deleteTask : () {},
@@ -379,7 +381,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         TextFormField(
           readOnly: isEdit || !_canEditTask(),
           controller: controller,
-          decoration: _inputDecoration('Enter $label'),
+          decoration: _inputDecoration('enter_${label.toLowerCase()}.tr()'),
           style: TextStyle(color: colors.textColor),
         ),
       ],
@@ -395,7 +397,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
       ),
       readOnly: true,
       decoration: InputDecoration(
-        labelText: 'Task Date',
+        labelText: 'task_date_label'.tr(),
         hintStyle: const TextStyle(fontSize: 16, color: Colors.grey),
         labelStyle: TextStyle(color: colors.textColor, fontSize: 18),
         filled: true,
@@ -445,11 +447,11 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         text:
             notificationTime != null
                 ? '${notificationTime!.hour}:${notificationTime!.minute}'
-                : 'No time set',
+                : 'no_time_set'.tr(),
       ),
       readOnly: true,
       decoration: InputDecoration(
-        labelText: 'Notification Time',
+        labelText: 'notification_time'.tr(),
         hintStyle: const TextStyle(fontSize: 16, color: Colors.grey),
         labelStyle: TextStyle(color: colors.textColor, fontSize: 18),
         filled: true,
@@ -510,7 +512,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: selectedValue,
-          decoration: _inputDecoration('Select $label'),
+          decoration: _inputDecoration('select_${label.toLowerCase()}'.tr()),
           dropdownColor: colors.bgColor,
           items:
               items.map((item) {

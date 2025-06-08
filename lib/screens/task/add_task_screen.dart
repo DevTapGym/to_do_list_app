@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
@@ -91,7 +92,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         _selectedDate == null ||
         selectedCategoryIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all required fields")),
+        SnackBar(content: Text('please_fill_all_required_fields'.tr())),
       );
       return;
     }
@@ -100,7 +101,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     if (authState is! AuthAuthenticated || authState.authResponse == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('user_not_authenticated'.tr())));
       return;
     }
 
@@ -116,7 +117,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       notificationTime: _selectedTime,
       completed: false,
     );
-    print('Creating task: $task');
 
     final success = await TaskService().addTask(task);
 
@@ -124,7 +124,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       if (mounted) {
         widget.onTaskAdded(task);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Task created successfully!')),
+          SnackBar(content: Text('task_created_successfully'.tr())),
         );
         Navigator.pop(context);
       }
@@ -132,7 +132,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to create task')));
+        ).showSnackBar(SnackBar(content: Text('failed_to_create_task'.tr())));
       }
     }
   }
@@ -152,7 +152,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
           ),
           title: Text(
-            'Add task',
+            'add_task_title'.tr(),
             style: TextStyle(
               color: colors.textColor,
               fontWeight: FontWeight.bold,
@@ -169,7 +169,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Task Title',
+                  'task_title'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -181,7 +181,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   controller: _titleController,
                   style: TextStyle(color: colors.textColor),
                   decoration: InputDecoration(
-                    hintText: 'Enter task title',
+                    hintText: 'enter_task_title'.tr(),
                     hintStyle: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
@@ -214,7 +214,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Task Description',
+                  'task_description'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -227,7 +227,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   maxLines: 4,
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
-                    hintText: 'Enter task description',
+                    hintText: 'enter_task_description'.tr(),
                     hintStyle: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
@@ -261,7 +261,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Task date',
+                  'task_date'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -295,7 +295,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         const SizedBox(width: 8),
                         Text(
                           _selectedDate == null
-                              ? 'Select date'
+                              ? 'select_date'.tr()
                               : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                           style: TextStyle(
                             fontSize: 16,
@@ -333,7 +333,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         const SizedBox(width: 8),
                         Text(
                           _selectedTime == null
-                              ? 'Select time for notification'
+                              ? 'select_time_for_notification'.tr()
                               : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(
                             fontSize: 16,
@@ -346,7 +346,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'Select repeat days',
+                  'select_repeat_days'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -390,8 +390,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        "Create Task",
+                      child: Text(
+                        'create_task'.tr(),
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
