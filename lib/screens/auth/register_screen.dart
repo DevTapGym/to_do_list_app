@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
@@ -48,8 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (result == "success") {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Đăng ký thành công!"),
+          SnackBar(
+            content: Text('registration_success'.tr()),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -98,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Register',
+                    'register'.tr(),
                     style: TextStyle(
                       color: colors.textColor,
                       fontSize: 36,
@@ -112,13 +113,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _fullNameController,
                     style: const TextStyle(color: Colors.white),
                     decoration: _buildInputDecoration(
-                      'Full Name',
+                      'full_name'.tr(),
                       Icons.person,
                     ),
                     validator:
                         (value) =>
                             value == null || value.isEmpty
-                                ? 'Enter your name'
+                                ? 'enter_name'.tr()
                                 : null,
                   ),
                   const SizedBox(height: 16),
@@ -128,15 +129,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
-                    decoration: _buildInputDecoration('Email', Icons.email),
+                    decoration: _buildInputDecoration(
+                      'email'.tr(),
+                      Icons.email,
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter email';
+                        return 'enter_email'.tr();
                       }
                       if (!RegExp(
                         r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
                       ).hasMatch(value)) {
-                        return 'Invalid email';
+                        return 'invalid_email'.tr();
                       }
                       return null;
                     },
@@ -149,13 +153,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     keyboardType: TextInputType.phone,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     style: const TextStyle(color: Colors.white),
-                    decoration: _buildInputDecoration('Phone', Icons.phone),
+                    decoration: _buildInputDecoration(
+                      'phone'.tr(),
+                      Icons.phone,
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter phone number';
+                        return 'enter_phone_number'.tr();
                       }
                       if (value.length != 10) {
-                        return 'Invalid phone number';
+                        return 'invalid_phone_number'.tr();
                       }
                       return null;
                     },
@@ -167,13 +174,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _passwordController,
                     obscureText: true,
                     style: const TextStyle(color: Colors.white),
-                    decoration: _buildInputDecoration('Password', Icons.lock),
+                    decoration: _buildInputDecoration(
+                      'password'.tr(),
+                      Icons.lock,
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter password';
+                        return 'enter_password'.tr();
                       }
                       if (value.length < 8) {
-                        return 'Password at least 8 characters';
+                        return 'password_too_short'.tr();
                       }
                       return null;
                     },
@@ -185,15 +195,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     obscureText: true,
                     style: const TextStyle(color: Colors.white),
                     decoration: _buildInputDecoration(
-                      'Confirm Password',
+                      'confirm_password'.tr(),
                       Icons.lock,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Confirm Password';
+                        return 'confirm_password_empty'.tr();
                       }
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return 'passwords_not_match'.tr();
                       }
                       return null;
                     },
@@ -205,7 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Password must be more than 8 characters, including uppercase, lowercase, numbers and special characters.',
+                          'password_requirements'.tr(),
                           style: TextStyle(
                             fontSize: 14,
                             color: colors.subtitleColor,
@@ -227,8 +237,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Register',
+                    child: Text(
+                      'register'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -242,7 +252,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        'already_have_account'.tr(),
                         style: TextStyle(color: colors.subtitleColor),
                       ),
                       TextButton(
@@ -250,7 +260,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.pop(context);
                         },
                         child: Text(
-                          'Login',
+                          'login'.tr(),
                           style: TextStyle(color: colors.subtitleColor),
                         ),
                       ),

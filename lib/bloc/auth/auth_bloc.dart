@@ -14,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LogoutEvent>(_onLogout);
     on<VerifyTokenEvent>(_onVerifyToken);
     on<UpdateProfileEvent>(_onUpdateProfile);
+    on<OtpVerifyEvent>(_onOtpVerify);
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -114,6 +115,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _onOtpVerify(
+    OtpVerifyEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await authService.checkCode(event.email, event.code);
+
+    if (result.authResponse != null) {
+      emit(
+        AuthAuthenticated(authResponse: result.authResponse!, isActive: true),
+      );
+    } else {
+      emit(AuthError(message: result.error ?? "Mã xác thực không đúng."));
     }
   }
 }

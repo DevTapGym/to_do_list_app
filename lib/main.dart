@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:to_do_list_app/bloc/Team/team_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_event.dart';
@@ -47,24 +49,37 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.init();
   await notificationService.requestPermissions();
+
+  await EasyLocalization.ensureInitialized();
+
+  // Lấy ngôn ngữ đã lưu (tùy chọn)
+  final prefs = await SharedPreferences.getInstance();
+  final savedLanguage = prefs.getString('language_code') ?? 'en';
+      
   if (getIt.isRegistered<TeamTaskBloc>()) getIt.unregister<TeamTaskBloc>();
   getIt.registerFactory<TeamTaskBloc>(() => TeamTaskBloc(getIt<TeamService>()));
+
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        BlocProvider(create: (_) => AuthBloc(authService: authService)),
-        BlocProvider(
-          create:
-              (context) => TaskBloc(
-                taskService: TaskService(),
-                categoryService: CategoryService(),
-              ),
-        ),
-        BlocProvider(create: (_) => getIt<TeamTaskBloc>()),
-        BlocProvider(create: (_) => getIt<TeamBloc>()),
-      ],
-      child: const MyApp(),
+    EasyLocalization(
+      supportedLocales: [Locale('en'), Locale('vi')],
+      path: 'assets/translations', // Thư mục chứa file JSON
+      fallbackLocale: const Locale('en'), // Ngôn ngữ mặc định
+      startLocale: Locale(savedLanguage), // Khôi phục ngôn ngữ đã lưu
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          BlocProvider(create: (_) => AuthBloc(authService: authService)),
+          BlocProvider(
+            create:
+                (context) => TaskBloc(
+                  taskService: TaskService(),
+                  categoryService: CategoryService(),
+                ),
+          ),
+          BlocProvider(create: (_) => getIt<TeamBloc>()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -77,6 +92,9 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
           title: 'To do list app',
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),

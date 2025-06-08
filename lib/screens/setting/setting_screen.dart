@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,14 +47,12 @@ class _SettingScreenState extends State<SettingScreen> {
           context: context,
           builder:
               (context) => AlertDialog(
-                title: const Text('Disable Notifications?'),
-                content: const Text(
-                  'Disabling notifications may lead to a poor app experience.',
-                ),
+                title: Text('disableNotificationsTitle'.tr()),
+                content: Text('disableNotificationsContent'.tr()),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: Text('cancel'.tr()),
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context, true),
@@ -61,12 +60,55 @@ class _SettingScreenState extends State<SettingScreen> {
                       backgroundColor: Colors.deepPurpleAccent,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Agree'),
+                    child: Text('agree'.tr()),
                   ),
                 ],
               ),
         ) ??
         false;
+  }
+
+  Future<void> _changeLanguage(BuildContext context, Locale locale) async {
+    print('Changing language to: ${locale.languageCode}');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language_code', locale.languageCode);
+    await context.setLocale(locale);
+    print('Current locale: ${context.locale}');
+  }
+
+  Future<void> _showLanguageDialog() async {
+    await showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('selectLanguage'.tr()),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: Text('english'.tr()),
+                  onTap: () {
+                    _changeLanguage(context, const Locale('en'));
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  title: Text('vietnamese'.tr()),
+                  onTap: () {
+                    _changeLanguage(context, const Locale('vi'));
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('cancel'.tr()),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -90,7 +132,7 @@ class _SettingScreenState extends State<SettingScreen> {
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 10),
               child: Text(
-                'Setting',
+                'settings'.tr(),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -107,13 +149,12 @@ class _SettingScreenState extends State<SettingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Task Settings", style: styleTitle),
+                      Text('taskSettings'.tr(), style: styleTitle),
                       const SizedBox(height: 10),
-
                       TaskSettingItem(
                         icon: Icons.remove_red_eye,
-                        title: "Show Completed Tasks",
-                        subtitle: "Display completed tasks in your task list",
+                        title: 'showCompletedTasks'.tr(),
+                        subtitle: 'showCompletedTasksSubtitle'.tr(),
                         hasSwitch: true,
                         isSwitchOn: _showCompletedTasks,
                         iconBgColor:
@@ -134,8 +175,8 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                       TaskSettingItem(
                         icon: Icons.notifications,
-                        title: "Notifications",
-                        subtitle: "Enable or disable notifications",
+                        title: 'notifications'.tr(),
+                        subtitle: 'notificationsSubtitle'.tr(),
                         hasSwitch: true,
                         isSwitchOn: _notificationsEnabled,
                         iconBgColor:
@@ -179,8 +220,8 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                       TaskSettingItem(
                         icon: Icons.lock,
-                        title: "Account",
-                        subtitle: "Information about your account",
+                        title: 'account'.tr(),
+                        subtitle: 'accountSubtitle'.tr(),
                         iconBgColor: isDark ? Colors.red.shade900 : Colors.red,
                         backgroundColor: colors.itemBgColor,
                         onTap: () {
@@ -192,16 +233,13 @@ class _SettingScreenState extends State<SettingScreen> {
                           );
                         },
                       ),
-
                       const SizedBox(height: spacing),
-
-                      Text("Display", style: styleTitle),
+                      Text('display'.tr(), style: styleTitle),
                       const SizedBox(height: 10),
-
                       TaskSettingItem(
                         icon: Icons.nightlight_round,
-                        title: "Dark Mode",
-                        subtitle: "Enable dark theme for the app",
+                        title: 'darkMode'.tr(),
+                        subtitle: 'darkModeSubtitle'.tr(),
                         hasSwitch: true,
                         isSwitchOn: isDark,
                         iconBgColor:
@@ -214,11 +252,10 @@ class _SettingScreenState extends State<SettingScreen> {
                           themeProvider.toggleTheme();
                         },
                       ),
-
                       TaskSettingItem(
                         icon: Icons.view_agenda,
-                        title: "Default View",
-                        subtitle: "Choose your default task view",
+                        title: 'defaultView'.tr(),
+                        subtitle: 'defaultViewSubtitle'.tr(),
                         iconBgColor:
                             isDark ? Colors.purple.shade900 : Colors.purple,
                         backgroundColor: colors.itemBgColor,
@@ -226,22 +263,20 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                       TaskSettingItem(
                         icon: Icons.language,
-                        title: "Language",
-                        subtitle: "Change the app language",
+                        title: 'language'.tr(),
+                        subtitle: 'languageSubtitle'.tr(),
                         iconBgColor:
                             isDark ? Colors.cyan.shade900 : Colors.cyan,
                         backgroundColor: colors.itemBgColor,
-                        onTap: () {},
+                        onTap: _showLanguageDialog,
                       ),
-
                       const SizedBox(height: spacing),
-
-                      Text("About", style: styleTitle),
+                      Text('about'.tr(), style: styleTitle),
                       const SizedBox(height: 10),
                       TaskSettingItem(
                         icon: Icons.help_outline,
-                        title: "Help & Support",
-                        subtitle: "Get help with using the app",
+                        title: 'helpSupport'.tr(),
+                        subtitle: 'helpSupportSubtitle'.tr(),
                         iconBgColor:
                             isDark ? Colors.blueGrey.shade900 : Colors.blueGrey,
                         backgroundColor: colors.itemBgColor,
@@ -249,8 +284,8 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                       TaskSettingItem(
                         icon: Icons.info_outline,
-                        title: "About TaskMaster",
-                        subtitle: "Version 1.0.0",
+                        title: 'aboutTaskMaster'.tr(),
+                        subtitle: 'aboutTaskMasterSubtitle'.tr(),
                         iconBgColor:
                             isDark ? Colors.teal.shade900 : Colors.teal,
                         backgroundColor: colors.itemBgColor,

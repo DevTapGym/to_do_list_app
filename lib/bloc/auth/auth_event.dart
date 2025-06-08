@@ -20,3 +20,10 @@ class UpdateProfileEvent extends AuthEvent {
 
   UpdateProfileEvent({required this.name, required this.phone, this.avatar});
 }
+
+class OtpVerifyEvent extends AuthEvent {
+  final String email;
+  final String code;
+
+  OtpVerifyEvent({required this.email, required this.code});
+}

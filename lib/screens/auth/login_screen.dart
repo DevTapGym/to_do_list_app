@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_app/bloc/auth/auth_bloc.dart';
@@ -38,9 +39,9 @@ class _LoginPageState extends State<LoginPage> {
               );
             }
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('auth_error'.tr(args: [state.message]))),
+            );
           }
         },
         builder: (context, state) {
@@ -68,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Login',
+                      'login'.tr(),
                       style: TextStyle(
                         color: colors.textColor,
                         fontSize: 36,
@@ -80,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _emailController,
                       style: TextStyle(color: colors.textColor),
                       decoration: InputDecoration(
-                        hintText: 'Email',
+                        hintText: 'email'.tr(),
                         hintStyle: TextStyle(color: colors.subtitleColor),
                         filled: true,
                         fillColor: colors.itemBgColor,
@@ -95,11 +96,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
+                          return 'please_enter_email'.tr();
                         }
                         final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                         if (!emailRegex.hasMatch(value)) {
-                          return 'Please enter a valid email address';
+                          return 'please_enter_valid_email'.tr();
                         }
                         return null;
                       },
@@ -111,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(color: colors.textColor),
                       obscureText: _obscureText,
                       decoration: InputDecoration(
-                        hintText: 'Password',
+                        hintText: 'password'.tr(),
                         hintStyle: TextStyle(color: colors.subtitleColor),
                         filled: true,
                         fillColor: colors.itemBgColor,
@@ -139,10 +140,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
+                          return 'please_enter_password'.tr();
                         }
                         if (value.length < 6) {
-                          return 'Password must be at least 6 characters long';
+                          return 'password_too_short'.tr();
                         }
                         return null;
                       },
@@ -168,8 +169,8 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Login',
+                      child: Text(
+                        'login'.tr(),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -188,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           child: Text(
-                            'OR',
+                            'or'.tr(),
                             style: TextStyle(color: colors.subtitleColor),
                           ),
                         ),
@@ -211,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: 26,
                       ),
                       label: Text(
-                        'Login with Google',
+                        'login_with_google'.tr(),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -236,7 +237,7 @@ class _LoginPageState extends State<LoginPage> {
                             Navigator.pushNamed(context, '/forgot-password');
                           },
                           child: Text(
-                            'Forgot Password?',
+                            'forgot_password'.tr(),
                             style: TextStyle(color: colors.subtitleColor),
                           ),
                         ),
@@ -245,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
                             Navigator.pushNamed(context, '/register');
                           },
                           child: Text(
-                            'Sign Up',
+                            'sign_up'.tr(),
                             style: TextStyle(color: colors.subtitleColor),
                           ),
                         ),
