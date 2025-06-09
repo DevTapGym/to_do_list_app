@@ -38,7 +38,6 @@ import 'package:to_do_list_app/widgets/to_do_card_Team.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp();
 
   final AuthService authService = AuthService();
@@ -54,6 +53,9 @@ void main() async {
   // Lấy ngôn ngữ đã lưu (tùy chọn)
   final prefs = await SharedPreferences.getInstance();
   final savedLanguage = prefs.getString('language_code') ?? 'en';
+
+  // Reset cờ thông báo mỗi lần chạy app
+  await prefs.setBool('has_shown_notifications', false);
 
   if (getIt.isRegistered<TeamTaskBloc>()) getIt.unregister<TeamTaskBloc>();
   getIt.registerFactory<TeamTaskBloc>(() => TeamTaskBloc(getIt<TeamService>()));
@@ -294,35 +296,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = <Widget>[
-      Center(
-        child: TaskScreen(
-          onTaskAdded: _addTask,
-          tasks: taskList,
-          categories: categoriesList,
-          scaffoldKey: _scaffoldKey,
-        ),
-      ),
-      Center(child: GroupsScreen()),
-      Center(child: StatsScreen()),
-      Center(child: SettingScreen()),
-    ];
-
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     bool isDark = themeProvider.isDarkMode;
     final colors = AppThemeConfig.getColors(context);
 
+    Widget body;
+    switch (_selectedIndex) {
+      case 0:
+        body = TaskScreen(
+          onTaskAdded: _addTask,
+          tasks: taskList,
+          categories: categoriesList,
+          scaffoldKey: _scaffoldKey,
+        );
+        break;
+      case 1:
+        body = GroupsScreen();
+        break;
+      case 2:
+        body = StatsScreen();
+        break;
+      case 3:
+        body = SettingScreen();
+        break;
+      default:
+        body = TaskScreen(
+          onTaskAdded: _addTask,
+          tasks: taskList,
+          categories: categoriesList,
+          scaffoldKey: _scaffoldKey,
+        );
+    }
+
     return SafeArea(
       child: Scaffold(
         key: _scaffoldKey,
-        body: pages[_selectedIndex],
+        body: body,
         drawer:
             _selectedIndex == 0
                 ? CategoryDrawer(
-                  onCategoryUpdated: (updatedCategories) {
-                    setState(() {
-                      categoriesList = updatedCategories;
-                    });
+                  onCategoryUpdated: (updatedCategories) async {
+                    // Gọi lại _loadData để cập nhật cả category và task
+                    await _loadData();
                   },
                 )
                 : _selectedIndex == 1
