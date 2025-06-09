@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
@@ -14,11 +15,13 @@ class TodoCardTeam extends StatelessWidget {
   final VoidCallback? onChanged;
   final TeamService teamService = getIt.get<TeamService>();
   final User? assignedMember;
+  final bool isWide;
   TodoCardTeam({
     super.key,
     required this.task,
     required this.canEdit,
     required this.isLeader,
+    required this.isWide,
     this.onChanged,
     this.assignedMember,
   });
@@ -62,12 +65,18 @@ class TodoCardTeam extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      task.title,
-                      style: TextStyle(
-                        color: colors.textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    SizedBox(
+                      width:
+                          160, // hoặc dùng Flexible bên dưới nếu muốn tự động co giãn
+                      child: Text(
+                        task.title,
+                        style: TextStyle(
+                          color: colors.textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -170,13 +179,11 @@ class TodoCardTeam extends StatelessWidget {
       builder: (BuildContext context) {
         if (!canEdit) {
           return AlertDialog(
-            title: const Text('Notification'),
-            content: const Text(
-              'You do not have permission to perform this action!',
-            ),
+            title: Text('notification'.tr()),
+            content: Text('no_permission_to_perform_action'.tr()),
             actions: [
               TextButton(
-                child: const Text('Close'),
+                child: Text('close'.tr()),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -185,11 +192,12 @@ class TodoCardTeam extends StatelessWidget {
           );
         } else {
           return ConfirmationDialog(
-            title: 'Confirmation',
-            content:
-                'Are you sure you want to perform action with task "$taskName"?',
-            confirmText: 'Confirm',
-            cancelText: 'Cancel',
+            title: 'confirmation'.tr(),
+            content: 'are_you_sure_perform_action_with_task'.tr(
+              args: [taskName],
+            ),
+            confirmText: 'confirm'.tr(),
+            cancelText: 'cancel'.tr(),
             onConfirm: () => onTap(task),
           );
         }

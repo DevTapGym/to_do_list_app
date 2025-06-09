@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/bloc/Team/teamMember_bloc.dart';
@@ -122,7 +123,7 @@ class _GroupListMemberState extends State<GroupListMember> {
                         children: [
                           if (leaderMember.isNotEmpty) ...[
                             Text(
-                              'Leader',
+                              'leader'.tr(),
                               style: TextStyle(
                                 color: colors.textColor,
                                 fontSize: 18,
@@ -140,7 +141,7 @@ class _GroupListMemberState extends State<GroupListMember> {
                           ],
                           if (normalMembers.isNotEmpty) ...[
                             Text(
-                              'Members',
+                              'members'.tr(),
                               style: TextStyle(
                                 color: colors.textColor,
                                 fontSize: 18,
@@ -160,7 +161,7 @@ class _GroupListMemberState extends State<GroupListMember> {
                         ],
                       );
                     } else {
-                      return const Center(child: Text('No data available'));
+                      return Center(child: Text('no_data_available'.tr()));
                     }
                   },
                 ),
@@ -175,21 +176,13 @@ class _GroupListMemberState extends State<GroupListMember> {
   void onAddMember(String email) async {
     try {
       User user = await teamService.getUserbyEmail(email);
-      if (user != null) {
-        await teamService.AddTeamMember(widget.team.id, user.id);
-        Navigator.of(context).pop();
-        teamMemberBloc.add(LoadTeamMembersByTeamId(widget.team.id));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("No user found with email: $email"),
-          ),
-        );
-      }
+      await teamService.AddTeamMember(widget.team.id, user.id);
+      Navigator.of(context).pop();
+      teamMemberBloc.add(LoadTeamMembersByTeamId(widget.team.id));
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+      ).showSnackBar(SnackBar(content: Text('error'.tr(args: [e.toString()]))));
     }
   }
 
@@ -203,10 +196,10 @@ class _GroupListMemberState extends State<GroupListMember> {
       context: context,
       builder: (context) {
         return ConfirmationDialog(
-          title: 'Confirmation',
-          content: 'Are you sure you want to delete member "${user.name}"?',
-          confirmText: 'Confirm',
-          cancelText: 'Cancel',
+          title: 'confirmation'.tr(),
+          content: 'are_you_sure_delete_member'.tr(args: [user.name]),
+          confirmText: 'confirm'.tr(),
+          cancelText: 'cancel'.tr(),
           onConfirm: () => onRemoveMember(user),
         );
       },

@@ -31,7 +31,7 @@ class TeamMemberTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    member.name ?? 'Unknown',
+                    member.name,
                     style: TextStyle(
                       color: colors.textColor,
                       fontSize: 16,
@@ -40,7 +40,7 @@ class TeamMemberTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${member.email ?? ''} | ID: ${member.id ?? ''}',
+                    '${member.email} | ID: ${member.id}',
                     style: TextStyle(color: colors.subtitleColor, fontSize: 13),
                   ),
                 ],

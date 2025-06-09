@@ -24,7 +24,6 @@ import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/screens/task/task_screen.dart';
 import 'package:to_do_list_app/screens/team/QR_JoinGroup.dart';
 import 'package:to_do_list_app/screens/team/group_create.dart';
-import 'package:to_do_list_app/screens/team/group_detail.dart';
 import 'package:to_do_list_app/screens/team/group_screen.dart';
 import 'package:to_do_list_app/services/auth_service.dart';
 import 'package:to_do_list_app/services/category_service.dart';
@@ -55,7 +54,7 @@ void main() async {
   // Lấy ngôn ngữ đã lưu (tùy chọn)
   final prefs = await SharedPreferences.getInstance();
   final savedLanguage = prefs.getString('language_code') ?? 'en';
-      
+
   if (getIt.isRegistered<TeamTaskBloc>()) getIt.unregister<TeamTaskBloc>();
   getIt.registerFactory<TeamTaskBloc>(() => TeamTaskBloc(getIt<TeamService>()));
 
@@ -264,9 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _teamTaskBloc = getIt<TeamTaskBloc>();
         _teamTaskBloc.add(LoadTeamTasksByUserId(user_id));
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load data: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('failed_to_load_data'.tr(args: ['$e']))),
+        );
         setState(() {
           categoriesList = [];
           taskList = [];
@@ -275,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('user_not_authenticated'.tr())));
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -330,19 +329,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? GroupDrawer(userId: user_id)
                 : null,
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.check_box),
-              label: 'Tasks',
+              label: 'tasks'.tr(),
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Group'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.group),
+              label: 'group'.tr(),
+            ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
-              label: 'Stats',
+              label: 'stats'.tr(),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),
-              label: 'Setting',
+              label: 'setting'.tr(),
             ),
           ],
           backgroundColor: colors.itemBgColor,
@@ -396,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               ListTile(
                                 leading: const Icon(Icons.group_add),
-                                title: const Text('Tạo nhóm mới'),
+                                title: Text('create_new_group'.tr()),
                                 onTap: () async {
                                   final result = await Navigator.push(
                                     context,
@@ -415,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               ListTile(
                                 leading: const Icon(Icons.qr_code_scanner),
-                                title: const Text('Quét mã QR để vào nhóm'),
+                                title: Text('scan_qr_to_join_group'.tr()),
                                 onTap: () async {
                                   final TeamMember? result =
                                       await Navigator.push(
@@ -429,19 +431,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       result,
                                     );
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                                      SnackBar(
                                         content: Text(
-                                          'Tham gia nhóm thành công',
+                                          'join_group_success'.tr(),
                                         ),
                                       ),
                                     );
                                     _teamBloc.add(LoadTeamsByUserId(user_id));
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Không thể tham gia nhóm',
-                                        ),
+                                      SnackBar(
+                                        content: Text('join_group_failed'.tr()),
                                       ),
                                     );
                                   }
@@ -514,13 +514,13 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
         });
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load categories: $e')),
+          SnackBar(content: Text('failed_to_load_data'.tr(args: ['$e']))),
         );
       }
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('user_not_authenticated'.tr())));
       setState(() {
         categories = [];
       });
@@ -531,7 +531,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
     if (name.isEmpty || defaultCategoryNames.contains(name)) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid category name')));
+      ).showSnackBar(SnackBar(content: Text('invalid_category_name'.tr())));
       return;
     }
 
@@ -547,17 +547,17 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
         });
         widget.onCategoryUpdated(categories); // Notify parent
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Category added successfully')),
+          SnackBar(content: Text('category_added_successfully'.tr())),
         );
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add category: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('failed_to_add_category'.tr(args: ['$e']))),
+        );
       }
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('user_not_authenticated'.tr())));
     }
   }
 
@@ -565,7 +565,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
     if (newName.isEmpty || defaultCategoryNames.contains(newName)) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid category name')));
+      ).showSnackBar(SnackBar(content: Text('invalid_category_name'.tr())));
       return;
     }
 
@@ -585,17 +585,17 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
         });
         widget.onCategoryUpdated(categories); // Notify parent
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Category updated successfully')),
+          SnackBar(content: Text('category_updated_successfully'.tr())),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update category: $e')),
+          SnackBar(content: Text('failed_to_update_category'.tr(args: ['$e']))),
         );
       }
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+      ).showSnackBar(SnackBar(content: Text('user_not_authenticated'.tr())));
     }
   }
 
@@ -635,7 +635,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                   Icon(Icons.category, color: Colors.white, size: 40),
                   const SizedBox(height: 8),
                   Text(
-                    'Manage Categories',
+                    'manage_categories'.tr(),
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -661,7 +661,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'No categories yet',
+                              'no_categories_yet'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
                                 color: colors.subtitleColor,
@@ -741,7 +741,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                                       backgroundColor:
                                                           colors.itemBgColor,
                                                       title: Text(
-                                                        'Edit Category',
+                                                        'edit_category'.tr(),
                                                         style: TextStyle(
                                                           fontSize: 20,
                                                           fontWeight:
@@ -762,7 +762,8 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                                                     value,
                                                         decoration: InputDecoration(
                                                           labelText:
-                                                              'Category Name',
+                                                              'category_name'
+                                                                  .tr(),
                                                           labelStyle: TextStyle(
                                                             color:
                                                                 colors
@@ -813,7 +814,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                                                     context,
                                                                   ),
                                                           child: Text(
-                                                            'Cancel',
+                                                            'cancel'.tr(),
                                                             style: TextStyle(
                                                               color:
                                                                   colors
@@ -845,8 +846,8 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                                                   ),
                                                             ),
                                                           ),
-                                                          child: const Text(
-                                                            'Save',
+                                                          child: Text(
+                                                            'save'.tr(),
                                                             style: TextStyle(
                                                               fontSize: 16,
                                                               fontWeight:
@@ -874,8 +875,8 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
               padding: const EdgeInsets.all(16),
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.add, size: 24),
-                label: const Text(
-                  'Add Category',
+                label: Text(
+                  'add_category'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -904,7 +905,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                             ),
                             backgroundColor: colors.itemBgColor,
                             title: Text(
-                              'Limit Reached',
+                              'limit_reached'.tr(),
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -912,14 +913,14 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                               ),
                             ),
                             content: Text(
-                              'You can only have up to 7 categories.',
+                              'category_limit'.tr(),
                               style: TextStyle(color: colors.subtitleColor),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
                                 child: Text(
-                                  'OK',
+                                  'ok'.tr(),
                                   style: TextStyle(
                                     color: colors.subtitleColor,
                                     fontSize: 16,
@@ -940,7 +941,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                           ),
                           backgroundColor: colors.itemBgColor,
                           title: Text(
-                            'Add New Category',
+                            'add_new_category'.tr(),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -950,7 +951,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                           content: TextField(
                             onChanged: (value) => newCategory = value,
                             decoration: InputDecoration(
-                              labelText: 'Category Name',
+                              labelText: 'category_name'.tr(),
                               labelStyle: TextStyle(
                                 color: colors.subtitleColor,
                               ),
@@ -972,7 +973,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                               ),
                               errorText:
                                   defaultCategoryNames.contains(newCategory)
-                                      ? 'This category name is reserved'
+                                      ? 'reserved_category_name'.tr()
                                       : null,
                             ),
                             style: TextStyle(color: colors.textColor),
@@ -981,7 +982,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                             TextButton(
                               onPressed: () => Navigator.pop(context),
                               child: Text(
-                                'Cancel',
+                                'cancel'.tr(),
                                 style: TextStyle(
                                   color: colors.subtitleColor,
                                   fontSize: 16,
@@ -1004,8 +1005,8 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text(
-                                'Add',
+                              child: Text(
+                                'add'.tr(),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -1030,8 +1031,7 @@ class _CategoryDrawerState extends State<CategoryDrawer> {
 class GroupDrawer extends StatelessWidget {
   final int userId;
   const GroupDrawer({super.key, required this.userId});
-  
-  
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -1067,7 +1067,7 @@ class GroupDrawer extends StatelessWidget {
                   Icon(Icons.group, color: Colors.white, size: 40),
                   const SizedBox(height: 8),
                   Text(
-                    'Manage Tasks',
+                    'manage_tasks'.tr(),
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -1099,7 +1099,7 @@ class GroupDrawer extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'No Tasks yet',
+                                'no_tasks'.tr(),
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: colors.subtitleColor,
@@ -1110,14 +1110,22 @@ class GroupDrawer extends StatelessWidget {
                           ),
                         )
                         : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 8,
+                          ),
                           itemCount: state.tasks.length,
                           itemBuilder: (context, index) {
                             final task = state.tasks[index];
-                            return TodoCardTeam(task: task,isLeader: false,canEdit: true,onChanged: (){
-                              teamTaskBloc.add(LoadTeamTasksByUserId(userId));
-                            },);
-                            
+                            return TodoCardTeam(
+                              task: task,
+                              isLeader: false,
+                              canEdit: true,
+                              isWide: false,
+                              onChanged: () {
+                                teamTaskBloc.add(LoadTeamTasksByUserId(userId));
+                              },
+                            );
                           },
                         );
                   } else if (state is TeamTaskLoading) {
@@ -1125,7 +1133,7 @@ class GroupDrawer extends StatelessWidget {
                   } else {
                     return Center(
                       child: Text(
-                        'Failed to load tasks',
+                        'failed_to_load_tasks'.tr(),
                         style: TextStyle(color: colors.subtitleColor),
                       ),
                     );

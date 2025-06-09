@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/screens/stats/stats_screen.dart';
@@ -24,7 +25,7 @@ class TeamSummaryPage extends StatefulWidget {
 class _TeamSummaryPageState extends State<TeamSummaryPage> {
   late TextEditingController _searchController;
   String _searchQuery = '';
-  
+
   @override
   void initState() {
     super.initState();
@@ -53,15 +54,16 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
     int teamCompletedTasksCount =
         widget.allTeamTasks.where((task) => task.isCompleted).length;
     int teamPendingTasksCount =
-        widget.allTeamTasks.where((task) => !task.isCompleted && task.deadline.isAfter(now)).length;
+        widget.allTeamTasks
+            .where((task) => !task.isCompleted && task.deadline.isAfter(now))
+            .length;
     int teamPendingLateTasksCount =
-                    widget.allTeamTasks
-                        .where(
-                          (task) =>
-                              !task.isCompleted &&
-                              task.deadline.isBefore(DateTime.now()),
-                        )
-                        .length;
+        widget.allTeamTasks
+            .where(
+              (task) =>
+                  !task.isCompleted && task.deadline.isBefore(DateTime.now()),
+            )
+            .length;
     final filteredMembers =
         widget.team.teamMembers.where((member) {
           final userName = member.user?.name.toLowerCase() ?? '';
@@ -71,7 +73,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Team Summary for ${widget.team.name}',
+          'team_summary'.tr(),
           style: TextStyle(color: colors.textColor),
         ),
         backgroundColor: colors.bgColor,
@@ -84,7 +86,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
           child: ListView(
             children: [
               Text(
-                'Overall Team Summary',
+                'overall_team_summary'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -93,54 +95,51 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
               ),
               const SizedBox(height: 12),
               SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: SummaryCard(
-                            title: "Pending & Late",
-                            value: teamPendingLateTasksCount.toString(),
-                            icon: Icons.warning_amber_rounded,
-                            borderColor:
-                                isDark ? Colors.red.shade900 : Colors.red,
-                            iconColor:
-                                isDark
-                                    ? Colors.redAccent.shade100
-                                    : Colors.redAccent,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: SummaryCard(
-                            title: "Pending",
-                            value: teamPendingTasksCount.toString(),
-                            icon: Icons.access_time,
-                            borderColor:
-                                isDark ? Colors.orange.shade900 : Colors.orange,
-                            iconColor:
-                                isDark ? Colors.orange : Colors.orangeAccent,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: SummaryCard(
-                            title: "Completed",
-                            value: teamCompletedTasksCount.toString(),
-                            icon: Icons.check_circle,
-                            borderColor:
-                                isDark ? Colors.green.shade600 : Colors.green,
-                            iconColor:
-                                isDark ? Colors.green : Colors.greenAccent,
-                          ),
-                        ),
-                      ],
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: SummaryCard(
+                        title: 'pending_and_late'.tr(),
+                        value: teamPendingLateTasksCount.toString(),
+                        icon: Icons.warning_amber_rounded,
+                        borderColor: isDark ? Colors.red.shade900 : Colors.red,
+                        iconColor:
+                            isDark
+                                ? Colors.redAccent.shade100
+                                : Colors.redAccent,
+                      ),
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: SummaryCard(
+                        title: 'pending'.tr(),
+                        value: teamPendingTasksCount.toString(),
+                        icon: Icons.access_time,
+                        borderColor:
+                            isDark ? Colors.orange.shade900 : Colors.orange,
+                        iconColor: isDark ? Colors.orange : Colors.orangeAccent,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: SummaryCard(
+                        title: 'completed'.tr(),
+                        value: teamCompletedTasksCount.toString(),
+                        icon: Icons.check_circle,
+                        borderColor:
+                            isDark ? Colors.green.shade600 : Colors.green,
+                        iconColor: isDark ? Colors.green : Colors.greenAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
 
               Text(
-                'Summary by Member',
+                'summary_by_member'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -153,8 +152,8 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    labelText: 'Search Member',
-                    hintText: 'Enter member name',
+                    labelText: 'search_member'.tr(),
+                    hintText: 'enter_member_name'.tr(),
                     prefixIcon: Icon(Icons.search, color: colors.textColor),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -195,7 +194,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                     columns: [
                       DataColumn(
                         label: Text(
-                          'Name',
+                          'name'.tr(),
                           style: TextStyle(
                             fontStyle: FontStyle.italic,
                             color: colors.textColor,
@@ -205,19 +204,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                       ),
                       DataColumn(
                         label: Text(
-                          'Completed',
-                          style: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: colors.textColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        numeric: true,
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Pending',
+                          'completed_table'.tr(),
                           style: TextStyle(
                             fontStyle: FontStyle.italic,
                             color: colors.textColor,
@@ -229,7 +216,19 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                       ),
                       DataColumn(
                         label: Text(
-                          'Late',
+                          'pending_table'.tr(),
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: colors.textColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        numeric: true,
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'late'.tr(),
                           style: TextStyle(
                             fontStyle: FontStyle.italic,
                             color: colors.textColor,
@@ -273,14 +272,14 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                               DataCell(
                                 Text(
                                   member.user?.name ?? 'Unknown',
-                                  style:  TextStyle(color: colors.textColor),
+                                  style: TextStyle(color: colors.textColor),
                                 ),
                               ),
                               DataCell(
                                 Center(
                                   child: Text(
                                     completed.toString(),
-                                    style:  TextStyle(color: colors.textColor),
+                                    style: TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),
@@ -288,7 +287,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                                 Center(
                                   child: Text(
                                     pendingNotLate.toString(),
-                                    style:  TextStyle(color: colors.textColor),
+                                    style: TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),
@@ -296,7 +295,7 @@ class _TeamSummaryPageState extends State<TeamSummaryPage> {
                                 Center(
                                   child: Text(
                                     pendingLate.toString(),
-                                    style:  TextStyle(color: colors.textColor),
+                                    style: TextStyle(color: colors.textColor),
                                   ),
                                 ),
                               ),

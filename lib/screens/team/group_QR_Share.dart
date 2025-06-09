@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -30,13 +31,9 @@ class _QRPageState extends State<QRPage> {
     // Nếu bị từ chối
     if (await Permission.storage.isPermanentlyDenied ||
         await Permission.photos.isPermanentlyDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Storage permission is permanently denied. Please enable it in app settings.',
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('storage_permission_denied'.tr())));
       openAppSettings();
     }
 
@@ -67,7 +64,7 @@ class _QRPageState extends State<QRPage> {
       if (_qrKey.currentContext == null || !_qrKey.currentContext!.mounted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('QR Code widget is not ready yet.')),
+            SnackBar(content: Text('qr_code_widget_not_ready'.tr())),
           );
           setState(() {
             _isSaving = false;
@@ -86,7 +83,7 @@ class _QRPageState extends State<QRPage> {
       if (byteData == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to generate QR image data.')),
+            SnackBar(content: Text('failed_to_generate_qr_image'.tr())),
           );
         }
         return;
@@ -106,7 +103,13 @@ class _QRPageState extends State<QRPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'QR Code saved to Gallery! ${result['filePath'] != null ? "Path: ${result['filePath']}" : ""}',
+                'qr_code_saved_to_gallery'.tr(
+                  args: [
+                    result['filePath'] != null
+                        ? "Path: ${result['filePath']}"
+                        : "",
+                  ],
+                ),
               ),
             ),
           );
@@ -114,7 +117,9 @@ class _QRPageState extends State<QRPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Failed to save QR code: ${result['errorMessage'] ?? 'Unknown error'}',
+                'failed_to_save_qr_code'.tr(
+                  args: [result['errorMessage'] ?? 'Unknown error'],
+                ),
               ),
             ),
           );
@@ -123,7 +128,9 @@ class _QRPageState extends State<QRPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save QR code: ${e.toString()}')),
+          SnackBar(
+            content: Text('failed_to_save_qr_code'.tr(args: [e.toString()])),
+          ),
         );
       }
     } finally {
@@ -142,7 +149,7 @@ class _QRPageState extends State<QRPage> {
       backgroundColor: colors.primaryColor,
       appBar: AppBar(
         title: Text(
-          "Team ${widget.team.name}",
+          'team_name'.tr(args: [widget.team.name]),
           style: TextStyle(color: colors.textColor),
         ),
         backgroundColor: colors.primaryColor,
@@ -151,7 +158,7 @@ class _QRPageState extends State<QRPage> {
           IconButton(
             icon: Icon(Icons.save_alt, color: colors.textColor),
             onPressed: _isSaving ? null : _saveQrCodeToGallery,
-            tooltip: "Save QR Code to Gallery",
+            tooltip: 'save_qr_code_to_gallery'.tr(),
           ),
         ],
       ),

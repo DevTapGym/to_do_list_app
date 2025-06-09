@@ -1,5 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:to_do_list_app/main.dart';
 import 'package:to_do_list_app/models/auth_response.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/services/injections.dart';
@@ -24,7 +24,6 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
 
   TeamService _teamService = getIt.get<TeamService>();
   List<User> _teamMembers = [];
-  
 
   @override
   void initState() {
@@ -54,7 +53,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
               icon: Icon(Icons.arrow_back, color: colors.textColor, size: 34),
             ),
             title: Text(
-              'Add task',
+              'add_task'.tr(),
               style: TextStyle(
                 color: colors.textColor,
                 fontWeight: FontWeight.bold,
@@ -72,7 +71,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Task Title',
+                      'task_title'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -84,18 +83,27 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                       controller: _titleController,
                       style: TextStyle(color: colors.textColor),
                       decoration: InputDecoration(
-                        hintText: 'Enter task title',
-                        hintStyle: TextStyle(fontSize: 16, color: colors.subtitleColor),
+                        hintText: 'enter_task_title'.tr(),
+                        hintStyle: TextStyle(
+                          fontSize: 16,
+                          color: colors.subtitleColor,
+                        ),
                         labelStyle: TextStyle(color: colors.textColor),
                         filled: true,
                         fillColor: colors.itemBgColor,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.textColor  , width: 2),
+                          borderSide: BorderSide(
+                            color: colors.textColor,
+                            width: 2,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.textColor, width: 2),
+                          borderSide: BorderSide(
+                            color: colors.textColor,
+                            width: 2,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -108,7 +116,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                     ),
                     SizedBox(height: 18),
                     Text(
-                      'Task Description',
+                      'task_description'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -123,15 +131,24 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                       decoration: InputDecoration(
                         fillColor: colors.itemBgColor,
                         filled: true,
-                        hintText: 'Enter task description',
-                        hintStyle: TextStyle(fontSize: 16, color: colors.subtitleColor),
+                        hintText: 'enter_task_description'.tr(),
+                        hintStyle: TextStyle(
+                          fontSize: 16,
+                          color: colors.subtitleColor,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.textColor, width: 2),
+                          borderSide: BorderSide(
+                            color: colors.textColor,
+                            width: 2,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.textColor, width: 2),
+                          borderSide: BorderSide(
+                            color: colors.textColor,
+                            width: 2,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -145,7 +162,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                     ),
                     SizedBox(height: 18),
                     Text(
-                      'Due Date',
+                      'due_date'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -176,7 +193,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                             SizedBox(width: 8),
                             Text(
                               _selectedDate == null
-                                  ? 'Select date'
+                                  ? 'select_date'.tr()
                                   : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                               style: TextStyle(
                                 fontSize: 16,
@@ -189,7 +206,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                     ),
                     SizedBox(height: 18),
                     Text(
-                      'Assign To',
+                      'assign_to'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -221,7 +238,10 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                         fillColor: colors.itemBgColor,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: colors.textColor, width: 2),
+                          borderSide: BorderSide(
+                            color: colors.textColor,
+                            width: 2,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -245,7 +265,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed: () async{
+                          onPressed: () async {
                             if (_selectedDate == null ||
                                 _selectedMember == null ||
                                 _titleController.text.isEmpty ||
@@ -253,7 +273,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    "Please fill in all information!",
+                                    'please_fill_in_all_information'.tr(),
                                   ),
                                 ),
                               );
@@ -281,7 +301,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
                             ),
                           ),
                           child: Text(
-                            "Create Task",
+                            'create_task'.tr(),
                             style: TextStyle(
                               color: colors.textColor,
                               fontWeight: FontWeight.bold,
@@ -301,6 +321,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
       debugShowCheckedModeBanner: false,
     );
   }
+
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -315,6 +336,7 @@ class _GroupCreateTaskState extends State<GroupCreateTask> {
       });
     }
   }
+
   void _loadTeamMembers() async {
     final members = await _teamService.getMembersByTeamId(widget.team.id);
     setState(() {

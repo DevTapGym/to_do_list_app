@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
+
 class OneTextFieldDialog extends StatefulWidget {
   final String title;
   final String hintText;
@@ -16,7 +17,7 @@ class OneTextFieldDialog extends StatefulWidget {
     this.hintText = "Enter email",
     this.buttonText = "Add",
     this.cancelText = "Cancel",
-  }) ;
+  });
 
   @override
   State<OneTextFieldDialog> createState() => _OneTextFieldDialogState();
@@ -53,11 +54,17 @@ class _OneTextFieldDialogState extends State<OneTextFieldDialog> {
             final email = emailController.text.trim();
             widget.onFunction(email);
           },
-          child: Text(widget.buttonText, style: TextStyle(color: widget.colors.textColor)),
+          child: Text(
+            widget.buttonText,
+            style: TextStyle(color: widget.colors.textColor),
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(widget.cancelText, style: TextStyle(color: widget.colors.textColor)),
+          child: Text(
+            widget.cancelText,
+            style: TextStyle(color: widget.colors.textColor),
+          ),
         ),
       ],
     );
