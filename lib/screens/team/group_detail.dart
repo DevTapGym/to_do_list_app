@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -125,10 +126,10 @@ class _GroupDetailState extends State<GroupDetail> {
                           context: context,
                           builder: (context) {
                             return OneTextFieldDialog(
-                              title: 'Rename Team',
-                              hintText: 'Enter new name',
-                              buttonText: 'Change',
-                              cancelText: 'Cancel',
+                              title: 'rename_team'.tr(),
+                              hintText: 'enter_new_name'.tr(),
+                              buttonText: 'change'.tr(),
+                              cancelText: 'cancel'.tr(),
                               onFunction: onRename,
                               colors: colors,
                             );
@@ -149,21 +150,21 @@ class _GroupDetailState extends State<GroupDetail> {
                     },
                     itemBuilder:
                         (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'Share',
-                            child: Text('Share'),
+                            child: Text('share'.tr()),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'Rename',
-                            child: Text('Rename'),
+                            child: Text('rename_team'.tr()),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'Disband',
-                            child: Text('Disband'),
+                            child: Text('disband'.tr()),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'Leave',
-                            child: Text('Leave Team'),
+                            child: Text('leave_team'.tr()),
                           ),
                         ],
                   )
@@ -184,13 +185,13 @@ class _GroupDetailState extends State<GroupDetail> {
                     },
                     itemBuilder:
                         (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'Share',
-                            child: Text('Share'),
+                            child: Text('share'.tr()),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'Leave',
-                            child: Text('Leave Team'),
+                            child: Text('leave_team'.tr()),
                           ),
                         ],
                   ),
@@ -265,7 +266,7 @@ class _GroupDetailState extends State<GroupDetail> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Team Summary',
+                        'team_summary'.tr(),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -289,7 +290,7 @@ class _GroupDetailState extends State<GroupDetail> {
                           }
                         },
                         child: Text(
-                          'See more',
+                          'see_more'.tr(),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -307,7 +308,7 @@ class _GroupDetailState extends State<GroupDetail> {
                         Padding(
                           padding: const EdgeInsets.only(right: 12.0),
                           child: SummaryCard(
-                            title: "Pending & Late",
+                            title: 'pending_and_late'.tr(),
                             value: teamPendingLateTasksCount.toString(),
                             icon: Icons.warning_amber_rounded,
                             borderColor:
@@ -321,7 +322,7 @@ class _GroupDetailState extends State<GroupDetail> {
                         Padding(
                           padding: const EdgeInsets.only(right: 12.0),
                           child: SummaryCard(
-                            title: "Pending",
+                            title: 'pending'.tr(),
                             value: teamPendingTasksCount.toString(),
                             icon: Icons.access_time,
                             borderColor:
@@ -333,7 +334,7 @@ class _GroupDetailState extends State<GroupDetail> {
                         Padding(
                           padding: const EdgeInsets.only(right: 12.0),
                           child: SummaryCard(
-                            title: "Completed",
+                            title: 'completed'.tr(),
                             value: teamCompletedTasksCount.toString(),
                             icon: Icons.check_circle,
                             borderColor:
@@ -352,7 +353,7 @@ class _GroupDetailState extends State<GroupDetail> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Your Summary',
+                          'your_summary'.tr(),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -369,7 +370,7 @@ class _GroupDetailState extends State<GroupDetail> {
                           Padding(
                             padding: const EdgeInsets.only(right: 12.0),
                             child: SummaryCard(
-                              title: "Pending & Late",
+                              title: 'pending_and_late'.tr(),
                               value: myPendingLate.toString(),
                               icon: Icons.warning_amber_rounded,
                               borderColor:
@@ -383,7 +384,7 @@ class _GroupDetailState extends State<GroupDetail> {
                           Padding(
                             padding: const EdgeInsets.only(right: 12.0),
                             child: SummaryCard(
-                              title: "Pending",
+                              title: 'pending'.tr(),
                               value: myPendingTasksCount.toString(),
                               icon: Icons.access_time,
                               borderColor:
@@ -397,7 +398,7 @@ class _GroupDetailState extends State<GroupDetail> {
                           Padding(
                             padding: const EdgeInsets.only(right: 12.0),
                             child: SummaryCard(
-                              title: "Completed",
+                              title: 'completed'.tr(),
                               value: myCompletedTasksCount.toString(),
                               icon: Icons.check_circle,
                               borderColor:
@@ -446,7 +447,7 @@ class _GroupDetailState extends State<GroupDetail> {
                             children: [
                               if (myDisplayedTasks.isNotEmpty) ...[
                                 Text(
-                                  'Your tasks',
+                                  'your_tasks'.tr(),
                                   style: TextStyle(
                                     color: colors.textColor,
                                     fontSize: 18,
@@ -456,6 +457,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                 ...myDisplayedTasks.map(
                                   (g) => TodoCardTeam(
                                     task: g,
+                                    isWide: true,
                                     onChanged: onChanged,
                                     canEdit:
                                         widget.isLeader ||
@@ -471,7 +473,7 @@ class _GroupDetailState extends State<GroupDetail> {
                               ],
                               if (otherDisplayedTasks.isNotEmpty) ...[
                                 Text(
-                                  'Other members\' tasks',
+                                  'other_members_tasks'.tr(),
                                   style: TextStyle(
                                     color: colors.textColor,
                                     fontSize: 18,
@@ -487,6 +489,7 @@ class _GroupDetailState extends State<GroupDetail> {
                                         (teamMember != null &&
                                             g.teamMemberId == teamMember!.id),
                                     isLeader: widget.isLeader,
+                                    isWide: true,
                                     assignedMember: getAssignedMemberById(
                                       g.teamMemberId,
                                     ),
@@ -497,7 +500,7 @@ class _GroupDetailState extends State<GroupDetail> {
                               if (state.tasks.isEmpty)
                                 Center(
                                   child: Text(
-                                    'No tasks available for this team.',
+                                    'no_tasks_available'.tr(),
                                     style: TextStyle(color: colors.textColor),
                                   ),
                                 ),
@@ -506,14 +509,14 @@ class _GroupDetailState extends State<GroupDetail> {
                         } else if (state is TeamTaskError) {
                           return Center(
                             child: Text(
-                              'Error: ${state.message}',
+                              'error'.tr(args: [state.message]),
                               style: TextStyle(color: colors.textColor),
                             ),
                           );
                         } else {
                           return Center(
                             child: Text(
-                              'No data available or unknown state.',
+                              'no_data_available'.tr(),
                               style: TextStyle(color: colors.textColor),
                             ),
                           );
@@ -578,10 +581,10 @@ class _GroupDetailState extends State<GroupDetail> {
       context: context,
       builder: (context) {
         return ConfirmationDialog(
-          title: 'Confirmation',
-          content: 'Are you sure you want to disband team "${team.name}"?',
-          confirmText: 'Confirm',
-          cancelText: 'Cancel',
+          title: 'confirmation'.tr(),
+          content: 'are_you_sure_disband_team'.tr(args: [team.name]),
+          confirmText: 'confirm'.tr(),
+          cancelText: 'cancel'.tr(),
           onConfirm: () => onDisband(team.id),
         );
       },
@@ -658,19 +661,17 @@ class _GroupDetailState extends State<GroupDetail> {
 
   Future<void> _fetchTeamDetails() async {
     final updatedTeam = await teamService.getTeamById(widget.team.id);
-    if (updatedTeam != null) {
-      setState(() {
-        widget.team.teamMembers = updatedTeam.teamMembers;
-        widget.team.name = updatedTeam.name;
-        var leader = updatedTeam.teamMembers.firstWhere(
-          (member) => member.role == Role.LEADER,
-        );
-        widget.LeaderId = leader.userId;
-        widget.isLeader = widget.LeaderId == user.id;
-        teamMember = widget.team.teamMembers.firstWhere(
-          (member) => member.userId == user.id,
-        );
-      });
-    }
+    setState(() {
+      widget.team.teamMembers = updatedTeam.teamMembers;
+      widget.team.name = updatedTeam.name;
+      var leader = updatedTeam.teamMembers.firstWhere(
+        (member) => member.role == Role.LEADER,
+      );
+      widget.LeaderId = leader.userId;
+      widget.isLeader = widget.LeaderId == user.id;
+      teamMember = widget.team.teamMembers.firstWhere(
+        (member) => member.userId == user.id,
+      );
+    });
   }
 }

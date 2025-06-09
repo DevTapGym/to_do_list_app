@@ -1,10 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:to_do_list_app/models/task.dart';
 import 'package:to_do_list_app/models/team.dart';
 import 'package:to_do_list_app/services/injections.dart';
 import 'package:to_do_list_app/services/team_service.dart';
 import 'package:to_do_list_app/utils/theme_config.dart';
-import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 
 class TeamTaskDetail extends StatefulWidget {
   final TeamTask task;
@@ -56,7 +55,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
             icon: Icon(Icons.arrow_back, color: colors.textColor, size: 24),
           ),
           title: Text(
-            'Detail Task',
+            'detail_task'.tr(),
             style: TextStyle(
               color: colors.textColor,
               fontWeight: FontWeight.bold,
@@ -73,14 +72,14 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildTextField(
-                  'Title',
+                  'title'.tr(),
                   titleController,
                   canEdit: canEditTitle,
                 ),
                 SizedBox(height: 12),
                 CheckboxListTile(
                   title: Text(
-                    'Completed',
+                    'completed'.tr(),
                     style: TextStyle(color: colors.textColor),
                   ),
                   value: widget.task.isCompleted,
@@ -97,7 +96,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 ),
                 SizedBox(height: 12),
                 _buildEnumDropdownField<Priority>(
-                  label: 'Priority',
+                  label: 'priority'.tr(),
                   items: Priority.values,
                   selectedValue: selectedPriority,
                   getLabel: (val) => val.name,
@@ -120,7 +119,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 SizedBox(height: 12),
 
                 Text(
-                  'Description',
+                  'description'.tr(),
                   style: TextStyle(
                     color: colors.textColor,
                     fontWeight: FontWeight.bold,
@@ -132,7 +131,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                   controller: descriptionController,
                   maxLines: 4,
                   keyboardType: TextInputType.multiline,
-                  decoration: _inputDecoration('Enter task description'),
+                  decoration: _inputDecoration('enter_task_description'.tr()),
                   readOnly: !canEditDescription,
                   style: TextStyle(color: colors.textColor),
                 ),
@@ -144,7 +143,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                     if (widget.canEdit)
                       _buildOutlinedButton(
                         icon: Icons.update,
-                        label: 'Update',
+                        label: 'update'.tr(),
                         color: colors.primaryColor,
                         onPressed: () async {
                           widget.task.title = titleController.text;
@@ -158,16 +157,14 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                           if (isSuccess) {
                             setState(() {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Updated successfully')),
+                                SnackBar(
+                                  content: Text('updated_successfully'.tr()),
+                                ),
                               );
                             });
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Update failed. Please try again.',
-                                ),
-                              ),
+                              SnackBar(content: Text('update_failed'.tr())),
                             );
                           }
                         },
@@ -175,7 +172,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                     if (widget.isLeader)
                       _buildOutlinedButton(
                         icon: Icons.delete,
-                        label: 'Delete',
+                        label: 'delete'.tr(),
                         color: Colors.red,
                         onPressed: () {
                           _showConfirmationDialog(context);
@@ -225,13 +222,12 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
 
     return TextFormField(
       controller: TextEditingController(
-        text:
-            "${taskDate.day}/${taskDate.month}/${taskDate.year}",
+        text: "${taskDate.day}/${taskDate.month}/${taskDate.year}",
       ),
       readOnly: true,
       enabled: canEditDeadline,
       decoration: InputDecoration(
-        labelText: 'Task Date',
+        labelText: 'task_date'.tr(),
         hintStyle: TextStyle(fontSize: 16, color: Colors.grey),
         labelStyle: TextStyle(color: colors.textColor, fontSize: 18),
         filled: true,
@@ -292,7 +288,7 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
         SizedBox(height: 8),
         DropdownButtonFormField<T>(
           value: selectedValue,
-          decoration: _inputDecoration('Select $label'),
+          decoration: _inputDecoration('select_priority'.tr()),
           dropdownColor: colors.itemBgColor,
           items:
               items.map((item) {
@@ -305,7 +301,6 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
                 );
               }).toList(),
           onChanged: canEditPriority ? onChanged : null,
-          
         ),
       ],
     );
@@ -357,22 +352,23 @@ class _TeamTaskDetailState extends State<TeamTaskDetail> {
       ),
     );
   }
+
   void _showConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm'),
-          content: Text('Are you sure you want to delete this Task?'),
+          title: Text('confirm'.tr()),
+          content: Text('are_you_sure_delete_task'.tr()),
           actions: [
             TextButton(
-              child: const Text('Cancel'),
+              child: Text('cancel'.tr()),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Confirm'),
+              child: Text('confirm'.tr()),
               onPressed: () async {
                 await teamService.DeleteTeamTask(widget.task.id!);
                 Navigator.of(context).pop();

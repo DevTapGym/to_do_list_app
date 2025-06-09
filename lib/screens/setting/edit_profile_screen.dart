@@ -89,7 +89,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           final userService = ProfileService();
           final fileName = await userService.uploadFile({
             'filePath': _fullImagePath!,
-            'folder': 'avatars',
+            'folder': 'avatar',
           });
           avatarUrl =
               '$_baseImageUrl$fileName'; // Tạo avatarUrl từ fileName trả về

@@ -52,7 +52,7 @@ class NotificationService {
     await androidPlugin?.requestExactAlarmsPermission();
   }
 
-  Future<void> showNotification(String title, String body) async {
+  Future<void> showNotification(String title, String body, {int id = 0}) async {
     final androidPlugin =
         flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<
@@ -69,9 +69,9 @@ class NotificationService {
       }
     }
 
-    // Hiển thị thông báo
+    // Hiển thị thông báo với id tùy chỉnh
     await flutterLocalNotificationsPlugin.show(
-      0,
+      id, // Sử dụng id được truyền vào
       title,
       body,
       const NotificationDetails(

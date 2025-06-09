@@ -69,42 +69,48 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   Future<void> _changeLanguage(BuildContext context, Locale locale) async {
-    print('Changing language to: ${locale.languageCode}');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', locale.languageCode);
     await context.setLocale(locale);
-    print('Current locale: ${context.locale}');
   }
 
   Future<void> _showLanguageDialog() async {
+    final currentLang = context.locale.languageCode;
     await showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
+          (context) => SimpleDialog(
             title: Text('selectLanguage'.tr()),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: Text('english'.tr()),
-                  onTap: () {
-                    _changeLanguage(context, const Locale('en'));
-                    Navigator.pop(context);
-                  },
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.language,
+                  color: currentLang == 'en' ? Colors.blue : null,
                 ),
-                ListTile(
-                  title: Text('vietnamese'.tr()),
-                  onTap: () {
-                    _changeLanguage(context, const Locale('vi'));
-                    Navigator.pop(context);
-                  },
+                title: Text('English'),
+                trailing:
+                    currentLang == 'en'
+                        ? Icon(Icons.check, color: Colors.blue)
+                        : null,
+                onTap: () {
+                  _changeLanguage(context, const Locale('en'));
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.language,
+                  color: currentLang == 'vi' ? Colors.blue : null,
                 ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr()),
+                title: Text('Tiếng Việt'),
+                trailing:
+                    currentLang == 'vi'
+                        ? Icon(Icons.check, color: Colors.blue)
+                        : null,
+                onTap: () {
+                  _changeLanguage(context, const Locale('vi'));
+                  Navigator.pop(context);
+                },
               ),
             ],
           ),

@@ -146,68 +146,6 @@ class _CategoryListState extends State<CategoryList> {
   }
 }
 
-class WeekdaySelector extends StatefulWidget {
-  final Function(List<int>) onSelectionChanged;
-
-  const WeekdaySelector({super.key, required this.onSelectionChanged});
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _WeekdaySelectorState createState() => _WeekdaySelectorState();
-}
-
-class _WeekdaySelectorState extends State<WeekdaySelector> {
-  List<int> selectedDays = [];
-
-  final List<String> days = ["2", "3", "4", "5", "6", "7", "C"];
-
-  void toggleSelection(int index) {
-    setState(() {
-      if (selectedDays.contains(index)) {
-        selectedDays.remove(index);
-      } else {
-        selectedDays.add(index);
-      }
-      widget.onSelectionChanged(selectedDays);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppThemeConfig.getColors(context);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: List.generate(days.length, (index) {
-        bool isSelected = selectedDays.contains(index);
-        return GestureDetector(
-          onTap: () => toggleSelection(index),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? colors.primaryColor : Colors.grey,
-                width: 2,
-              ),
-              color: isSelected ? colors.primaryColor : colors.itemBgColor,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              days[index],
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
 class PrioritySelector extends StatefulWidget {
   final Function(String) onPrioritySelected;
 

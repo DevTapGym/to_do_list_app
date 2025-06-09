@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -86,8 +87,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Your groups',
+                    Text(
+                      'your_groups'.tr(),
                       style: TextStyle(
                         fontSize: 26,
                         color: Colors.white,
@@ -145,7 +146,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'No groups yet',
+                              'no_groups_yet'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
                                 color: colors.subtitleColor,
@@ -163,7 +164,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
                             child: Text(
-                              'Leader of Teams',
+                              'leader_of_teams'.tr(),
                               style: TextStyle(
                                 color: colors.textColor,
                                 fontSize: 18,
@@ -193,7 +194,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(14, 0, 0, 0),
                             child: Text(
-                              'Member of Teams',
+                              'member_of_teams'.tr(),
                               style: TextStyle(
                                 color: colors.textColor,
                                 fontSize: 18,
@@ -219,7 +220,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       ],
                     );
                   } else {
-                    return const Center(child: Text('No data available'));
+                    return Center(child: Text('no_data_available'.tr()));
                   }
                 },
               ),
