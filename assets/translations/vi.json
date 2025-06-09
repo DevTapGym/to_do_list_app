@@ -94,7 +94,7 @@
   "enter_task_description": "Nhập mô tả tác vụ",
   "task_date": "Ngày thực hiện tác vụ",
   "select_date": "Chọn ngày",
-  "select_time_for_notification": "Chọn thời gian thông báo",
+  "select_time_for_notification": "Chọn thời gian",
   "select_repeat_days": "Chọn thể loại và ưu tiên",
   "create_task": "Tạo tác vụ",
   "please_fill_all_required_fields": "Vui lòng điền đầy đủ các trường bắt buộc",
@@ -108,7 +108,7 @@
   "category": "Danh mục",
   "enter_category": "Nhập danh mục",
   "task_date_label": "Ngày thực hiện",
-  "notification_time": "Thời gian thông báo",
+  "notification_time": "Thời gian",
   "no_time_set": "Chưa đặt thời gian",
   "description": "Mô tả",
   "enter_description": "Nhập mô tả tác vụ",
@@ -263,5 +263,11 @@
   "are_you_sure_perform_action_with_task": "Bạn có chắc chắn muốn thực hiện hành động với công việc \"{}\"?",
   "close": "Đóng",
   "completed_table": "Hoàn thành",
-  "pending_table": "Chưa làm"
+  "pending_table": "Chưa làm",
+  "repeat_tomorrow": "Lặp lại vào ngày mai",
+  "tasks_for_today": "Công việc hôm nay",
+  "you_have_tasks_to_do": "Bạn có {} công việc cần làm hôm nay!",
+  "keep_it_up": "Cố lên!",
+  "you_completed_tasks_in_week": "Bạn đã hoàn thành {} công việc trong tuần này. Đừng bỏ cuộc!"
+
 }

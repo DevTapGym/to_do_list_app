@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +15,6 @@ import 'package:to_do_list_app/utils/theme_config.dart';
 import 'package:to_do_list_app/widgets/icon_button_wg.dart';
 import 'package:to_do_list_app/screens/task/add_task_screen.dart';
 import 'package:to_do_list_app/widgets/to_do_card.dart';
-import 'package:intl/intl.dart';
 import 'package:to_do_list_app/services/task_service.dart';
 
 class TaskScreen extends StatefulWidget {
@@ -44,6 +45,9 @@ class _TaskScreenState extends State<TaskScreen> {
   List<Category> _categories = [];
   bool _showCompletedTasks = false;
 
+  final SummaryService summaryService = SummaryService();
+  final NotificationService notificationService = NotificationService();
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +57,61 @@ class _TaskScreenState extends State<TaskScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchTasksByDate();
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setBool('has_shown_notifications', false);
+        _listenForAuthState();
+      });
     });
+  }
+
+  Future<void> _listenForAuthState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasShownNotifications =
+        prefs.getBool('has_shown_notifications') ?? false;
+    final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    if (hasShownNotifications || !notificationsEnabled) return;
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && authState.authResponse != null) {
+      final userId = authState.authResponse!.user.id;
+      final today = DateTime.now();
+
+      // Thông báo sau 30 giây: Số công việc cần làm hôm nay
+      Timer(const Duration(seconds: 30), () async {
+        try {
+          final uncompletedTasks = await summaryService
+              .countUncompletedTasksInDay(userId, today);
+          await notificationService.showNotification(
+            'tasks_for_today'.tr(),
+            'you_have_tasks_to_do'.tr(args: ['$uncompletedTasks']),
+            id: 1,
+          );
+          // Cập nhật trạng thái sau khi gửi thông báo
+          await prefs.setBool('has_shown_notifications', true);
+        } catch (e) {
+          print('Error showing tasks notification: $e');
+        }
+      });
+
+      // Thông báo sau 60 giây: Số công việc hoàn thành trong tuần
+      Timer(const Duration(seconds: 60), () async {
+        try {
+          final completedTasks = await summaryService.countCompletedTasksInWeek(
+            userId,
+            today,
+          );
+          await notificationService.showNotification(
+            'keep_it_up'.tr(),
+            'you_completed_tasks_in_week'.tr(args: ['$completedTasks']),
+            id: 2,
+          );
+          // Cập nhật trạng thái sau khi gửi thông báo
+          await prefs.setBool('has_shown_notifications', true);
+        } catch (e) {
+          print('Error showing weekly tasks notification: $e');
+        }
+      });
+    }
   }
 
   Future<void> _loadShowCompletedTasks() async {
@@ -162,45 +220,96 @@ class _TaskScreenState extends State<TaskScreen> {
   }
 
   Future<void> _showConfirmationDialog(Task task) async {
+    bool repeatTomorrow = false; // Biến lưu trạng thái checkbox
+
     return showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text('confirm_task_completion'.tr()),
-            content: Text('mark_task_irreversible'.tr()),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr()),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _updateTaskStatus(task);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  foregroundColor: Colors.white,
+          (context) => StatefulBuilder(
+            builder:
+                (BuildContext context, StateSetter setState) => AlertDialog(
+                  title: Text('confirm_task_completion'.tr()),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('mark_task_irreversible'.tr()),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: repeatTomorrow,
+                            onChanged: (value) {
+                              setState(() {
+                                repeatTomorrow = value ?? false;
+                              });
+                            },
+                          ),
+                          Text(
+                            'repeat_tomorrow'.tr(),
+                            style: TextStyle(
+                              color: Colors.deepPurpleAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('cancel'.tr()),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await _updateTaskStatus(
+                          task,
+                          repeatTomorrow: repeatTomorrow,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurpleAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text('confirm'.tr()),
+                    ),
+                  ],
                 ),
-                child: Text('confirm'.tr()),
-              ),
-            ],
           ),
     );
   }
 
-  Future<void> _updateTaskStatus(Task task) async {
+  Future<void> _updateTaskStatus(
+    Task task, {
+    required bool repeatTomorrow,
+  }) async {
     setState(() {
       _isLoading = true;
     });
     try {
+      // Cập nhật trạng thái task
       bool result = await taskService.updateTask(
         task.copyWith(completed: !task.completed),
       );
       if (result) {
+        // Nếu checkbox được chọn, thêm task mới cho ngày mai
+        if (repeatTomorrow) {
+          final newTask = Task(
+            title: task.title,
+            description: task.description,
+            taskDate: task.taskDate.add(const Duration(days: 1)),
+            priority: task.priority,
+            categoryId: task.categoryId,
+            categoryName: task.categoryName,
+            completed: false,
+            notificationTime: task.notificationTime,
+            userId: task.userId,
+          );
+          await taskService.addTask(newTask); // Gọi API để thêm task mới
+        }
         await _fetchTasksByDate();
-
-        // Logic kiểm tra và cập nhật streak
+        // Logic streak giữ nguyên
         final authState = context.read<AuthBloc>().state;
         if (authState is AuthAuthenticated && authState.authResponse != null) {
           final userId = authState.authResponse!.user.id;
@@ -208,14 +317,11 @@ class _TaskScreenState extends State<TaskScreen> {
           final today = DateTime(now.year, now.month, now.day);
           final SummaryService summaryService = SummaryService();
 
-          // Đếm số task hoàn thành trong ngày hiện tại
           final completedTasksToday = await summaryService
               .countCompletedTasksInDay(userId, today);
 
-          // Kiểm tra nếu đã hoàn thành ít nhất 3 task
           if (completedTasksToday >= 3) {
             try {
-              // Lấy thông tin streak hiện tại
               final streakData = await summaryService.getStreak(userId);
               int currentStreak = streakData['currentStreak'] ?? 0;
               int longestStreak = streakData['longestStreak'] ?? 0;
@@ -225,7 +331,6 @@ class _TaskScreenState extends State<TaskScreen> {
                       ? DateTime.parse(lastCompletedDateStr)
                       : null;
 
-              // Kiểm tra nếu streak đã được cập nhật trong ngày
               if (lastCompletedDate != null &&
                   lastCompletedDate.year == today.year &&
                   lastCompletedDate.month == today.month &&
@@ -233,26 +338,21 @@ class _TaskScreenState extends State<TaskScreen> {
                 return;
               }
 
-              // Chuẩn hóa ngày để so sánh
               final yesterday = today.subtract(const Duration(days: 1));
 
               if (lastCompletedDate != null &&
                   lastCompletedDate.year == yesterday.year &&
                   lastCompletedDate.month == yesterday.month &&
                   lastCompletedDate.day == yesterday.day) {
-                // Nếu lastCompletedDate là ngày hôm qua, tăng currentStreak
                 currentStreak += 1;
               } else {
-                // Nếu không phải ngày hôm qua, đặt currentStreak thành 1
                 currentStreak = 1;
               }
 
-              // Cập nhật longestStreak nếu currentStreak lớn hơn
               if (currentStreak > longestStreak) {
                 longestStreak = currentStreak;
               }
 
-              // Cập nhật streak qua API
               await summaryService.updateStreak({
                 'id': streakData['id'] ?? 0,
                 'userId': userId,
@@ -277,17 +377,15 @@ class _TaskScreenState extends State<TaskScreen> {
             }
           }
         }
-        setState(() {
-          _isLoading = false;
-        });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('failed_to_update_task'.tr())));
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 

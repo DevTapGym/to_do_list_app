@@ -75,7 +75,7 @@
   "hi_there": "Hi there,",
   "your_task": "Your Task",
   "search_task": "Search task...",
-  "tasks_for": "Tasks For {}",
+  "tasks_for": "{} Tasks For {}",
   "no_tasks_yet": "No tasks yet",
   "add_first_task": "Add your first task to get started",
   "add_task": "Add Task",
@@ -95,7 +95,7 @@
   "enter_task_description": "Enter task description",
   "task_date": "Task date",
   "select_date": "Select date",
-  "select_time_for_notification": "Select time for notification",
+  "select_time_for_notification": "Select time",
   "select_repeat_days": "Select category and priority",
   "create_task": "Create Task",
   "please_fill_all_required_fields": "Please fill all required fields",
@@ -109,7 +109,7 @@
   "category": "Category",
   "enter_category": "Enter Category",
   "task_date_label": "Task Date",
-  "notification_time": "Notification Time",
+  "notification_time": "Time",
   "no_time_set": "No time set",
   "description": "Description",
   "enter_description": "Enter task description",
@@ -263,5 +263,10 @@
   "are_you_sure_perform_action_with_task": "Are you sure you want to perform action with task \"{}\"?",
   "close": "Close",
   "completed_table": "Completed",
-  "pending_table": "Pending"
+  "pending_table": "Pending",
+  "repeat_tomorrow": "Repeat Tomorrow",
+  "tasks_for_today": "Tasks for Today",
+  "you_have_tasks_to_do": "You have {} tasks to do today!",
+  "keep_it_up": "Keep It Up!",
+  "you_completed_tasks_in_week": "You've completed {} tasks this week. Don't give up!"
 }

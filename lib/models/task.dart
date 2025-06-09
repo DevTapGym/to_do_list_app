@@ -13,7 +13,6 @@ class Task {
   int? userId;
   DateTime? createdAt;
   TimeOfDay? notificationTime;
-  List<int>? repeatDays = []; // 0 = thứ 2, 1 = thứ 3, ..., 6 = chủ nhật
 
   // Constructor
   Task({
@@ -27,7 +26,6 @@ class Task {
     this.createdAt,
     this.completed = false,
     this.notificationTime,
-    this.repeatDays,
     this.userId,
   });
 
@@ -84,7 +82,6 @@ class Task {
       createdAt: createdAt,
       userId: userId,
       notificationTime: notificationTime,
-      repeatDays: repeatDays,
     );
   }
 
