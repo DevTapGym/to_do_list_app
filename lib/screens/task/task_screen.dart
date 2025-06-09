@@ -57,10 +57,7 @@ class _TaskScreenState extends State<TaskScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchTasksByDate();
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setBool('has_shown_notifications', false);
-        _listenForAuthState();
-      });
+      _listenForAuthState(); // Không cần set lại has_shown_notifications = false
     });
   }
 
@@ -78,6 +75,10 @@ class _TaskScreenState extends State<TaskScreen> {
 
       // Thông báo sau 30 giây: Số công việc cần làm hôm nay
       Timer(const Duration(seconds: 30), () async {
+        // Kiểm tra lại cờ trước khi gửi thông báo
+        final prefs = await SharedPreferences.getInstance();
+        final hasShown = prefs.getBool('has_shown_notifications') ?? false;
+        if (hasShown) return;
         try {
           final uncompletedTasks = await summaryService
               .countUncompletedTasksInDay(userId, today);
@@ -95,6 +96,10 @@ class _TaskScreenState extends State<TaskScreen> {
 
       // Thông báo sau 60 giây: Số công việc hoàn thành trong tuần
       Timer(const Duration(seconds: 60), () async {
+        // Kiểm tra lại cờ trước khi gửi thông báo
+        final prefs = await SharedPreferences.getInstance();
+        final hasShown = prefs.getBool('has_shown_notifications') ?? false;
+        if (hasShown) return;
         try {
           final completedTasks = await summaryService.countCompletedTasksInWeek(
             userId,
