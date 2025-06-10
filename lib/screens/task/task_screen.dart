@@ -611,7 +611,7 @@ class _TaskScreenState extends State<TaskScreen> {
                               (c) => CategoryChip(
                                 id: c.id,
                                 label: c.name,
-                                color: Colors.deepPurpleAccent.shade700,
+                                color: Colors.deepPurpleAccent,
                                 isSelected: task.categoryId == c.id,
                               ),
                             )
@@ -710,11 +710,14 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
+    final colors = AppThemeConfig.getColors(context);
+
     List<DateTime> dates = List.generate(
       4,
       (index) => DateTime.now().add(Duration(days: index)),
     );
-    final colors = AppThemeConfig.getColors(context);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -724,6 +727,13 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 selectedDate.day == date.day &&
                 selectedDate.month == date.month &&
                 selectedDate.year == date.year;
+
+            Color textColor;
+            if (isSelected) {
+              textColor = Colors.white;
+            } else {
+              textColor = isDark ? colors.textColor : Colors.black;
+            }
 
             return GestureDetector(
               onTap: () {
@@ -743,6 +753,26 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 decoration: BoxDecoration(
                   color: isSelected ? colors.primaryColor : colors.itemBgColor,
                   borderRadius: BorderRadius.circular(12),
+                  border:
+                      isSelected
+                          ? Border.all(
+                            color:
+                                isDark
+                                    ? Colors.deepPurpleAccent.shade100
+                                    : Colors.deepPurpleAccent,
+                            width: 2,
+                          )
+                          : null,
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: Colors.deepPurpleAccent.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ]
+                          : [],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -750,7 +780,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                     Text(
                       DateFormat('EEE').format(date),
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: textColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -758,7 +788,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                     Text(
                       date.day.toString(),
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: textColor,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -766,7 +796,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                     Text(
                       DateFormat('MMM').format(date),
                       style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: textColor.withOpacity(0.85),
                         fontSize: 12,
                       ),
                     ),
