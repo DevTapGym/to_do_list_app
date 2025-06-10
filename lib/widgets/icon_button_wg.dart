@@ -22,15 +22,36 @@ class CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppThemeConfig.getColors(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isDark = themeProvider.isDarkMode;
 
+    // Khi được chọn: nền là màu category, chữ trắng, border đậm
+    // Khi không chọn: nền là itemBgColor, chữ là textColor, border nhạt
     return GestureDetector(
       onTap: onPressed,
-      child: Container(
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.transparent : colors.itemBgColor,
+          color: isSelected ? color : colors.itemBgColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color, width: 2),
+          border: Border.all(
+            color:
+                isSelected
+                    ? color
+                    : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+            width: 2,
+          ),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.25),
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -38,13 +59,26 @@ class CategoryChip extends StatelessWidget {
             Container(
               width: 14,
               height: 14,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white : color,
+                shape: BoxShape.circle,
+                border:
+                    isSelected
+                        ? Border.all(color: Colors.white, width: 2)
+                        : null,
+              ),
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: colors.textColor,
+                color:
+                    isSelected
+                        ? Colors.white
+                        : (isDark
+                            ? colors.textColor
+                            : Colors
+                                .grey[800]!), // Light mode: dùng màu xám đậm thay vì đen/trắng
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
