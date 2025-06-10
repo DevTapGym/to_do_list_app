@@ -11,9 +11,14 @@ import 'package:to_do_list_app/services/api_service.dart';
 void main() {
   final ApiService apiService = ApiService();
   runApp(
-    BlocProvider(
-      create: (context) => AuthBloc(apiService: apiService),
-      child: AuthScreen(),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthBloc(apiService: apiService),
+        ),
+        // Thêm các BlocProvider khác nếu cần
+      ],
+      child: const AuthScreen(),
     ),
   );
 }

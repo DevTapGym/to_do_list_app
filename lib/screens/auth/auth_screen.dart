@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_app/main.dart';
 
 import 'package:to_do_list_app/screens/auth/forgot_password_page.dart';
 import 'package:to_do_list_app/screens/auth/login_page.dart';
@@ -26,7 +27,11 @@ class AuthScreen extends StatelessWidget {
         '/register': (context) => const RegisterPage(),
         '/forgot-password': (context) => ForgotPasswordPage(),
         '/reset-password': (context) => ResetPasswordScreen(),
-        '/otp-verification': (context) => OtpVerificationScreen(),
+        '/otp-verification': (context) {
+          final email = ModalRoute.of(context)!.settings.arguments as String;
+          return OtpVerificationScreen(email: email);
+        },
+        '/home': (context) => const HomeScreen(),
       },
     );
   }
